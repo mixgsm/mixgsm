@@ -328,26 +328,52 @@ function SequenceMatcher(a,b){
  return (2*prev[n])/(m+n);
 }
 function render(){
- let base=products.filter(p=>(cat==="ALL"||p.cat===cat) && (group==="ALL" || (group==="PHONE" && p.cat!=="PERSONAL_CARE") || (group==="PERSONAL_CARE" && p.cat==="PERSONAL_CARE")));
+ let base = products.filter(p => (cat === "ALL" || p.cat === cat) &&
+   (group === "ALL" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE"))
+ );
+ 
  let a;
  if(q){
-   base.forEach(p=>p._score=searchScore(p,q));
-   a=base.filter(p=>p._score>=0.18).sort((x,y)=>y._score-x._score).slice(0,24);
- }else a=base;
- if(!q){
-   if(sort==="low")a.sort((x,y)=>(x.p??Infinity)-(y.p??Infinity));
-   if(sort==="high")a.sort((x,y)=>(y.p??-Infinity)-(x.p??-Infinity));
-   if(sort==="name")a.sort((x,y)=>(x.m).localeCompare(y.m,"tr"));
+   base.forEach(p => p._score = searchScore(p, q));
+   a = base.filter(p => p._score >= 0.18).sort((x, y) => y._score - x._score).slice(0, 24);
+ } else {
+   a = base;
  }
- count.textContent=`${a.length} ürün listeleniyor`;
- grid.innerHTML=a.length?a.map(p=>{
-   const badge=p.stock?'<span class="stock">● STOKTA</span>':'<span class="stock no">TÜKENDİ</span>';
-   const status=p.reg==="XIAOMI_GUARANTEE"?"1 YIL KAYIT + YAZILIM":p.reg==="KAYITLI"?"KAYITLI":p.reg==="KAYITSIZ"?"8 AY ÇİFT HAT":"1 HAFTA DEĞİŞİM";
-   const priceText=p.p==null?"fiyat bilgisi":`${fmt(p.p)} TL`;
-   const wa=`https://wa.me/905424818255?text=${encodeURIComponent(`Merhaba İsa Bey, Mix GSM kataloğundan ${p.b} ${p.m} (${p.s}) - ${priceText} cihazınız hakkında bilgi almak istiyorum.`)}`;
-   return `<article class="card" onclick="openProduct(${products.indexOf(p)})"><div class="visual"><span class="ribbon">${status}</span>${badge}<button class="fav ${favs.includes(products.indexOf(p))?"active":""}" onclick="toggleFav(event,${products.indexOf(p)})" aria-label="Favoriye ekle">${favs.includes(products.indexOf(p))?"♥":"♡"}</button><img src="${imgFor(p)}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.style.opacity=.25"></div><div class="info"><div class="brand">${p.b}</div><div class="name">${p.m}</div><span class="spec">▣ ${p.s}</span><div class="bottom"><div class="price"><small>GÜNCEL NAKİT FİYAT</small><strong class="${p.p==null?'price-query':''}">${p.p==null?'FİYAT İÇİN SOR':fmt(p.p)}${p.p==null?'':' <em>TL</em>'}</strong></div><a class="buy ${p.stock?'':'no'}" onclick="event.stopPropagation()" href="${p.stock?wa:'#'}" target="_blank">${p.stock?'💬 SİPARİŞ':'❌ TÜKENDİ'}</a></div><div style="margin-top:9px;color:#94a3b8;font-size:10px;font-weight:800;text-align:center">👆 Ürüne dokun → ayrıntıları incele</div></div></article>`;
- }).join(""):'<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+
+ // Sıralama artık arama varken de çalışır
+ if(sort === "low") a.sort((x, y) => (x.p ?? Infinity) - (y.p ?? Infinity));
+ if(sort === "high") a.sort((x, y) => (y.p ?? -Infinity) - (x.p ?? -Infinity));
+ if(sort === "name") a.sort((x, y) => (x.m).localeCompare(y.m, "tr"));
+
+ count.textContent = `${a.length} ürün listeleniyor`;
+ grid.innerHTML = a.length ? a.map(p => {
+   const badge = p.stock ? '<span class="stock">● STOKTA</span>' : '<span class="stock no">TÜKENDİ</span>';
+   const status = p.reg === "XIAOMI_GUARANTEE" ? "1 YIL KAYIT + YAZILIM" : p.reg === "KAYITLI" ? "KAYITLI" : p.reg === "KAYITSIZ" ? "8 AY ÇİFT HAT" : "1 HAFTA DEĞİŞİM";
+   const priceText = p.p == null ? "fiyat bilgisi" : `${fmt(p.p)} TL`;
+   const wa = `https://wa.me/905424818255?text=${encodeURIComponent(`Merhaba İsa Bey, Mix GSM kataloğundan ${p.b} ${p.m} (${p.s}) - ${priceText} cihazınız hakkında bilgi almak istiyorum.`)}`;
+   return `<article class="card" onclick="openProduct(${products.indexOf(p)})">
+     <div class="visual">
+       <span class="ribbon">${status}</span>${badge}
+       <button class="fav ${favs.includes(products.indexOf(p)) ? "active" : ""}" onclick="toggleFav(event,${products.indexOf(p)})" aria-label="Favoriye ekle">${favs.includes(products.indexOf(p)) ? "♥" : "♡"}</button>
+       <img src="${imgFor(p)}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.style.opacity=.25">
+     </div>
+     <div class="info">
+       <div class="brand">${p.b}</div>
+       <div class="name">${p.m}</div>
+       <span class="spec">▣ ${p.s}</span>
+       <div class="bottom">
+         <div class="price">
+           <small>GÜNCEL NAKİT FİYAT</small>
+           <strong class="${p.p == null ? 'price-query' : ''}">${p.p == null ? 'FİYAT İÇİN SOR' : fmt(p.p)}${p.p == null ? '' : ' <em>TL</em>'}</strong>
+         </div>
+         <a class="buy ${p.stock ? '' : 'no'}" onclick="event.stopPropagation()" href="${p.stock ? wa : '#'}" target="_blank">${p.stock ? '💬 SİPARİŞ' : '❌ TÜKENDİ'}</a>
+       </div>
+       <div style="margin-top:9px;color:#94a3b8;font-size:10px;font-weight:800;text-align:center">👆 Ürüne dokun → ayrıntıları incele</div>
+     </div>
+   </article>`;
+ }).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
 }
+
 // ARAMA YAPILDIĞINDA FİLTRELERİ TÜMÜNE ÇEKEN DÜZELTME
 document.querySelector("#q").addEventListener("input", e => {
   q = e.target.value.trim();
@@ -397,32 +423,74 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
 });
 render();
 
+// MODAL AÇMA (Dyson ve Boş Akordeon Düzeltmesi Yapıldı)
 function openProduct(i){
- const p=products[i], modal=document.getElementById("modal");
- document.getElementById("mi").src=imgFor(p);document.getElementById("mi").alt=p.b+" "+p.m;
- document.getElementById("mb").textContent=p.b;document.getElementById("mn").textContent=p.m;
- document.getElementById("ms").textContent="▣ "+p.s;
- document.getElementById("mr").textContent=p.reg==="XIAOMI_GUARANTEE"?"🛡️ 1 YIL KAYIT + 1 YIL YAZILIM":p.reg==="KAYITLI"?"✓ KAYITLI":p.reg==="KAYITSIZ"?"8 AY ÇİFT HAT":"1 HAFTA DEĞİŞİM";
- document.getElementById("mp").textContent=p.p==null?"FİYAT İÇİN BİLGİ AL":fmt(p.p)+" TL";
- document.getElementById("mp").classList.toggle("price-query",p.p==null);
- document.getElementById("xiaomiModalNotice").style.display=p.cat==="XIAOMI"?"block":"none";
- const gb=document.getElementById("guideBtn"); gb.classList.toggle("show",p.b==="APPLE");
- document.getElementById("mfbrand").textContent=p.b;
- document.getElementById("mfspec").textContent=p.s;
- document.getElementById("mfstatus").textContent=p.stock?"Stokta":"Tükendi";
- const t=p.tech||{};
- document.getElementById("fte").textContent=t.ekran||"Bilgi için WhatsApp";
- document.getElementById("fti").textContent=t.islemci||"Bilgi için WhatsApp";
- document.getElementById("ftk").textContent=t.kamera||"Bilgi için WhatsApp";
- document.getElementById("ftb").textContent=t.batarya||"Bilgi için WhatsApp";
- document.getElementById("ftn").textContent=t.baglanti||"Bilgi için WhatsApp";
+ const p = products[i], modal = document.getElementById("modal");
+ document.getElementById("mi").src = imgFor(p);
+ document.getElementById("mi").alt = p.b + " " + p.m;
+ document.getElementById("mb").textContent = p.b;
+ document.getElementById("mn").textContent = p.m;
+ document.getElementById("ms").textContent = "▣ " + p.s;
+ document.getElementById("mr").textContent = p.reg === "XIAOMI_GUARANTEE" ? "🛡️ 1 YIL KAYIT + 1 YIL YAZILIM" : p.reg === "KAYITLI" ? "✓ KAYITLI" : p.reg === "KAYITSIZ" ? "8 AY ÇİFT HAT" : "1 HAFTA DEĞİŞİM";
+ document.getElementById("mp").textContent = p.p == null ? "FİYAT İÇİN BİLGİ AL" : fmt(p.p) + " TL";
+ document.getElementById("mp").classList.toggle("price-query", p.p == null);
+ document.getElementById("xiaomiModalNotice").style.display = p.cat === "XIAOMI" ? "block" : "none";
+ 
+ const gb = document.getElementById("guideBtn");
+ gb.classList.toggle("show", p.b === "APPLE");
+ 
+ document.getElementById("mfbrand").textContent = p.b;
+ document.getElementById("mfspec").textContent = p.s;
+ document.getElementById("mfstatus").textContent = p.stock ? "Stokta" : "Tükendi";
 
- const modalPrice=p.p==null?"fiyat bilgisi":`${fmt(p.p)} TL`;
- document.getElementById("mw").href="https://wa.me/905424818255?text="+encodeURIComponent(`Merhaba İsa Bey, ${p.b} ${p.m} (${p.s}) - ${modalPrice} cihaz hakkında bilgi almak istiyorum.`);
- modal.classList.add("open");document.body.style.overflow="hidden";
+ // DYSON / KİŞİSEL BAKIM DÜZELTMESİ: Telefon değilse Teknik Özeti Gizle
+ const isPersonalCare = p.cat === "PERSONAL_CARE";
+ const techTitles = document.querySelectorAll(".detail-title");
+ const featureGrids = document.querySelectorAll(".modalinfo .feature-grid");
+ const specAccordion = document.querySelector(".spec-accordion");
+
+ if (techTitles[1]) techTitles[1].style.display = isPersonalCare ? "none" : "block";
+ if (featureGrids[1]) featureGrids[1].style.display = isPersonalCare ? "none" : "grid";
+
+ const t = p.tech || {};
+ document.getElementById("fte").textContent = t.ekran || "Bilgi için WhatsApp";
+ document.getElementById("fti").textContent = t.islemci || "Bilgi için WhatsApp";
+ document.getElementById("ftk").textContent = t.kamera || "Bilgi için WhatsApp";
+ document.getElementById("ftb").textContent = t.batarya || "Bilgi için WhatsApp";
+ document.getElementById("ftn").textContent = t.baglanti || "Bilgi için WhatsApp";
+
+ // BOŞ AKORDEON DÜZELTMESİ: Epey linkini şık bir buton olarak bas
+ const allTech = document.getElementById("allTech");
+ specAccordion.removeAttribute("open");
+ if (p.epey) {
+   specAccordion.style.display = "block";
+   allTech.innerHTML = `<div style="padding:10px 0;text-align:center">
+     <a href="${p.epey}" target="_blank" rel="noopener" style="display:inline-block;padding:8px 14px;background:#1e293b;border:1px solid #334155;border-radius:999px;color:#38bdf8;font-size:11px;font-weight:800">🌐 Epey.com Detaylı Teknik Özelliklerini Aç ↗</a>
+   </div>`;
+ } else {
+   specAccordion.style.display = "none";
+ }
+
+ const modalPrice = p.p == null ? "fiyat bilgisi" : `${fmt(p.p)} TL`;
+ document.getElementById("mw").href = "https://wa.me/905424818255?text=" + encodeURIComponent(`Merhaba İsa Bey, ${p.b} ${p.m} (${p.s}) - ${modalPrice} cihaz hakkında bilgi almak istiyorum.`);
+ modal.classList.add("open");
+ document.body.style.overflow = "hidden";
 }
-function closeProduct(){document.getElementById("modal").classList.remove("open");document.body.style.overflow=""}
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProduct()});
+
+function closeProduct(){
+  document.getElementById("modal").classList.remove("open");
+  if (!document.getElementById("guideModal").classList.contains("open")) {
+    document.body.style.overflow = "";
+  }
+}
+
+// ESC TUŞU İLE TÜM MODALLARI KAPATMA
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeProduct();
+    closeGuide();
+  }
+});
 
 // REHBER MODALINDA ARKA PLANI KİLİTLEME
 function openGuide() {
