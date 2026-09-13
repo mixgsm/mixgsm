@@ -93,6 +93,11 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 
 /* V11 - SSS & müşteri deneyimleri */
 .trust-section{max-width:1100px;margin:26px auto 0;padding:0 14px}.trust-head{text-align:center;margin-bottom:14px}.trust-head h2{margin:0;color:#fff;font-size:18px}.trust-head p{margin:7px auto 0;max-width:720px;color:#91a0b8;font-size:11px;line-height:1.65}.faq-grid,.ref-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.faq-card,.ref-card{background:#0b111d;border:1px solid #263650;border-radius:14px;padding:13px}.faq-card summary{cursor:pointer;list-style:none;color:#fff;font-size:12px;font-weight:900}.faq-card summary::-webkit-details-marker{display:none}.faq-card summary:after{content:'+';float:right;color:#d7aa4b;font-size:16px}.faq-card[open] summary:after{content:'−'}.faq-card p{margin:9px 0 0;color:#b7c2d2;font-size:10.5px;line-height:1.7}.ref-card{position:relative}.ref-card:before{content:'“';position:absolute;right:12px;top:2px;color:#d7aa4b;font-size:32px;font-weight:900;opacity:.65}.ref-quote{color:#eef3f8;font-size:11.5px;line-height:1.65;font-weight:750;padding-right:18px}.ref-source{margin-top:9px;color:#71809a;font-size:9.5px;font-weight:800}.section-cta{text-align:center;margin-top:14px}.section-cta a{display:inline-block;padding:10px 14px;border-radius:999px;background:#d7aa4b;color:#07101c;font-size:10px;font-weight:950;text-decoration:none}.source-note{max-width:900px;margin:12px auto 0;color:#66758b;text-align:center;font-size:9px;line-height:1.55}@media(max-width:720px){.faq-grid,.ref-grid{grid-template-columns:1fr}.trust-section{margin-top:22px}}
+
+/* V13 FINAL UI fixes */
+.store-section{max-width:1100px;margin:24px auto 0;padding:22px;border:1px solid var(--line);border-radius:20px;background:#0b111d;box-sizing:border-box}
+.store-header>span{color:#e5b84b;font-size:11px;font-weight:900;letter-spacing:.08em}.store-header h2{margin:6px 0;font-size:22px}.store-header p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}.store-content{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}.store-gallery{display:grid;grid-template-columns:1.35fr .65fr;grid-template-rows:1fr 1fr;gap:10px;min-height:340px}.store-gallery a{display:block;overflow:hidden;border-radius:15px;border:1px solid #26354c;background:#080d15}.store-gallery a:first-child{grid-row:1 / span 2}.store-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}.store-gallery a:hover img{transform:scale(1.025)}.store-info-card{border:1px solid #2b3a53;border-radius:16px;padding:18px;background:linear-gradient(145deg,#121c2c,#0b111d);display:flex;flex-direction:column}.store-title{font-size:16px;font-weight:900}.store-address{margin-top:8px;color:#aebbd0;font-size:12px;line-height:1.6}.store-actions{display:flex;flex-direction:column;gap:8px;margin-top:15px}.store-actions a{display:block;text-align:center;border:1px solid #c89527;background:#d6a737;color:#0b0e14;border-radius:11px;padding:11px 12px;font-weight:900;text-decoration:none}.store-actions a:nth-child(2){background:#121a29;color:#fff;border-color:#2a3850}.store-actions a:nth-child(3){background:#0d6b45;color:#fff;border-color:#15815a}.store-badges{display:grid;gap:8px;margin-top:auto;padding-top:15px}.store-badges>div{padding:10px;border:1px solid #223149;border-radius:11px;background:#0b111d}.store-badges b{display:block;font-size:11px}.store-badges span{display:block;margin-top:3px;color:#8190a8;font-size:10px}.guide-inner{border-bottom:0}.guide-box{border-bottom:0}.site-footer{max-width:1100px;margin:28px auto 0;padding:22px 18px 30px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px;color:#94a3b8}.footer-content{display:flex;flex-direction:column;gap:6px}.footer-content strong{color:#f1f5f9;font-size:13px}.footer-content span{font-size:10px}.footer-content a{color:#dbe4f0;text-decoration:none}.social-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}.social-links a{font-size:10px;color:#94a3b8}.footer-wa-btn{background:#20c77a;color:#042f1a;border-radius:12px;padding:11px 15px;font-size:12px;font-weight:950;text-decoration:none;white-space:nowrap}
+@media(max-width:720px){.store-content{grid-template-columns:1fr}.store-gallery{min-height:300px}.site-footer{flex-direction:column;align-items:stretch;padding-bottom:30px}.footer-wa-btn{text-align:center}.social-links{gap:8px 12px}}
 </style>
 
 <style>
@@ -153,27 +158,27 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
   <section class="grid" id="grid"></section>
 </main>
 
-<section class="store-section wrap" id="magazamiz">
-  <div class="store-headline">
-    <span class="guide-banner-kicker">🏪 MAĞAZAMIZ</span>
+<section class="store-section" id="store">
+  <div class="store-header">
+    <span>🏪 MAĞAZAMIZ</span>
     <h2>Gerçek mağaza, gerçek iletişim.</h2>
     <p>MİX GSM • İsa Aslan. Fiziksel mağazamızda ürünleri yakından inceleyebilir, teknik destek alabilir ve alışverişinizi güvenle gerçekleştirebilirsiniz.</p>
   </div>
-  <div class="store-layout">
+  <div class="store-content">
     <div class="store-gallery">
-      <a class="store-photo store-photo-main" href="store-front-1.jpg" target="_blank" rel="noopener"><img src="store-front-1.jpg" alt="MİX GSM mağaza dış görünüşü" loading="lazy"></a>
-      <a class="store-photo" href="store-interior.jpg" target="_blank" rel="noopener"><img src="store-interior.jpg" alt="MİX GSM mağaza içi" loading="lazy"></a>
-      <a class="store-photo" href="store-front-2.jpg" target="_blank" rel="noopener"><img src="store-front-2.jpg" alt="MİX GSM mağaza dış görünüşü" loading="lazy"></a>
+      <a href="store-front-1.jpg" target="_blank" rel="noopener noreferrer"><img src="store-front-1.jpg" alt="MİX GSM mağaza dış görünüşü" loading="lazy"></a>
+      <a href="store-interior.jpg" target="_blank" rel="noopener noreferrer"><img src="store-interior.jpg" alt="MİX GSM mağaza içi" loading="lazy"></a>
+      <a href="store-front-2.jpg" target="_blank" rel="noopener noreferrer"><img src="store-front-2.jpg" alt="MİX GSM mağaza vitrini" loading="lazy"></a>
     </div>
-    <div class="store-card">
-      <div class="store-card-title">📍 Mix GSM İsa ASLAN</div>
+    <div class="store-info-card">
+      <div class="store-title">📍 Mix GSM İsa ASLAN</div>
       <div class="store-address">Karagöz Mah. Karahoca Sk. No:26/D<br>Şahinbey / Gaziantep</div>
       <div class="store-actions">
-        <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener">📍 Google Maps’te Aç →</a>
+        <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer">📍 Google Maps’te Aç →</a>
         <a href="tel:+905424818255">📞 0542 481 82 55</a>
-        <a class="store-wa" href="https://wa.me/905424818255?text=Merhaba%20İsa%20Bey%2C%20mağazanız%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener">💬 WhatsApp’tan Yaz</a>
+        <a href="https://wa.me/905424818255?text=Merhaba%20İsa%20Bey%2C%20mağazanız%20hakkında%20bilgi%20almak%20istiyorum" target="_blank" rel="noopener noreferrer">💬 WhatsApp’tan Yaz</a>
       </div>
-      <div class="store-mini-grid">
+      <div class="store-badges">
         <div><b>🏪 Gerçek Mağaza</b><span>Ürünleri yerinde inceleyin</span></div>
         <div><b>🛡️ Güvenli Alışveriş</b><span>9 yıllık tecrübe</span></div>
         <div><b>🎧 Teknik Destek</b><span>Satış sonrası da yanınızdayız</span></div>
@@ -261,23 +266,29 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 <div class="guide-modal" id="guideModal" onclick="if(event.target===this)closeGuide()">
   <div class="guide-box">
     <button class="guide-close" onclick="closeGuide()">×</button>
-    <h2>📘 <span>Yurt Dışı iPhone Modelleri</span> İçin Yasal Süreç Rehberi</h2>
-    <p class="guide-intro">Satışını yaptığımız yurt dışı iPhone modelleri orijinal, sıfır ve kapalı kutudur. Bu cihazlarda fabrikasyon yapıyı bozan yazılımsal veya donanımsal (server/direnç) kayıt işlemi uygulanmaz; cihaz tamamen yasal döngüyle kullanılır.</p>
-    <div class="guide-step"><b>1. 2026 Yıl Sonu Dönemi</b><p>Cihazınızı aldığınız andan itibaren (çift SIM / eSIM sayesinde) yasal kullanım süreniz başlar ve 2026 yılı sonuna kadar kesintisiz şebeke alırsınız.</p></div>
-    <div class="guide-step"><b>2. 2027 Yılı • 8 Ay Kesintisiz Kullanım</b><p>Devlet sistemleri her takvim yılı başında (1 Ocak) kullanım sayaçlarını sıfırlar. 1 Ocak 2027 itibarıyla cihazınıza tekrar <b>4 + 4 = 8 ay</b> yasal kullanım hakkı tanımlanır. Cihazınızı hiçbir ek masraf yapmadan <b>Eylül 2027</b> dönemine kadar doğrudan kullanabilirsiniz.</p></div>
-    <div class="guide-step"><b>3. Yıl Sonu Geçiş Dönemi • Eylül – Ocak</b><p>Eylül 2027'de 8 aylık süre bittiğinde, yılbaşına kadar kalan yaklaşık 3-4 aylık süreci <b>IKOS yardımcı cihazı</b> ile tamamlayabilirsiniz. SIM kartınızı IKOS adaptörüne takarak telefonunuzla Bluetooth üzerinden eşleştirir, aramalarınızı ve SMS'lerinizi ana iPhone'unuzdan kesintisiz yönetmeye devam edersiniz.</p></div>
-    <div class="guide-step"><b>4. Döngüsel Yenilenme • 1 Ocak 2028</b><p>1 Ocak 2028 geldiğinde devlet hakları tekrar sıfırlar. SIM kartınızı IKOS'tan çıkarıp doğrudan telefonunuza takarak yeni 8 aylık kullanımınıza başlarsınız. Bu döngü her takvim yılında aynı şekilde tekrarlanır.</p></div>
-    <div class="guide-note">ℹ️ IKOS adaptörünün güncel fiyatı ve temin durumu için <b>WhatsApp üzerinden güncel bilgi alınız</b>.<br><br><b>Önemli:</b> Gümrük/BTK mevzuatı ve operatör uygulamaları değişebileceğinden, satın alma öncesinde güncel resmi kurallar ayrıca kontrol edilmelidir. Bu ekran MİX GSM'in müşteri bilgilendirme metnidir.</div>
+    <div class="guide-inner">
+      <h2>📘 <span>Yurt Dışı iPhone Modelleri</span> İçin Yasal Süreç Rehberi</h2>
+      <p class="guide-intro">Satışını yaptığımız yurt dışı iPhone modelleri orijinal, sıfır ve kapalı kutudur. Bu cihazlarda fabrikasyon yapıyı bozan yazılımsal veya donanımsal (server/direnç) müdahale uygulanmaz; cihaz tamamen yasal kullanım döngüsüyle çalışır.</p>
+      <div class="guide-step"><b>1. Cihaz Başına 8 Ay (4 + 4 Ay) Yasal Kullanım</b><p>Cihaza taktığınız ilk SIM kart (Fiziksel SIM) ile BTK sistemi üzerinden <b>120 gün (4 ay)</b> yasal kullanım süresi başlar. Süre bitiminde diğer yuvaya (veya eSIM'e) geçildiğinde ilave bir <b>120 gün (4 ay)</b> daha kullanım hakkı devreye girer. Tek bir takvim yılında toplam <b>8 ay</b> kesintisiz hat alırsınız.</p></div>
+      <div class="guide-step"><b>2. Yıl Sonu Geçiş Dönemi (Kalan 4 Ay)</b><p>Yıl içindeki 8 aylık kullanım süreniz dolduğunda, yeni takvim yılına kadar kalan süreyi <b>IKOS yardımcı cihazı</b> ile tamamlayabilirsiniz. SIM kartınızı IKOS adaptörüne takarak telefonunuzla Bluetooth üzerinden eşleştirir; çağrı ve SMS'lerinizi ana iPhone'unuzdan yönetmeye devam edersiniz.</p></div>
+      <div class="guide-step"><b>3. Her 1 Ocak'ta Döngüsel Yenilenme</b><p>Devlet sistemleri her takvim yılı başında (1 Ocak) kullanım sayaçlarını sıfırlar. Her yeni yılda cihazınıza tekrar <b>4 + 4 = 8 ay</b> yasal kullanım hakkı tanımlanır. SIM kartınızı IKOS'tan çıkarıp doğrudan telefonunuza takarak normal kullanıma dönersiniz.</p></div>
+      <div class="guide-note">ℹ️ IKOS adaptörünün güncel fiyatı ve temin durumu için <b>WhatsApp üzerinden bilgi alabilirsiniz</b>.<br><br><b>Önemli Bilgilendirme:</b> BTK mevzuatı ve operatör uygulamaları resmi kurumlara bağlı olduğundan, güncel kurallar satın alma öncesinde karşılıklı teyit edilir.</div>
+    </div>
   </div>
 </div>
-<footer class="sticky-bottom">
-<div><strong>MİX GSM • İSA ASLAN</strong><span><a href="tel:+905424818255">📞 0542 481 82 55</a> • Sipariş & Bilgi</span><span class="footer-address">📍 Karagöz Mah. Karahoca Sk. No:26/D, Şahinbey / Gaziantep</span>
-<div class="socials">
-<a href="https://www.instagram.com/mixgsm/" target="_blank" rel="noopener">📸 Instagram • mixgsm</a>
-<a href="https://www.facebook.com/groups/xiaomiredmidestek/" target="_blank" rel="noopener">f Facebook Grubu</a>
-<a href="https://t.me/xiaomiredmidestek" target="_blank" rel="noopener">✈️ Telegram Grubu</a>
-</div></div>
-<a class="wa" target="_blank" href="https://wa.me/905424818255?text=Merhaba%20%C4%B0sa%20Bey%2C%20Mix%20GSM%20web%20katalo%C4%9Funuzu%20inceledim.">💬 WhatsApp</a></footer>
+<footer class="site-footer">
+  <div class="footer-content">
+    <strong>MİX GSM • İSA ASLAN</strong>
+    <span><a href="tel:+905424818255">📞 0542 481 82 55</a> • Sipariş &amp; Bilgi</span>
+    <span>📍 Karagöz Mah. Karahoca Sk. No:26/D, Şahinbey / Gaziantep</span>
+    <div class="social-links">
+      <a href="https://www.instagram.com/mixgsm/" rel="noopener noreferrer" target="_blank">📸 Instagram • mixgsm</a>
+      <a href="https://www.facebook.com/groups/xiaomiredmidestek/" rel="noopener noreferrer" target="_blank">👥 Facebook Grubu</a>
+      <a href="https://t.me/xiaomiredmidestek" rel="noopener noreferrer" target="_blank">✈️ Telegram Grubu</a>
+    </div>
+  </div>
+  <a href="https://wa.me/905424818255?text=Merhaba%20İsa%20Bey%2C%20Mix%20GSM%20web%20kataloğunuzu%20inceledim" class="footer-wa-btn" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+</footer>
 <div class="comparebar" id="comparebar"><span id="favcount">0 favori</span><button onclick="clearFavs()">Favorileri Temizle</button></div>
 <div class="toast" id="toast"></div>
 <script>
