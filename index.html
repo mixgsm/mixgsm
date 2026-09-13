@@ -39,8 +39,8 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 .ribbon{position:absolute;left:10px;top:10px;z-index:3;background:#070a12e8;border:1px solid #ffffff20;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900}.stock{position:absolute;right:10px;top:10px;z-index:3;background:#07150fdd;color:#6ee7b7;border:1px solid #1f6b50;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900}.stock.no{background:#1b1212;color:#fca5a5;border-color:#6b2929}
 .info{padding:14px}.brand{font-size:10px;color:#ef4444;font-weight:950;letter-spacing:1px}.name{font-size:17px;font-weight:950;margin:4px 0 7px}.spec{display:inline-block;background:#0a101b;border:1px solid #26344c;border-radius:999px;color:#cbd5e1;padding:5px 9px;font-size:11px;font-weight:750}.bottom{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-top:14px}.price small{display:block;color:var(--muted);font-size:9px;font-weight:800}.price strong{font-size:23px;color:var(--blue);letter-spacing:-.7px}.price strong em{font-size:12px;font-style:normal}.buy{background:var(--green);color:#042f1a;padding:10px 12px;border-radius:11px;font-size:11px;font-weight:950;text-align:center}.buy.no{background:#334155;color:#94a3b8;pointer-events:none}
 .empty{text-align:center;padding:55px;color:var(--muted);border:1px dashed var(--line);border-radius:16px;grid-column:1/-1}
-.bottom{position:fixed;left:0;right:0;bottom:0;z-index:100;background:#0b111dF5;border-top:1px solid var(--line);backdrop-filter:blur(18px);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}.bottom strong{font-size:12px;display:block}.bottom span{font-size:10px;color:var(--muted)}.wa{background:var(--green);color:#042f1a;border-radius:12px;padding:11px 14px;font-size:12px;font-weight:950}
-@media(max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.visual{height:185px}.visual img{max-height:170px}.info{padding:10px}.name{font-size:13px}.price strong{font-size:17px}.buy{padding:9px 6px;font-size:10px}.bottom span{display:none}.hero{padding-top:22px}.trust span{font-size:10px}}
+.sticky-bottom{position:fixed;left:0;right:0;bottom:0;z-index:100;background:#0b111dF5;border-top:1px solid var(--line);backdrop-filter:blur(18px);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}.sticky-bottom strong{font-size:12px;display:block}.sticky-bottom span{font-size:10px;color:var(--muted)}.wa{background:var(--green);color:#042f1a;border-radius:12px;padding:11px 14px;font-size:12px;font-weight:950}
+@media(max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.visual{height:185px}.visual img{max-height:170px}.info{padding:10px}.name{font-size:13px}.price strong{font-size:17px}.buy{padding:9px 6px;font-size:10px}.sticky-bottom span{display:none}.hero{padding-top:22px}.trust span{font-size:10px}}
 @media(max-width:390px){.grid{grid-template-columns:1fr}.visual{height:220px}.visual img{max-height:205px}}
 
 .modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:14px}.modal.open{display:flex}
@@ -270,7 +270,7 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
     <div class="guide-note">ℹ️ IKOS adaptörünün güncel fiyatı ve temin durumu için <b>WhatsApp üzerinden güncel bilgi alınız</b>.<br><br><b>Önemli:</b> Gümrük/BTK mevzuatı ve operatör uygulamaları değişebileceğinden, satın alma öncesinde güncel resmi kurallar ayrıca kontrol edilmelidir. Bu ekran MİX GSM'in müşteri bilgilendirme metnidir.</div>
   </div>
 </div>
-<footer class="bottom">
+<footer class="sticky-bottom">
 <div><strong>MİX GSM • İSA ASLAN</strong><span><a href="tel:+905424818255">📞 0542 481 82 55</a> • Sipariş & Bilgi</span><span class="footer-address">📍 Karagöz Mah. Karahoca Sk. No:26/D, Şahinbey / Gaziantep</span>
 <div class="socials">
 <a href="https://www.instagram.com/mixgsm/" target="_blank" rel="noopener">📸 Instagram • mixgsm</a>
@@ -348,11 +348,53 @@ function render(){
    return `<article class="card" onclick="openProduct(${products.indexOf(p)})"><div class="visual"><span class="ribbon">${status}</span>${badge}<button class="fav ${favs.includes(products.indexOf(p))?"active":""}" onclick="toggleFav(event,${products.indexOf(p)})" aria-label="Favoriye ekle">${favs.includes(products.indexOf(p))?"♥":"♡"}</button><img src="${imgFor(p)}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.style.opacity=.25"></div><div class="info"><div class="brand">${p.b}</div><div class="name">${p.m}</div><span class="spec">▣ ${p.s}</span><div class="bottom"><div class="price"><small>GÜNCEL NAKİT FİYAT</small><strong class="${p.p==null?'price-query':''}">${p.p==null?'FİYAT İÇİN SOR':fmt(p.p)}${p.p==null?'':' <em>TL</em>'}</strong></div><a class="buy ${p.stock?'':'no'}" onclick="event.stopPropagation()" href="${p.stock?wa:'#'}" target="_blank">${p.stock?'💬 SİPARİŞ':'❌ TÜKENDİ'}</a></div><div style="margin-top:9px;color:#94a3b8;font-size:10px;font-weight:800;text-align:center">👆 Ürüne dokun → ayrıntıları incele</div></div></article>`;
  }).join(""):'<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
 }
-document.querySelector("#q").addEventListener("input",e=>{q=e.target.value.trim();render()});
-document.querySelector("#sort").addEventListener("change",e=>{sort=e.target.value;render()});
-document.querySelectorAll("#filters button").forEach(b=>b.addEventListener("click",()=>{cat=b.dataset.cat;document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()}));
-document.querySelectorAll("#categoryFilters button").forEach(b=>b.addEventListener("click",()=>{group=b.dataset.group;document.querySelectorAll("#categoryFilters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");cat="ALL";document.querySelectorAll("#filters button").forEach(x=>x.classList.remove("active"));document.querySelector("#filters button[data-cat=\"ALL\"]").classList.add("active");render()}));
-document.querySelectorAll("#filters button").forEach(b=>b.addEventListener("click",()=>{group="ALL";document.querySelectorAll("#categoryFilters button").forEach(x=>x.classList.remove("active"));document.querySelector("#categoryFilters button[data-group=\"ALL\"]").classList.add("active");}));
+// ARAMA YAPILDIĞINDA FİLTRELERİ TÜMÜNE ÇEKEN DÜZELTME
+document.querySelector("#q").addEventListener("input", e => {
+  q = e.target.value.trim();
+  if (q.length > 0) {
+    cat = "ALL";
+    group = "ALL";
+    document.querySelectorAll("#filters button, #categoryFilters button").forEach(x => x.classList.remove("active"));
+    const allCatBtn = document.querySelector('#filters button[data-cat="ALL"]');
+    const allGrpBtn = document.querySelector('#categoryFilters button[data-group="ALL"]');
+    if (allCatBtn) allCatBtn.classList.add("active");
+    if (allGrpBtn) allGrpBtn.classList.add("active");
+  }
+  render();
+});
+
+document.querySelector("#sort").addEventListener("change", e => {
+  sort = e.target.value;
+  render();
+});
+
+// MARKA BUTONLARI (TEK VE TEMİZ DİNLEYİCİ)
+document.querySelectorAll("#filters button").forEach(b => {
+  b.addEventListener("click", () => {
+    cat = b.dataset.cat;
+    group = "ALL";
+    document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
+    const allGrp = document.querySelector('#categoryFilters button[data-group="ALL"]');
+    if (allGrp) allGrp.classList.add("active");
+    render();
+  });
+});
+
+// KATEGORİ BUTONLARI
+document.querySelectorAll("#categoryFilters button").forEach(b => {
+  b.addEventListener("click", () => {
+    group = b.dataset.group;
+    cat = "ALL";
+    document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
+    const allCat = document.querySelector('#filters button[data-cat="ALL"]');
+    if (allCat) allCat.classList.add("active");
+    render();
+  });
+});
 render();
 
 function openProduct(i){
@@ -382,8 +424,18 @@ function openProduct(i){
 function closeProduct(){document.getElementById("modal").classList.remove("open");document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeProduct()});
 
-function openGuide(){document.getElementById("guideModal").classList.add("open");}
-function closeGuide(){document.getElementById("guideModal").classList.remove("open");}
+// REHBER MODALINDA ARKA PLANI KİLİTLEME
+function openGuide() {
+  document.getElementById("guideModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeGuide() {
+  document.getElementById("guideModal").classList.remove("open");
+  // Eğer ürün modalı açık değilse kaydırmayı geri aç
+  if (!document.getElementById("modal").classList.contains("open")) {
+    document.body.style.overflow = "";
+  }
+}
 function toggleFav(e,i){e.stopPropagation();if(favs.includes(i))favs=favs.filter(x=>x!==i);else favs.push(i);localStorage.setItem(favKey,JSON.stringify(favs));updateFavs();render()}
 function updateFavs(){const n=favs.length;document.getElementById("favcount").textContent=n+" favori";document.getElementById("comparebar").classList.toggle("show",n>0)}
 function clearFavs(){favs=[];localStorage.setItem(favKey,"[]");updateFavs();render();showToast("Favoriler temizlendi")}
