@@ -38,28 +38,30 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 .visual{height:245px;position:relative;background:radial-gradient(circle at 50% 45%,#263652 0,#111a2a 55%,#0b101a 100%);display:flex;align-items:center;justify-content:center;padding:12px}.visual:after{content:"";position:absolute;inset:auto 12% 8px;height:18px;background:#0008;filter:blur(13px);border-radius:50%}.visual img{position:relative;z-index:1;max-width:94%;max-height:225px;object-fit:contain;filter:drop-shadow(0 18px 20px #000b);transition:.25s}.card:hover .visual img{transform:scale(1.045)}
 .stock{position:absolute;right:10px;top:10px;z-index:3;background:#07150fdd;color:#6ee7b7;border:1px solid #1f6b50;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:900}.stock.no{background:#1b1212;color:#fca5a5;border-color:#6b2929}
 .info{padding:14px}.brand{font-size:10px;color:#ef4444;font-weight:950;letter-spacing:1px}.name{font-size:17px;font-weight:950;margin:4px 0 7px}.spec{display:inline-block;background:#0a101b;border:1px solid #26344c;border-radius:999px;color:#cbd5e1;padding:5px 9px;font-size:11px;font-weight:750}.bottom{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-top:14px}.price small{display:block;color:var(--muted);font-size:9px;font-weight:800}.price strong{font-size:23px;color:var(--blue);letter-spacing:-.7px}.price strong em{font-size:12px;font-style:normal}.buy{background:var(--green);color:#042f1a;padding:10px 12px;border-radius:11px;font-size:11px;font-weight:950;text-align:center}.buy.no{background:#334155;color:#94a3b8;pointer-events:none}
-.empty{text-align:center;padding:55px;color:var(--muted);border:1px dashed var(--line);border-radius:16px;grid-column:1/-1}
+.empty{text-align:center;padding:55px;color:var(--muted);border:1px dashed var(--line);border-radius:16px;grid-column:1/-1;font-size:14px;line-height:1.6}
 .fav{position:absolute;left:10px;top:10px;z-index:4;width:32px;height:32px;border-radius:50%;border:1px solid #ffffff22;background:#070a12dd;color:#fff;cursor:pointer;font-size:16px}.fav.active{color:#ff5d65;border-color:#7c2730}
 .comparebar{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(120px);z-index:120;background:#121b2b;border:1px solid #34445f;border-radius:15px;padding:9px 12px;box-shadow:0 15px 40px #0009;display:flex;align-items:center;gap:9px;transition:.25s;opacity:0}.comparebar.show{transform:translateX(-50%) translateY(0);opacity:1}.comparebar button{border:0;border-radius:9px;padding:8px 10px;background:#ef4444;color:#fff;font-size:10px;font-weight:900}
 
 .modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:14px}.modal.open{display:flex}
 .modalbox{width:min(940px,100%);max-height:92vh;overflow:auto;background:linear-gradient(145deg,#162238,#0b111c);border:1px solid #334563;border-radius:24px;box-shadow:0 30px 80px #000c;position:relative}
 .close{position:absolute;right:12px;top:12px;width:38px;height:38px;border:1px solid #ffffff22;border-radius:50%;background:#070a12dd;color:#fff;font-size:22px;cursor:pointer;z-index:4}
-.modalgrid{display:grid;grid-template-columns:1fr 1fr}.modalvisual{min-height:420px;background:radial-gradient(circle,#30425f 0,#111a2a 55%,#080d15 100%);display:flex;align-items:center;justify-content:center;padding:30px}.modalvisual img{max-width:100%;max-height:390px;object-fit:contain;filter:drop-shadow(0 20px 25px #000b)}.modalinfo{padding:34px}.modalbrand{color:#ef4444;font-size:12px;font-weight:950;letter-spacing:1.4px}.modalname{font-size:30px;font-weight:950;line-height:1.05;margin:7px 0 13px}.modalprice{font-size:32px;color:#38bdf8;font-weight:950;margin:18px 0}.modalchips{display:flex;flex-wrap:wrap;gap:7px}.modalchip{background:#0a101b;border:1px solid #293951;border-radius:10px;padding:8px 10px;color:#dbe4f0;font-size:12px;font-weight:800}.detail-title{font-size:11px;font-weight:950;margin-top:20px;margin-bottom:8px;color:#fff}.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.feature{border:1px solid #263650;background:#0a101b;border-radius:10px;padding:9px}.feature b{display:block;font-size:9px;color:#71809a}.feature span{display:block;font-size:11px;color:#dbe4f0;font-weight:800;margin-top:3px}.modal-actions{display:grid;grid-template-columns:1fr;margin-top:15px}.modalwa{display:block;text-align:center;background:#25d366;color:#042f1a;border-radius:13px;padding:14px;font-weight:950;font-size:13px}
-.spec-accordion{margin-top:12px;border:1px solid #263650;background:#0a101b;border-radius:12px;overflow:hidden}.spec-accordion summary{cursor:pointer;padding:11px 12px;color:#dbe4f0;font-size:11px;font-weight:900}.all-tech{padding:0 12px 12px}.sales-note{margin-top:10px;color:#91a0b8;font-size:10px;line-height:1.6}
+.modalgrid{display:grid;grid-template-columns:1fr 1fr}.modalvisual{min-height:420px;background:radial-gradient(circle,#30425f 0,#111a2a 55%,#080d15 100%);display:flex;align-items:center;justify-content:center;padding:30px}.modalvisual img{max-width:100%;max-height:390px;object-fit:contain;filter:drop-shadow(0 20px 25px #000b)}.modalinfo{padding:34px}.modalbrand{color:#ef4444;font-size:12px;font-weight:950;letter-spacing:1.4px}.modalname{font-size:30px;font-weight:950;line-height:1.05;margin:7px 0 13px}.modalprice{font-size:32px;color:#38bdf8;font-weight:950;margin:18px 0}.modalchips{display:flex;flex-wrap:wrap;gap:7px}.modalchip{background:#0a101b;border:1px solid #293951;border-radius:10px;padding:8px 10px;color:#dbe4f0;font-size:12px;font-weight:800}.detail-title{font-size:11px;font-weight:950;margin-top:20px;margin-bottom:8px;color:#fff}.feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.feature{border:1px solid #263650;background:#0a101b;border-radius:10px;padding:9px}.feature b{display:block;font-size:9px;color:#71809a}.feature span{display:block;font-size:11px;color:#dbe4f0;font-weight:800;margin-top:3px}.modal-actions{display:grid;grid-template-columns:1fr;margin-top:15px;gap:8px}.modalwa{display:block;text-align:center;background:#25d366;color:#042f1a;border-radius:13px;padding:14px;font-weight:950;font-size:13px}
+.sales-note{margin-top:10px;color:#91a0b8;font-size:10px;line-height:1.6}
 
 .xiaomi-assure{margin:12px auto 0;max-width:920px;padding:12px 14px;border:1px solid #24314a;border-radius:14px;background:#0a101b;color:#dbe4f0;font-size:12px;font-weight:900;text-align:center}
 .xiaomi-assure b{color:#fff}
 .price-query{font-size:18px!important;color:#fbbf24!important}
 .toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-80px);z-index:400;background:#172235;border:1px solid #3a4c69;color:#fff;border-radius:10px;padding:9px 13px;font-size:11px;font-weight:800;transition:.25s;opacity:0;pointer-events:none}.toast.show{transform:translate(-50%,0);opacity:1}
 
-.trust-section{max-width:1100px;margin:26px auto 0;padding:0 14px}.trust-head{text-align:center;margin-bottom:14px}.trust-head h2{margin:0;color:#fff;font-size:18px}.trust-head p{margin:7px auto 0;max-width:720px;color:#91a0b8;font-size:11px;line-height:1.65}.faq-grid,.ref-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.faq-card,.ref-card{background:#0b111d;border:1px solid #263650;border-radius:14px;padding:13px}.faq-card summary{cursor:pointer;list-style:none;color:#fff;font-size:12px;font-weight:900}.faq-card summary::-webkit-details-marker{display:none}.faq-card summary:after{content:'+';float:right;color:#d7aa4b;font-size:16px}.faq-card[open] summary:after{content:'−'}.faq-card p{margin:9px 0 0;color:#b7c2d2;font-size:10.5px;line-height:1.7}.ref-card{position:relative}.ref-card:before{content:'“';position:absolute;right:12px;top:2px;color:#d7aa4b;font-size:32px;font-weight:900;opacity:.65}.ref-quote{color:#eef3f8;font-size:11.5px;line-height:1.65;font-weight:750;padding-right:18px}.ref-source{margin-top:9px;color:#71809a;font-size:9.5px;font-weight:800}.section-cta{text-align:center;margin-top:14px}.section-cta a{display:inline-block;padding:10px 14px;border-radius:999px;background:#d7aa4b;color:#07101c;font-size:10px;font-weight:950;text-decoration:none}.source-note{max-width:900px;margin:12px auto 0;color:#66758b;text-align:center;font-size:9px;line-height:1.55}@media(max-width:720px){.faq-grid,.ref-grid{grid-template-columns:1fr}.trust-section{margin-top:22px}}
+.trust-section{max-width:1100px;margin:26px auto 0;padding:0 14px}.trust-head{text-align:center;margin-bottom:14px}.trust-head h2{margin:0;color:#fff;font-size:18px}.trust-head p{margin:7px auto 0;max-width:720px;color:#91a0b8;font-size:11px;line-height:1.65}.faq-grid,.ref-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.faq-card,.ref-card{background:#0b111d;border:1px solid #263650;border-radius:14px;padding:13px}.faq-card summary{cursor:pointer;list-style:none;color:#fff;font-size:12px;font-weight:900}.faq-card summary::-webkit-details-marker{display:none}.faq-card summary:after{content:'+';float:right;color:#d7aa4b;font-size:16px}.faq-card[open] summary:after{content:'−'}.faq-card p{margin:9px 0 0;color:#b7c2d2;font-size:10.5px;line-height:1.7}.ref-card{position:relative}.ref-card:before{content:'“';position:absolute;right:12px;top:2px;color:#d7aa4b;font-size:32px;font-weight:900;opacity:.65}.ref-quote{color:#eef3f8;font-size:11.5px;line-height:1.65;font-weight:750;padding-right:18px}.ref-source{margin-top:9px;color:#71809a;font-size:9.5px;font-weight:800}.section-cta{text-align:center;margin-top:14px}.section-cta a{display:inline-block;padding:10px 14px;border-radius:999px;background:#d7aa4b;color:#07101c;font-size:10px;font-weight:950;text-decoration:none}.source-note{max-width:900px;margin:12px auto 0;color:#66758b;text-align:center;font-size:9px;line-height:1.55}
 
 .store-section{max-width:1100px;margin:24px auto 0;padding:22px;border:1px solid var(--line);border-radius:20px;background:#0b111d;box-sizing:border-box}
 .store-header>span{color:#e5b84b;font-size:11px;font-weight:900;letter-spacing:.08em}.store-header h2{margin:6px 0;font-size:22px}.store-header p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}.store-content{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}.store-gallery{display:grid;grid-template-columns:1.35fr .65fr;grid-template-rows:1fr 1fr;gap:10px;min-height:340px}.store-gallery a{display:block;overflow:hidden;border-radius:15px;border:1px solid #26354c;background:#080d15}.store-gallery a:first-child{grid-row:1 / span 2}.store-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}.store-gallery a:hover img{transform:scale(1.025)}.store-info-card{border:1px solid #2b3a53;border-radius:16px;padding:18px;background:linear-gradient(145deg,#121c2c,#0b111d);display:flex;flex-direction:column}.store-title{font-size:16px;font-weight:900}.store-address{margin-top:8px;color:#aebbd0;font-size:12px;line-height:1.6}.store-actions{display:flex;flex-direction:column;gap:8px;margin-top:15px}.store-actions a{display:block;text-align:center;border:1px solid #c89527;background:#d6a737;color:#0b0e14;border-radius:11px;padding:11px 12px;font-weight:900;text-decoration:none}.store-actions a:nth-child(2){background:#121a29;color:#fff;border-color:#2a3850}.store-actions a:nth-child(3){background:#0d6b45;color:#fff;border-color:#15815a}.store-badges{display:grid;gap:8px;margin-top:auto;padding-top:15px}.store-badges>div{padding:10px;border:1px solid #223149;border-radius:11px;background:#0b111d}.store-badges b{display:block;font-size:11px}.store-badges span{display:block;margin-top:3px;color:#8190a8;font-size:10px}.site-footer{max-width:1100px;margin:28px auto 0;padding:22px 18px 30px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px;color:#94a3b8}.footer-content{display:flex;flex-direction:column;gap:6px}.footer-content strong{color:#f1f5f9;font-size:13px}.footer-content span{font-size:10px}.footer-content a{color:#dbe4f0;text-decoration:none}.social-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}.social-links a{font-size:10px;color:#94a3b8}.footer-wa-btn{background:#20c77a;color:#042f1a;border-radius:12px;padding:11px 15px;font-size:12px;font-weight:950;text-decoration:none;white-space:nowrap}
-@media(max-width:720px){.store-content{grid-template-columns:1fr}.store-gallery{min-height:300px}.site-footer{flex-direction:column;align-items:stretch;padding-bottom:30px}.footer-wa-btn{text-align:center}.social-links{gap:8px 12px}}
-</style>
 
+@media(max-width:720px){.modalgrid{grid-template-columns:1fr}.modalvisual{min-height:270px}.modalvisual img{max-height:245px}.modalinfo{padding:22px}.modalname{font-size:23px}.store-content{grid-template-columns:1fr}.store-gallery{min-height:300px}.site-footer{flex-direction:column;align-items:stretch;padding-bottom:30px}.footer-wa-btn{text-align:center}.social-links{gap:8px 12px}.faq-grid,.ref-grid{grid-template-columns:1fr}.trust-section{margin-top:22px}}
+@media(max-width:620px){.hero-actions{margin-top:12px}.comparebar{width:calc(100% - 24px);justify-content:center}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.visual{height:185px}.visual img{max-height:170px}.info{padding:10px}.name{font-size:13px}.price strong{font-size:17px}.buy{padding:9px 6px;font-size:10px}.hero{padding-top:22px}.trust span{font-size:10px}.stats strong{font-size:15px}.stats small{font-size:8px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr}.visual{height:220px}.visual img{max-height:205px}}
+</style>
 </head>
 <body>
 <header class="hero">
@@ -160,11 +162,11 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
    <div class="modalvisual"><img id="mi" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Ürün görseli"></div>
    <div class="modalinfo">
     <div class="modalbrand" id="mb"></div><div class="modalname" id="mn"></div>
-    <div class="modalchips"><span class="modalchip" id="ms"></span><span class="modalchip">🛡️ MİX GSM</span></div>
+    <div class="modalchips"><span class="modalchip" id="ms"></span><span class="modalchip">🛡️ MİX GSM Desteği</span></div>
     <div class="modalprice" id="mp"></div>
     
     <div id="xiaomiModalNotice" class="xiaomi-assure" style="display:none; text-align:center;">⭐ <b>MİX GSM DESTEĞİ</b><br><span style="color:#dbe4f0;font-weight:700">Yazılım ve teknik destek seçenekleri hakkında WhatsApp'tan bilgi alabilirsiniz.</span></div>
-    
+
     <div class="detail-title">ÖNE ÇIKAN BİLGİLER</div>
     <div class="feature-grid">
       <div class="feature"><b>MARKA</b><span id="mfbrand">—</span></div>
@@ -172,16 +174,10 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
       <div class="feature"><b>DURUM</b><span id="mfstatus">—</span></div>
       <div class="feature"><b>VİTRİN</b><span>Mix GSM</span></div>
     </div>
-    <div class="detail-title">TEKNİK ÖZET</div>
-    <div class="feature-grid">
-      <div class="feature"><b>EKRAN</b><span id="fte"></span></div>
-      <div class="feature"><b>İŞLEMCİ</b><span id="fti"></span></div>
-      <div class="feature"><b>KAMERA</b><span id="ftk"></span></div>
-      <div class="feature"><b>BATARYA / ŞARJ</b><span id="ftb"></span></div>
-      <div class="feature"><b>BAĞLANTI / DİĞER</b><span id="ftn"></span></div>
+    
+    <div class="modal-actions">
+      <a id="mw" class="modalwa" target="_blank">💬 STOK VE FİYAT BİLGİSİ İÇİN (WHATSAPP)</a>
     </div>
-    <details class="spec-accordion"><summary>📋 Tüm mevcut teknik özellikleri göster</summary><div id="allTech" class="all-tech"></div></details>
-    <div class="modal-actions"><a id="mw" class="modalwa" target="_blank">💬 STOK VE FİYAT BİLGİSİ İÇİN (WHATSAPP)</a></div>
     <p class="sales-note">ℹ️ Ürünün güncel stok, renk, varyant ve teknik destek seçeneklerini WhatsApp üzerinden netleştirebilirsiniz.</p>
    </div>
   </div>
@@ -206,91 +202,18 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 <div class="toast" id="toast"></div>
 
 <script>
-const products = [
-  {"b":"XIAOMI","m":"MI 17 ULTRA LEICA EDITION","s":"16 GB / 512 GB","p":64000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1039172/m_xiaomi-17-ultra-14.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-ultra.html","tech":{"ekran":"6.9\" AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"6000 mAh • 90W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 ULTRA GLOBAL","s":"16 GB / 512 GB","p":61000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1039172/m_xiaomi-17-ultra-14.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-ultra.html","tech":{"ekran":"6.9\" AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"6000 mAh • 90W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 ULTRA","s":"12 GB / 512 GB","p":56000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1039172/m_xiaomi-17-ultra-14.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-ultra.html","tech":{"ekran":"6.9\" AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"6000 mAh • 90W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 ULTRA","s":"16 GB / 1024 GB","p":63000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1039172/m_xiaomi-17-ultra-14.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-ultra.html","tech":{"ekran":"6.9\" AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"6000 mAh • 90W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 PRO MAX","s":"16 GB / 512 GB","p":55500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028272/m_xiaomi-17-pro-max-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-pro-max.html","tech":{"ekran":"AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"7500 mAh • 100W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 PRO MAX","s":"12 GB / 512 GB","p":53500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028272/m_xiaomi-17-pro-max-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-pro-max.html","tech":{"ekran":"AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP Leica sistem • OIS","batarya":"7500 mAh • 100W","baglanti":"5G • NFC"}},
-  {"b":"XIAOMI","m":"MI 17 PRO","s":"12 GB / 256 GB","p":44000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028103/m_xiaomi-17-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17 PRO","s":"12 GB / 512 GB","p":46500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028103/m_xiaomi-17-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17 PRO","s":"16 GB / 512 GB","p":48500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028103/m_xiaomi-17-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17","s":"12 GB / 256 GB","p":38000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028081/m_xiaomi-17-8.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17","s":"12 GB / 512 GB","p":41000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1028081/m_xiaomi-17-8.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17T PRO","s":"12 GB / 512 GB","p":38500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1056994/m_xiaomi-17t-pro-3.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17t-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17T PRO","s":"12 GB / 1024 GB","p":42000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1056994/m_xiaomi-17t-pro-3.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17t-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17T","s":"12 GB / 256 GB","p":28500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1056988/m_xiaomi-17t-47.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17t.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 17T","s":"12 GB / 512 GB","p":30000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1056988/m_xiaomi-17t-47.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-17t.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 15T PRO","s":"12 GB / 512 GB","p":36000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1025636/m_xiaomi-15t-pro-1.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-15t-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"MI 15T","s":"12 GB / 256 GB","p":26500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1025638/m_xiaomi-15t-1.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-15t.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO PLUS 5G","s":"16 GB / 512 GB","p":25000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024569/m_redmi-note-15-pro-plus-6.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro-plus.html","tech":{"ekran":"AMOLED • 120 Hz","islemci":"Snapdragon 7s Gen 4","kamera":"200 MP • OIS","batarya":"6500 mAh • 100W","baglanti":"5G"}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO PLUS 5G","s":"12 GB / 512 GB","p":24000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024569/m_redmi-note-15-pro-plus-6.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro-plus.html","tech":{"ekran":"AMOLED • 120 Hz","islemci":"Snapdragon 7s Gen 4","kamera":"200 MP • OIS","batarya":"6500 mAh • 100W","baglanti":"5G"}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO PLUS 5G","s":"12 GB / 256 GB","p":21500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024569/m_redmi-note-15-pro-plus-6.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro-plus.html","tech":{"ekran":"AMOLED • 120 Hz","islemci":"Snapdragon 7s Gen 4","kamera":"200 MP • OIS","batarya":"6500 mAh • 100W","baglanti":"5G"}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO 5G","s":"12 GB / 512 GB","p":20500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024566/m_redmi-note-15-pro-5g-10.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO 5G","s":"12 GB / 256 GB","p":20000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024566/m_redmi-note-15-pro-5g-10.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15 PRO 4.5G","s":"8 GB / 256 GB","p":19000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1024566/m_redmi-note-15-pro-5g-10.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 15","s":"12 GB / 256 GB","p":16000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1036699/m_redmi-note-15-5.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-15.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 14 PRO PLUS 5G","s":"16 GB / 512 GB","p":22000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/987058/m_redmi-note-14-pro-plus-3.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-14-pro-plus.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 14 PRO 5G","s":"8 GB / 256 GB","p":16000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/987127/m_redmi-note-14-pro-5g-1.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-14-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI NOTE 14","s":"8 GB / 256 GB","p":14000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/982235/m_redmi-note-14-4g-6.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-note-14.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI 15","s":"8 GB / 256 GB","p":13000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1020491/m_redmi-15-1.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-15.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI 15C","s":"8 GB / 256 GB","p":11500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1027787/m_redmi-15c-3.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-15c.html","tech":{}},
-  {"b":"XIAOMI","m":"REDMI A7 PRO","s":"4 GB / 128 GB","p":9500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1055588/m_redmi-a7-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/xiaomi-redmi-a7-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"POCO F8 ULTRA","s":"16 GB / 512 GB","p":42500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1032980/m_poco-f8-ultra-2.png","epey":"https://www.epey.com/akilli-telefonlar/poco-f8-ultra.html","tech":{"ekran":"6.9\" AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP • OIS","batarya":"6500 mAh • 100W","baglanti":"5G • 50W kablosuz"}},
-  {"b":"XIAOMI","m":"POCO F8 PRO","s":"12 GB / 512 GB","p":32500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1035964/m_poco-f8-pro-512gb-4.png","epey":"https://www.epey.com/akilli-telefonlar/poco-f8-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"POCO X8 PRO MAX","s":"12 GB / 512 GB","p":31000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1046766/m_poco-x8-pro-9.png","epey":"https://www.epey.com/akilli-telefonlar/poco-x8-pro-max.html","tech":{}},
-  {"b":"XIAOMI","m":"POCO X8 PRO","s":"12 GB / 512 GB","p":26500,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/1046766/m_poco-x8-pro-9.png","epey":"https://www.epey.com/akilli-telefonlar/poco-x8-pro.html","tech":{}},
-  {"b":"XIAOMI","m":"POCO X7 PRO","s":"12 GB / 512 GB","p":23000,"stock":true,"cat":"XIAOMI","img":"https://resim.epey.com/983978/m_poco-x7-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/poco-x7-pro.html","tech":{}},
-  {"b":"ONEPLUS","m":"ONEPLUS 15","s":"12 GB / 256 GB","p":35000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1029443/m_oneplus-15-2.png","epey":"https://www.epey.com/akilli-telefonlar/oneplus-15.html","tech":{"ekran":"6.78\" AMOLED • 165 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP ana kamera • OIS","batarya":"7300 mAh • 120W","baglanti":"5G • NFC"}},
-  {"b":"ONEPLUS","m":"ONEPLUS 15","s":"12 GB / 512 GB","p":40000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1029443/m_oneplus-15-2.png","epey":"https://www.epey.com/akilli-telefonlar/oneplus-15.html","tech":{"ekran":"6.78\" AMOLED • 165 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP ana kamera • OIS","batarya":"7300 mAh • 120W","baglanti":"5G • NFC"}},
-  {"b":"ONEPLUS","m":"ONEPLUS 15","s":"16 GB / 512 GB","p":41000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1029443/m_oneplus-15-2.png","epey":"https://www.epey.com/akilli-telefonlar/oneplus-15.html","tech":{"ekran":"6.78\" AMOLED • 165 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"50 MP ana kamera • OIS","batarya":"7300 mAh • 120W","baglanti":"5G • NFC"}},
-  {"b":"ONEPLUS","m":"ONEPLUS 11","s":"12 GB / 256 GB","p":23000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/841686/m_oneplus-11-2.png","epey":"https://www.epey.com/akilli-telefonlar/oneplus-11.html","tech":{}},
-  {"b":"APPLE","m":"IPHONE 17 PRO MAX","s":"256 GB","p":73000,"stock":true,"cat":"IPHONE","img":"https://resim.epey.com/1023353/m_apple-iphone-17-pro-max-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-17-pro-max.html","tech":{"ekran":"6.9\" OLED • 120 Hz","islemci":"Apple A19 Pro","kamera":"48 MP kamera sistemi","batarya":"4832 mAh • 40W","baglanti":"5G • MagSafe"}},
-  {"b":"APPLE","m":"IPHONE 17 PRO","s":"256 GB","p":68000,"stock":true,"cat":"IPHONE","img":"https://resim.epey.com/1023349/m_apple-iphone-17-pro-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-17-pro.html","tech":{}},
-  {"b":"APPLE","m":"IPHONE 17","s":"256 GB","p":50500,"stock":true,"cat":"IPHONE","img":"https://resim.epey.com/1023347/m_apple-iphone-17-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-17.html","tech":{}},
-  {"b":"APPLE","m":"IPHONE 16 PRO MAX","s":"256 GB","p":61000,"stock":true,"cat":"IPHONE","img":"https://resim.epey.com/952387/m_apple-iphone-16-pro-max-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-16-pro-max.html","tech":{}},
-  {"b":"APPLE","m":"IPHONE 16 PRO","s":"128 GB","p":52000,"stock":true,"cat":"IPHONE","img":"https://resim.epey.com/960858/m_apple-iphone-16-pro-256gb-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-16-pro.html","tech":{}},
-  {"b":"APPLE","m":"IPHONE 16","s":"128 GB","p":39500,"stock":false,"cat":"IPHONE","img":"https://resim.epey.com/959779/m_apple-iphone-16-2.png","epey":"https://www.epey.com/akilli-telefonlar/apple-iphone-16.html","tech":{}},
-  {"b":"SAMSUNG","m":"Z FOLD 7","s":"12 GB / 512 GB","p":70000,"stock":true,"cat":"SAMSUNG","img":"https://resim.epey.com/1017340/m_samsung-galaxy-z-fold7-1.png","epey":"https://www.epey.com/akilli-telefonlar/samsung-galaxy-z-fold7.html","tech":{"ekran":"Katlanabilir AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite","kamera":"200 MP • OIS","batarya":"4400 mAh • 25W","baglanti":"5G • Kablosuz şarj"}},
-  {"b":"SAMSUNG","m":"Z FOLD 7","s":"12 GB / 256 GB","p":63000,"stock":true,"cat":"SAMSUNG","img":"https://resim.epey.com/1017340/m_samsung-galaxy-z-fold7-1.png","epey":"https://www.epey.com/akilli-telefonlar/samsung-galaxy-z-fold7.html","tech":{"ekran":"Katlanabilir AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite","kamera":"200 MP • OIS","batarya":"4400 mAh • 25W","baglanti":"5G • Kablosuz şarj"}},
-  {"b":"SAMSUNG","m":"S26 ULTRA","s":"12 GB / 256 GB","p":49000,"stock":true,"cat":"SAMSUNG","img":"https://resim.epey.com/1034870/m_samsung-galaxy-s26-ultra-12.png","epey":"https://www.epey.com/akilli-telefonlar/samsung-galaxy-s26-ultra.html","tech":{"ekran":"6.9\" Dynamic AMOLED • 120 Hz","islemci":"Snapdragon 8 Elite Gen 5","kamera":"200 MP • OIS","batarya":"5000 mAh • 60W","baglanti":"5G • IPX8"}},
-  {"b":"SAMSUNG","m":"S25 ULTRA","s":"12 GB / 256 GB","p":42000,"stock":true,"cat":"SAMSUNG","img":"https://resim.epey.com/939167/m_samsung-galaxy-s25-ultra-2.png","epey":"https://www.epey.com/akilli-telefonlar/samsung-galaxy-s25-ultra.html","tech":{}},
-  {"b":"INFINIX","m":"GT 50 PRO","s":"12 GB / 256 GB","p":28000,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1055868/m_infinix-gt-50-pro-1.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-gt-50-pro.html","tech":{}},
-  {"b":"INFINIX","m":"NOTE 60 PRO","s":"12 GB / 256 GB","p":26500,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1046390/m_infinix-note-60-pro-1.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-note-60-pro.html","tech":{}},
-  {"b":"INFINIX","m":"NOTE 50 PRO PLUS","s":"12 GB / 256 GB","p":22500,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1000560/m_infinix-note-50-pro-plus-1.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-note-50-pro-plus.html","tech":{}},
-  {"b":"INFINIX","m":"HOT 60 PRO PLUS","s":"8 GB / 256 GB","p":15000,"stock":false,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1018119/m_infinix-hot-60-pro-plus-8.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-hot-60-pro-plus.html","tech":{}},
-  {"b":"INFINIX","m":"HOT 60i","s":"4 GB / 128 GB","p":10000,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1017171/m_infinix-hot-60i-1.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-hot-60i.html","tech":{}},
-  {"b":"INFINIX","m":"SMART 20","s":"4 GB / 256 GB","p":10500,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1047416/m_infinix-smart-20-1.png","epey":"https://www.epey.com/akilli-telefonlar/infinix-smart-20.html","tech":{}},
-  {"b":"TECNO","m":"CAMON 50 PRO","s":"8 GB / 256 GB","p":22000,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1046194/m_tecno-camon-50-pro-7.png","epey":"https://www.epey.com/akilli-telefonlar/tecno-camon-50-pro.html","tech":{}},
-  {"b":"TECNO","m":"CAMON 40 PREMIER","s":"12 GB / 256 GB","p":23500,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/997848/m_tecno-camon-40-premier-2.png","epey":"https://www.epey.com/akilli-telefonlar/tecno-camon-40-premier.html","tech":{}},
-  {"b":"TECNO","m":"POVA CURVE 2","s":"8 GB / 256 GB","p":22000,"stock":true,"cat":"INFINIX_TECNO","img":"https://resim.epey.com/1046194/m_tecno-camon-50-pro-7.png","epey":"https://www.epey.com/akilli-telefonlar/tecno-pova-curve-2.html","tech":{}},
-  {"b":"RED MAGIC","m":"RED MAGIC 11S PRO","s":"16 GB / 512 GB","p":55000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1031643/m_nubia-red-magic-11-pro-7.png","epey":"https://www.epey.com/akilli-telefonlar/nubia-red-magic-11s-pro.html","tech":{}},
-  {"b":"RED MAGIC","m":"RED MAGIC 11 PRO","s":"12 GB / 256 GB","p":43000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1031643/m_nubia-red-magic-11-pro-7.png","epey":"https://www.epey.com/akilli-telefonlar/nubia-red-magic-11-pro.html","tech":{}},
-  {"b":"GOOGLE","m":"PIXEL 10 PRO XL","s":"16 GB / 256 GB","p":50000,"stock":true,"cat":"ONEPLUS_OTHERS","img":"https://resim.epey.com/1024892/m_google-pixel-10-pro-xl-1.png","epey":"https://www.epey.com/akilli-telefonlar/google-pixel-10-pro-xl.html","tech":{}},
-  {"b":"DYSON","m":"DYSON V16 PISTON ANIMAL","s":"Dikey Süpürge","p":19500,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/978252/m_dyson-v15s-detect-submarine-5.png","epey":"https://www.epey.com/supurge/dyson-v16-piston-animal.html","tech":{}},
-  {"b":"DYSON","m":"DYSON V15 DETECT SUBMARINE","s":"Dikey Süpürge • Islak/Kuru","p":18000,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/978252/m_dyson-v15s-detect-submarine-5.png","epey":"https://www.epey.com/supurge/dyson-v15-detect-submarine.html","tech":{}},
-  {"b":"DYSON","m":"DYSON V15 GEN5 ABSOLUTE","s":"Dikey Süpürge","p":16000,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/978252/m_dyson-v15s-detect-submarine-5.png","epey":"https://www.epey.com/supurge/dyson-gen5detect-absolute.html","tech":{}},
-  {"b":"DYSON","m":"DYSON AIRSTRAIT","s":"Saç Düzleştirici","p":9000,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/890457/m_dyson-airstrait-4.png","epey":"https://www.epey.com/sac-duzlestirici/dyson-airstrait.html","tech":{}},
-  {"b":"DYSON","m":"DYSON COANDA X2","s":"Saç Şekillendirici","p":14000,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/890457/m_dyson-airstrait-4.png","epey":"https://www.epey.com/sac-sekillendirici/dyson-airwrap-co-anda2x.html","tech":{}},
-  {"b":"DYSON","m":"DYSON SUPERSONIC FÖN","s":"Saç Kurutma Makinesi","p":null,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/890457/m_dyson-airstrait-4.png","epey":"https://www.epey.com/sac-kurutma-makinesi/dyson-supersonic.html","tech":{}},
-  {"b":"BRAUN","m":"BRAUN SILK-EXPERT PRO 5","s":"IPL Epilasyon Cihazı","p":null,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/593848/m_braun-silk-expert-pro-5-pl5117-1.png","epey":"https://www.epey.com/lazer-epilasyon/braun-silk-expert-pro-5.html","tech":{}},
-  {"b":"BRAUN","m":"BRAUN SKIN i·EXPERT","s":"IPL Epilasyon Cihazı","p":null,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/593848/m_braun-silk-expert-pro-5-pl5117-1.png","epey":"https://www.epey.com/lazer-epilasyon/braun-skin-i-expert.html","tech":{}},
-  {"b":"PHILIPS","m":"PHILIPS LUMEA IPL","s":"IPL Epilasyon Cihazı","p":8000,"stock":true,"cat":"PERSONAL_CARE","img":"https://resim.epey.com/712398/m_philips-lumea-ipl-bri950-00-1.png","epey":"https://www.epey.com/lazer-epilasyon/","tech":{}}
-];
-
-let cat="XIAOMI", group="ALL", q="", sort="default";
-const favKey="mixgsm-favorites-v14";
-const productKey=p=>`${p.b}|${p.m}|${p.s}`;
-let favs=[];
+let products = [];
+let cat = "XIAOMI", group = "ALL", q = "", sort = "default";
+const favKey = "mixgsm-favorites-v14";
+const productKey = p => `${p.b}|${p.m}|${p.s}`;
+let favs = [];
 try{
-  const saved=JSON.parse(localStorage.getItem(favKey)||"[]");
-  favs=Array.isArray(saved)?saved.filter(x=>typeof x==="string"):[];
-}catch(e){favs=[]}
+  const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
+  favs = Array.isArray(saved) ? saved.filter(x => typeof x === "string") : [];
+} catch(e) { favs = [] }
 
-const grid=document.querySelector("#grid"), count=document.querySelector("#count");
-const fmt=n=>n.toLocaleString("tr-TR");
-function imgFor(p){return p.img}
+const grid = document.querySelector("#grid"), count = document.querySelector("#count");
+const fmt = n => n.toLocaleString("tr-TR");
 
 function normalizeTR(v){
  return (v||"").toLocaleLowerCase("tr-TR")
@@ -314,18 +237,13 @@ function searchScore(p, query){
    if(words.some(w=>w===t))score+=0.55;
    else if(words.some(w=>w.startsWith(t)||t.startsWith(w)))score+=0.42;
    else{
-     const best=Math.max(...words.map(w=>difflibRatio(t,w)),0);
+     const best=Math.max(...words.map(w=>SequenceMatcher(t,w)),0);
      score+=best*0.28;
    }
  });
  const joined=compact(p.m+" "+p.b+" "+p.s);
- score+=difflibRatio(qc,joined)*0.35;
+ score+=SequenceMatcher(qc,joined)*0.35;
  return score/(qTokens.length+1);
-}
-
-function difflibRatio(a,b){
- if(!a||!b)return 0;
- return SequenceMatcher(a,b);
 }
 
 function SequenceMatcher(a,b){
@@ -333,6 +251,71 @@ function SequenceMatcher(a,b){
  let prev=new Array(n+1).fill(0),cur=new Array(n+1).fill(0);
  for(let i=1;i<=m;i++){cur[0]=0;for(let j=1;j<=n;j++)cur[j]=a[i-1]===b[j-1]?prev[j-1]+1:Math.max(prev[j],cur[j-1]);[prev,cur]=[cur,prev];}
  return (2*prev[n])/(m+n);
+}
+
+async function loadFromGoogleSheets() {
+  const url = "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
+  try {
+    grid.innerHTML = '<div class="empty">Ürünler kataloğa yükleniyor... ⏳</div>';
+    
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
+    
+    const tsv = await res.text();
+    const lines = tsv.split('\n');
+    
+    if (lines.length < 2) throw new Error("Excel tablosu boş veya format hatalı.");
+
+    const headers = lines[0].split('\t').map(h => h.trim().toLowerCase());
+    
+    let newProducts = [];
+    for(let i = 1; i < lines.length; i++) {
+      if(!lines[i].trim()) continue;
+      const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
+      
+      let pData = {};
+      headers.forEach((h, idx) => { pData[h] = cols[idx] || ''; });
+
+      if(!pData['marka'] && !pData['model']) continue; 
+      
+      let priceRaw = pData['fiyat'] || pData['fiyatı'] || '';
+      let price = parseInt(priceRaw.replace(/[^0-9]/g, ''));
+      
+      let stockRaw = (pData['stok'] || '').toLowerCase();
+      let isStock = !(stockRaw === 'yok' || stockRaw === 'tükendi' || stockRaw === '0');
+      
+      let catType = "PHONE";
+      let marka = (pData['marka'] || '').toUpperCase();
+      if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "IPHONE";
+      else if(marka.includes('SAMSUNG')) catType = "SAMSUNG";
+      else if(marka.includes('XIAOMI') || marka.includes('REDMI') || marka.includes('POCO')) catType = "XIAOMI";
+      else if(marka.includes('INFINIX') || marka.includes('TECNO')) catType = "INFINIX_TECNO";
+      
+      let katRaw = (pData['kategori'] || '').toLowerCase();
+      if(katRaw.includes('bakım') || marka.includes('DYSON') || marka.includes('BRAUN') || marka.includes('PHILIPS')) {
+          catType = "PERSONAL_CARE";
+      } else if(catType === "PHONE") {
+          catType = "ONEPLUS_OTHERS";
+      }
+
+      newProducts.push({
+        b: marka,
+        m: (pData['model'] || '').toUpperCase(),
+        s: pData['özellik'] || pData['hafıza'] || '',
+        p: isNaN(price) ? null : price,
+        stock: isStock,
+        cat: catType,
+        img: pData['resim'] || pData['görsel'] || 'https://via.placeholder.com/250x250/111a2a/38bdf8?text=G%C3%B6rsel+Y%C3%BCkleniyor'
+      });
+    }
+    
+    products = newProducts;
+    render();
+
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = '<div class="empty" style="color:#ef4444;">❌ Veriler okunamadı!<br><br>Lütfen Google Sheets dosyanızın sağ üst köşesindeki "Paylaş" butonuna basıp, genel erişimi <b>"Bağlantıya sahip olan herkes görebilir"</b> olarak değiştirdiğinizden emin olun.</div>';
+  }
 }
 
 function render(){
@@ -363,7 +346,7 @@ function render(){
      <div class="visual">
        ${badge}
        <button class="fav ${favs.includes(pk) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="Favoriye ekle">${favs.includes(pk) ? "♥" : "♡"}</button>
-       <img src="${imgFor(p)}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.style.opacity=.25">
+       <img src="${p.img}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.style.opacity=.25">
      </div>
      <div class="info">
        <div class="brand">${p.b}</div>
@@ -396,10 +379,7 @@ document.querySelector("#q").addEventListener("input", e => {
   render();
 });
 
-document.querySelector("#sort").addEventListener("change", e => {
-  sort = e.target.value;
-  render();
-});
+document.querySelector("#sort").addEventListener("change", e => { sort = e.target.value; render(); });
 
 document.querySelectorAll("#filters button").forEach(b => {
   b.addEventListener("click", () => {
@@ -427,48 +407,21 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
   });
 });
 
-render();
-
 function openProduct(i){
  const p = products[i], modal = document.getElementById("modal");
- document.getElementById("mi").src = imgFor(p);
+ document.getElementById("mi").src = p.img;
  document.getElementById("mi").alt = p.b + " " + p.m;
  document.getElementById("mb").textContent = p.b;
  document.getElementById("mn").textContent = p.m;
  document.getElementById("ms").textContent = "▣ " + p.s;
  document.getElementById("mp").textContent = p.p == null ? "FİYAT İÇİN BİLGİ AL" : fmt(p.p) + " TL";
  document.getElementById("mp").classList.toggle("price-query", p.p == null);
- document.getElementById("xiaomiModalNotice").style.display = p.cat === "XIAOMI" ? "block" : "none";
  
  document.getElementById("mfbrand").textContent = p.b;
  document.getElementById("mfspec").textContent = p.s;
  document.getElementById("mfstatus").textContent = p.stock ? "Stokta" : "Tükendi";
 
- const isPersonalCare = p.cat === "PERSONAL_CARE";
- const techTitles = document.querySelectorAll(".detail-title");
- const featureGrids = document.querySelectorAll(".modalinfo .feature-grid");
- const specAccordion = document.querySelector(".spec-accordion");
-
- if (techTitles[1]) techTitles[1].style.display = isPersonalCare ? "none" : "block";
- if (featureGrids[1]) featureGrids[1].style.display = isPersonalCare ? "none" : "grid";
-
- const t = p.tech || {};
- document.getElementById("fte").textContent = t.ekran || "Bilgi için WhatsApp";
- document.getElementById("fti").textContent = t.islemci || "Bilgi için WhatsApp";
- document.getElementById("ftk").textContent = t.kamera || "Bilgi için WhatsApp";
- document.getElementById("ftb").textContent = t.batarya || "Bilgi için WhatsApp";
- document.getElementById("ftn").textContent = t.baglanti || "Bilgi için WhatsApp";
-
- const allTech = document.getElementById("allTech");
- specAccordion.removeAttribute("open");
- if (p.epey) {
-   specAccordion.style.display = "block";
-   allTech.innerHTML = `<div style="padding:10px 0;text-align:center">
-     <a href="${p.epey}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:8px 14px;background:#1e293b;border:1px solid #334155;border-radius:999px;color:#38bdf8;font-size:11px;font-weight:800">🌐 Epey.com Detaylı Teknik Özelliklerini Aç ↗</a>
-   </div>`;
- } else {
-   specAccordion.style.display = "none";
- }
+ document.getElementById("xiaomiModalNotice").style.display = p.cat === "XIAOMI" ? "block" : "none";
 
  const modalPrice = p.p == null ? "fiyat bilgisi" : `${fmt(p.p)} TL`;
  const waText = p.p == null
@@ -485,9 +438,7 @@ function closeProduct(){
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") {
-    closeProduct();
-  }
+  if (e.key === "Escape") closeProduct();
 });
 
 function toggleFav(e, index){
@@ -520,6 +471,9 @@ function showToast(t){
   x.classList.add("show");
   setTimeout(() => x.classList.remove("show"), 1600);
 }
+
+// Start application by fetching Google Sheets
+window.addEventListener('DOMContentLoaded', loadFromGoogleSheets);
 </script>
 </body>
 </html>
