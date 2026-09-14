@@ -171,6 +171,12 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
       <div class="feature"><b>MARKA</b><span id="mfbrand">—</span></div>
       <div class="feature"><b>HAFIZA / RAM</b><span id="mfspec">—</span></div>
       <div class="feature"><b>DURUM</b><span id="mfstatus">—</span></div>
+      <div class="feature"><b>BATARYA</b><span id="mfbattery">—</span></div>
+      <div class="feature"><b>EKRAN</b><span id="mfscreen">—</span></div>
+      <div class="feature"><b>İŞLEMCİ</b><span id="mfprocessor">—</span></div>
+      <div class="feature"><b>KAMERA</b><span id="mfcamera">—</span></div>
+      <div class="feature"><b>BAĞLANTI</b><span id="mfconnectivity">—</span></div>
+      <div class="feature"><b>KAYIT DURUMU</b><span id="mfregistration">—</span></div>
       <div class="feature"><b>VİTRİN</b><span>Mix GSM</span></div>
     </div>
     
@@ -263,25 +269,39 @@ async function loadFromGoogleSheets() {
     const tsv = await res.text();
     const lines = tsv.split('\n');
     
+    if (lines.length < 2) throw new Error("Excel tablosu boş veya format hatalı.");
+
     let newProducts = [];
     
-    for(let i = 0; i < lines.length; i++) {
+    // Satır 0'ın başlık mı yoksa veri mi olduğunu tespit et (D sütunundaki rakama bakarak)
+    let startIndex = 1; 
+    let firstRowPrice = (lines[0].split('\t')[3] || '').replace(/[^0-9]/g, '');
+    if (firstRowPrice.length > 2) { 
+       startIndex = 0; // İlk satırda başlık yok, direkt veri var
+    }
+
+    for(let i = startIndex; i < lines.length; i++) {
       if(!lines[i].trim()) continue;
       const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
       
       let marka = (cols[0] || '').toUpperCase(); // A Sütunu
       let model = (cols[1] || '').toUpperCase(); // B Sütunu
-      
-      // EĞER MARKA veya MODEL BOŞSA, VEYA BAŞLIK SATIRIYSA (MARKA = "MARKA") ATLA
-      if(!marka || !model || marka === "MARKA") continue; 
-      
       let ozellik = cols[2] || '';               // C Sütunu
       let fiyatStr = cols[3] || '';              // D Sütunu
       let stokStr = (cols[4] || '').toLowerCase(); // E Sütunu
+      let katStr = (cols[5] || '').toLowerCase();  // F Sütunu
       let resimUrl = cols[6] || '';              // G Sütunu
+      let batarya = cols[7] || '';               // H Sütunu
+      let ekran = cols[8] || '';                 // I Sütunu
+      let islemci = cols[9] || '';               // J Sütunu
+      let kamera = cols[10] || '';               // K Sütunu
+      let baglanti = cols[11] || '';             // L Sütunu
+      let kayitDurumu = cols[12] || '';          // M Sütunu
+      
+      if(!marka && !model) continue; 
       
       let price = parseInt(fiyatStr.replace(/[^0-9]/g, ''));
-      let isStock = !(stokStr === 'yok' || stokStr === 'tükendi' || stokStr === '0' || stokStr.includes('tükendi'));
+      let isStock = !(stokStr === 'yok' || stokStr === 'tükendi' || stokStr === '0');
       
       let catType = "PHONE";
       if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "IPHONE";
@@ -289,7 +309,7 @@ async function loadFromGoogleSheets() {
       else if(marka.includes('XIAOMI') || marka.includes('REDMI') || marka.includes('POCO')) catType = "XIAOMI";
       else if(marka.includes('INFINIX') || marka.includes('TECNO')) catType = "INFINIX_TECNO";
       
-      if(marka.includes('DYSON') || marka.includes('BRAUN') || marka.includes('PHILIPS')) {
+      if(katStr.includes('bakım') || marka.includes('DYSON') || marka.includes('BRAUN') || marka.includes('PHILIPS')) {
           catType = "PERSONAL_CARE";
       } else if(catType === "PHONE") {
           catType = "ONEPLUS_OTHERS";
@@ -306,7 +326,13 @@ async function loadFromGoogleSheets() {
         p: isNaN(price) ? null : price,
         stock: isStock,
         cat: catType,
-        img: resimUrl
+        img: resimUrl,
+        battery: batarya,
+        screen: ekran,
+        processor: islemci,
+        camera: kamera,
+        connectivity: baglanti,
+        registration: kayitDurumu
       });
     }
     
@@ -419,9 +445,17 @@ function openProduct(i){
  document.getElementById("mp").textContent = p.p == null ? "FİYAT İÇİN BİLGİ AL" : fmt(p.p) + " TL";
  document.getElementById("mp").classList.toggle("price-query", p.p == null);
  
- document.getElementById("mfbrand").textContent = p.b;
- document.getElementById("mfspec").textContent = p.s || "Belirtilmedi";
+ const detailValue = value => value && String(value).trim() ? String(value).trim() : "Belirtilmedi";
+
+ document.getElementById("mfbrand").textContent = detailValue(p.b);
+ document.getElementById("mfspec").textContent = detailValue(p.s);
  document.getElementById("mfstatus").textContent = p.stock ? "Stokta" : "Tükendi";
+ document.getElementById("mfbattery").textContent = detailValue(p.battery);
+ document.getElementById("mfscreen").textContent = detailValue(p.screen);
+ document.getElementById("mfprocessor").textContent = detailValue(p.processor);
+ document.getElementById("mfcamera").textContent = detailValue(p.camera);
+ document.getElementById("mfconnectivity").textContent = detailValue(p.connectivity);
+ document.getElementById("mfregistration").textContent = detailValue(p.registration);
 
  document.getElementById("xiaomiModalNotice").style.display = p.cat === "XIAOMI" ? "block" : "none";
 
@@ -474,6 +508,7 @@ function showToast(t){
   setTimeout(() => x.classList.remove("show"), 1600);
 }
 
+// Start application by fetching Google Sheets
 window.addEventListener('DOMContentLoaded', loadFromGoogleSheets);
 </script>
 </body>
