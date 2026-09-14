@@ -263,33 +263,25 @@ async function loadFromGoogleSheets() {
     const tsv = await res.text();
     const lines = tsv.split('\n');
     
-    if (lines.length < 2) throw new Error("Excel tablosu boş veya format hatalı.");
-
     let newProducts = [];
     
-    // Satır 0'ın başlık mı yoksa veri mi olduğunu tespit et (D sütunundaki rakama bakarak)
-    let startIndex = 1; 
-    let firstRowPrice = (lines[0].split('\t')[3] || '').replace(/[^0-9]/g, '');
-    if (firstRowPrice.length > 2) { 
-       startIndex = 0; // İlk satırda başlık yok, direkt veri var
-    }
-
-    for(let i = startIndex; i < lines.length; i++) {
+    for(let i = 0; i < lines.length; i++) {
       if(!lines[i].trim()) continue;
       const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
       
       let marka = (cols[0] || '').toUpperCase(); // A Sütunu
       let model = (cols[1] || '').toUpperCase(); // B Sütunu
+      
+      // EĞER MARKA veya MODEL BOŞSA, VEYA BAŞLIK SATIRIYSA (MARKA = "MARKA") ATLA
+      if(!marka || !model || marka === "MARKA") continue; 
+      
       let ozellik = cols[2] || '';               // C Sütunu
       let fiyatStr = cols[3] || '';              // D Sütunu
       let stokStr = (cols[4] || '').toLowerCase(); // E Sütunu
-      let katStr = (cols[5] || '').toLowerCase();  // F Sütunu
       let resimUrl = cols[6] || '';              // G Sütunu
       
-      if(!marka && !model) continue; 
-      
       let price = parseInt(fiyatStr.replace(/[^0-9]/g, ''));
-      let isStock = !(stokStr === 'yok' || stokStr === 'tükendi' || stokStr === '0');
+      let isStock = !(stokStr === 'yok' || stokStr === 'tükendi' || stokStr === '0' || stokStr.includes('tükendi'));
       
       let catType = "PHONE";
       if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "IPHONE";
@@ -297,7 +289,7 @@ async function loadFromGoogleSheets() {
       else if(marka.includes('XIAOMI') || marka.includes('REDMI') || marka.includes('POCO')) catType = "XIAOMI";
       else if(marka.includes('INFINIX') || marka.includes('TECNO')) catType = "INFINIX_TECNO";
       
-      if(katStr.includes('bakım') || marka.includes('DYSON') || marka.includes('BRAUN') || marka.includes('PHILIPS')) {
+      if(marka.includes('DYSON') || marka.includes('BRAUN') || marka.includes('PHILIPS')) {
           catType = "PERSONAL_CARE";
       } else if(catType === "PHONE") {
           catType = "ONEPLUS_OTHERS";
@@ -482,7 +474,6 @@ function showToast(t){
   setTimeout(() => x.classList.remove("show"), 1600);
 }
 
-// Start application by fetching Google Sheets
 window.addEventListener('DOMContentLoaded', loadFromGoogleSheets);
 </script>
 </body>
