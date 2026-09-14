@@ -319,6 +319,10 @@ function imageNameAliases(model){
   if(/^POCO-F8-ULTRA/.test(key)) add('POCO-F8-ULTRA');
   if(/^POCO-F9-ULTRA/.test(key)) add('POCO-F9-ULTRA');
 
+  // GitHub dosya adları büyük/küçük harfe duyarlı olabilir.
+  // Aynı modelin küçük harfli dosya adını da dene (örn. poco-x7-pro.webp).
+  aliases.slice().forEach(v => add(v.toLowerCase()));
+
   return aliases;
 }
 
