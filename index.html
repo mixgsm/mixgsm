@@ -258,6 +258,36 @@ function SequenceMatcher(a,b){
  return (2*prev[n])/(m+n);
 }
 
+function imageCandidatesForProduct(p){
+  const clean = value => String(value || '')
+    .trim().toUpperCase()
+    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ğ/g,'G').replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C')
+    .replace(/[^A-Z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  const modelKey=clean(p.m); if(!modelKey) return [];
+  const variants=[...new Set([modelKey, modelKey.toLowerCase()])];
+  const exts=['webp','jpg','jpeg','png']; const urls=[];
+  variants.forEach(name=>exts.forEach(ext=>urls.push(`https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${name}.${ext}`)));
+  return urls;
+}
+function getProductImageSources(p){
+  if(p.img && /^https?:\/\//i.test(p.img) && !p.autoImage) return [p.img];
+  return imageCandidatesForProduct(p);
+}
+function tryNextProductImage(img){
+  try{
+    const sources=JSON.parse(img.dataset.imageSources||'[]');
+    const index=Number(img.dataset.imageIndex||0)+1;
+    if(index<sources.length){ img.dataset.imageIndex=String(index); img.src=sources[index]; return; }
+  }catch(e){}
+  img.onerror=null; img.src='https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+}
+function autoImageMarkup(p){
+  const sources=getProductImageSources(p);
+  const first=sources[0]||'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+  const encoded=JSON.stringify(sources).replace(/'/g,'&#39;');
+  return `<img src="${first}" data-image-sources='${encoded}' data-image-index="0" alt="${p.b} ${p.m}" loading="lazy" onerror="tryNextProductImage(this)">`;
+}
+
 async function loadFromGoogleSheets() {
   const url = "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
   try {
@@ -315,9 +345,8 @@ async function loadFromGoogleSheets() {
           catType = "ONEPLUS_OTHERS";
       }
 
-      if(!resimUrl.startsWith('http')) {
-         resimUrl = 'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
-      }
+      const hasManualImage = /^https?:\/\//i.test(resimUrl);
+      if(!hasManualImage) resimUrl = '';
 
       newProducts.push({
         b: marka,
@@ -327,6 +356,7 @@ async function loadFromGoogleSheets() {
         stock: isStock,
         cat: catType,
         img: resimUrl,
+        autoImage: !hasManualImage,
         battery: batarya,
         screen: ekran,
         processor: islemci,
@@ -373,7 +403,7 @@ function render(){
      <div class="visual">
        ${badge}
        <button class="fav ${favs.includes(pk) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="Favoriye ekle">${favs.includes(pk) ? "♥" : "♡"}</button>
-       <img src="${p.img}" alt="${p.b} ${p.m}" loading="lazy" onerror="this.src='https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok'">
+       ${autoImageMarkup(p)}
      </div>
      <div class="info">
        <div class="brand">${p.b}</div>
@@ -436,9 +466,13 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
 
 function openProduct(i){
  const p = products[i], modal = document.getElementById("modal");
- document.getElementById("mi").src = p.img;
- document.getElementById("mi").onerror = function() { this.src='https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok'; };
- document.getElementById("mi").alt = p.b + " " + p.m;
+ const modalImg = document.getElementById("mi");
+ const modalSources = getProductImageSources(p);
+ modalImg.dataset.imageSources = JSON.stringify(modalSources);
+ modalImg.dataset.imageIndex = "0";
+ modalImg.onerror = function(){ tryNextProductImage(this); };
+ modalImg.src = modalSources[0] || 'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+ modalImg.alt = p.b + " " + p.m;
  document.getElementById("mb").textContent = p.b;
  document.getElementById("mn").textContent = p.m;
  document.getElementById("ms").textContent = "▣ " + (p.s || "Belirtilmedi");
