@@ -323,6 +323,40 @@ function imageNameAliases(model, brand=''){
     add(`B-${b}-${key}`);
   });
 
+  // Fotoğraf klasöründeki gerçek adlandırma farklılıkları için güvenli model eşdeğerleri.
+  const addModelAlias = v => {
+    if(!v) return;
+    add(v); add(`M-${v}`); add(`K-${v}`); add(`B-${v}`);
+    add(v.toLowerCase()); add(`m-${v.toLowerCase()}`);
+  };
+  if(brandKey === 'SAMSUNG'){
+    if(/^Z-FOLD-?6/.test(key)) ['SAMSUNG-Z-FOLD-6','SAMSUNG-GALAXY-Z-FOLD-6','SAMSUNG-GALAXY-Z-FOLD6'].forEach(addModelAlias);
+    if(/^Z-FOLD-?7/.test(key)) ['SAMSUNG-Z-FOLD-7','SAMSUNG-GALAXY-Z-FOLD-7','SAMSUNG-GALAXY-Z-FOLD7'].forEach(addModelAlias);
+  }
+  if(brandKey === 'TECNO'){
+    if(/^SPARK-40-C/.test(key)) ['TECNO-SPARK-40-C','TECNO-SPARK-40C','SPARK-40-C','SPARK-40C'].forEach(addModelAlias);
+    if(/^CAMON-NOTE-50-ULTRA/.test(key)) ['TECNO-CAMON-NOTE-50-ULTRA','TECNO-CAMON-50-ULTRA','TECNO-CAMON-50','CAMON-50-ULTRA'].forEach(addModelAlias);
+  }
+  if(brandKey === 'REDMAGIC' || brandKey === 'NUBIA'){
+    if(/RED-MAGIC/.test(key)) ['NUBIA-REDMAGIC-11-PRO','NUBIA-REDMAGIC-11S-PRO','REDMAGIC-11-PRO','REDMAGIC-11S-PRO'].forEach(addModelAlias);
+  }
+  if(brandKey === 'PHILIPS' && /LUMEA/.test(key)){
+    ['PHILIPS-LUMEA-LAZER','PHILIPS-LUMEA','LUMEA-LAZER'].forEach(addModelAlias);
+  }
+  if(brandKey === 'BRAUN'){
+    if(/SKIN-I-EXPERT/.test(key)) ['BRAUN-SKIN-I-EXPERT','BRAUN-SKIN-I'].forEach(addModelAlias);
+    if(/SILK-EXPERT-PRO-5/.test(key)) ['BRAUN-SILK-EXPERT-PRO-5','BRAUN-PRO-5','BRAUN-SILK-EXPERT'].forEach(addModelAlias);
+  }
+  if(brandKey === 'DYSON'){
+    if(/AIRWRAP|AIRWARP/.test(key)) ['DYSON-AIRWRAP','DYSON-AIRWARP','DYSON-AIRWRAP-LONG-COMPLETE'].forEach(addModelAlias);
+  }
+  if(brandKey === 'XIAOMI' && /^MI-17-ULTRA/.test(key)){
+    ['MI-17-ULTRA','MI-17-ULTRA-GLOBAL','MI-17-ULTRA-LEICA-EDITION'].forEach(addModelAlias);
+  }
+  if(brandKey === 'POCO' && /^X7-PRO/.test(key)){
+    ['POCO-X7-PRO','poco-x7-pro'].forEach(addModelAlias);
+  }
+
   // Varyant/ülke ibarelerini kaldırarak en yakın mevcut görsele düş.
   [key, ...aliases].forEach(v => {
     add(v.replace(/-GLOBAL$/, ''));
@@ -500,8 +534,13 @@ function imageCandidatesForProduct(p){
   return [...new Set(urls)];
 }
 function getProductImageSources(p){
-  if(p.img && /^https?:\/\//i.test(p.img) && !p.autoImage) return [p.img];
-  return imageCandidatesForProduct(p);
+  const auto = imageCandidatesForProduct(p);
+  if(p.img && /^https?:\/\//i.test(p.img) && !p.autoImage){
+    // Manuel G sütunu URL'si bozuksa ürün görselsiz kalmasın;
+    // güvenli otomatik adaylar ikinci sırada denensin.
+    return [p.img, ...auto.filter(u => u !== p.img)];
+  }
+  return auto;
 }
 
 function tryNextProductImage(img){
@@ -534,14 +573,9 @@ function isNonProductRow(p){
   if(!text) return true;
   if(isPromoRow(p)) return true;
 
-  // Model hücresi boşsa veya yalnızca marka adıysa bu çoğunlukla Excel'deki
-  // bölüm başlığıdır (örn. SAMSUNG, ONEPLUS, TECNO).
-  if(!model || model === brand) {
-    const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
-    if(!hasProductData) return true;
-  }
-
-  // Tanıtım / bilgi satırlarını gerçek ürünlerden ayır.
+  // Excel'deki bölüm başlıkları hiçbir koşulda ürün olarak gösterilmez.
+  // Özellikle model hücresinde başlık yazarken diğer sütunlarda veri kalmış
+  // olsa bile (RAM / fiyat / kategori vb.) bu satırlar katalogdan çıkarılır.
   const titleTerms = [
     'MARKA MODEL','ÜRÜN TANIMI','MODELLERİ','MODELLERI','MODEL LİSTESİ','MODEL LISTESI',
     'GÜNCELLEME TARİHİ','GUNCELLEME TARIHI','WHATSAPP TIKLA','WHATSAPP SIPARIS','WHATSAPP SİPARİŞ',
@@ -549,14 +583,19 @@ function isNonProductRow(p){
     'DONANIMSAL SORUNLARA','BİREBİR DEĞİŞİM','BIREBIR DEGISIM',
     'ANLAŞMALI KARGO','ANLASMALI KARGO','GÜVENLİ VE HIZLI ADRESE','GUVENLI VE HIZLI ADRESE',
     'FİYATLAR MEVCUT STOK','FIYATLAR MEVCUT STOK','DOLAR KURUNA GÖRE','DOLAR KURUNA GORE',
-    'İLETİŞİM','ILETISIM','GÜNCEL VİTRİN','GUNCEL VITRIN','FİYAT LİSTESİ','FIYAT LISTESI'
+    'İLETİŞİM','ILETISIM','GÜNCEL VİTRİN','GUNCEL VITRIN','FİYAT LİSTESİ','FIYAT LISTESI',
+    'BİLGİLENDİRME','BILGILENDIRME','GARANTİ','GARANTI','KARGO İLE','KARGO ILE'
   ];
-  const looksLikeTitle = titleTerms.some(term => text.includes(term));
-  const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
-  if(looksLikeTitle && !hasProductData) return true;
+  if(titleTerms.some(term => text.includes(term))) return true;
+
+  // Sadece marka yazan bölüm satırları (SAMSUNG, ONEPLUS, TECNO vb.)
+  // gerçek ürün değildir.
+  const sectionBrands = ['SAMSUNG','ONEPLUS','TECNO','INFINIX','APPLE','IPHONE','GOOGLE','PIXEL','NUBIA','REDMAGIC','DYSON','BRAUN','PHILIPS','XIAOMI','REDMI','POCO'];
+  if(model === brand && sectionBrands.includes(brand)) return true;
 
   // Çok uzun, cümle biçimli model alanları genellikle açıklama satırıdır.
-  if(model.length > 65 && !p.p && !spec && !p.img) return true;
+  const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
+  if(model.length > 65 && !hasProductData) return true;
 
   return false;
 }
