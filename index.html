@@ -395,11 +395,14 @@ function scorePhotoFilename(filename, p){
   const fileJoined = fileTokens.join('-');
   let score = 0;
 
-  // En güçlü eşleşme: model adının tamamı dosyada geçiyor.
-  if(fileJoined === modelJoined) score += 100;
-  if(cleanBase === modelJoined) score += 90;
-  if(fileJoined.includes(modelJoined)) score += 72;
-  if(modelJoined.includes(fileJoined) && fileJoined.length >= 4) score += 35;
+  // En güçlü eşleşme: temizlenmiş MODEL ifadesi dosya adında birebir/ardışık geçiyorsa
+  // bunu açık ara öne al. Özellikle Dyson gibi aynı seride birden fazla varyant olduğunda
+  // yanlış görsel seçilmesini önler (örn. V15 Detect Slim ≠ V15 Detect Absolute).
+  const modelSlug = modelJoined;
+  if(fileJoined === modelSlug) score += 160;
+  if(cleanBase === modelSlug) score += 150;
+  if(fileJoined.includes(modelSlug)) score += 140;
+  if(modelSlug.includes(fileJoined) && fileJoined.length >= 5) score += 25;
 
   // Marka + model dosya adında birlikteyse ek puan.
   const brandTokens = brand.split('-').filter(Boolean);
@@ -423,7 +426,7 @@ function scorePhotoFilename(filename, p){
 
 async function loadPhotoManifest(){
   try{
-    const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos';
+    const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos?t=' + Date.now();
     const res = await fetch(api, {cache:'no-store', headers:{'Accept':'application/vnd.github+json'}});
     if(!res.ok) throw new Error('GitHub photos listesi alınamadı.');
     const data = await res.json();
@@ -558,7 +561,7 @@ async function loadFromGoogleSheets() {
       let model = (cols[1] || '').toUpperCase(); // B Sütunu
       let ozellik = cols[2] || '';               // C Sütunu
       let fiyatStr = cols[3] || '';              // D Sütunu
-      let stokStr = (cols[4] || '').toLowerCase(); // E Sütunu
+      let stokStr = normalizeTR(cols[4] || ''); // E Sütunu
       let katStr = (cols[5] || '').toLowerCase();  // F Sütunu
       let resimUrl = cols[6] || '';              // G Sütunu
       let batarya = cols[7] || '';               // H Sütunu
@@ -571,7 +574,12 @@ async function loadFromGoogleSheets() {
       if(!marka && !model) continue; 
       
       let price = parseInt(fiyatStr.replace(/[^0-9]/g, ''));
-      let isStock = ['var','stokta','evet','mevcut','available'].includes(stokStr);
+      // Stok bilgisini toleranslı oku: 'VAR', 'STOKTA', 'MEVCUT', 'VAR - 1 ADET' gibi
+      // ifadeler stokta kabul edilir. Açıkça yok/tükendi/0 olanlar stok dışıdır.
+      const noStockTerms = ['yok','stok yok','tukendi','tukenmis','0','hayir','false','out of stock'];
+      const hasNoStock = noStockTerms.some(term => stokStr === term || stokStr.includes(term));
+      const hasStock = /(^|\s)(var|stokta|mevcut|evet|available|in stock)(\s|$)/.test(stokStr) || /\bvar\b/.test(stokStr);
+      let isStock = hasStock && !hasNoStock;
       
       let catType = "PHONE";
       if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "IPHONE";
