@@ -384,46 +384,79 @@ function imageTokens(value){
 function scorePhotoFilename(filename, p){
   const base = normalizeImageBase(filename);
   if(!base) return -Infinity;
-  const cleanBase = base.replace(/^(M|K|B)-/, '');
+
   const model = cleanImageName(p.m);
   const brand = cleanImageName(p.b);
-  const modelTokens = imageTokens(model);
-  const fileTokens = imageTokens(base);
-  if(!modelTokens.length) return -Infinity;
+  if(!model || !brand) return -Infinity;
 
-  const modelJoined = modelTokens.join('-');
+  const cleanBase = base.replace(/^(M|K|B)-/, '');
+  const fileTokens = imageTokens(base);
+  const modelTokens = imageTokens(model);
+  const brandAliases = {
+    'SAMSUNG':['SAMSUNG','GALAXY'],
+    'APPLE':['APPLE','IPHONE'],
+    'IPHONE':['APPLE','IPHONE'],
+    'GOOGLE':['GOOGLE','PIXEL'],
+    'PIXEL':['GOOGLE','PIXEL'],
+    'ONEPLUS':['ONEPLUS'],
+    'INFINIX':['INFINIX'],
+    'TECNO':['TECNO'],
+    'NUBIA':['NUBIA','REDMAGIC'],
+    'REDMAGIC':['NUBIA','REDMAGIC'],
+    'DYSON':['DYSON'],
+    'BRAUN':['BRAUN'],
+    'PHILIPS':['PHILIPS'],
+    'XIAOMI':['XIAOMI','MI'],
+    'MI':['XIAOMI','MI'],
+    'REDMI':['REDMI'],
+    'POCO':['POCO']
+  };
+  const allowedBrands = brandAliases[brand] || [brand];
+
+  // Marka güvenliği: bilinen marka adı dosyada varsa ürünün markasıyla uyumlu olmalı.
+  const knownBrands = ['SAMSUNG','APPLE','IPHONE','GOOGLE','PIXEL','ONEPLUS','INFINIX','TECNO','NUBIA','REDMAGIC','DYSON','BRAUN','PHILIPS','XIAOMI','MI','REDMI','POCO'];
+  const conflictingBrand = knownBrands.find(b => fileTokens.includes(b) && !allowedBrands.includes(b));
+  if(conflictingBrand) return -Infinity;
+
+  // Dosyada ürün markası (veya güvenli marka eşdeğeri) bulunmalı.
+  const brandMatch = allowedBrands.some(b => fileTokens.includes(b));
+  if(!brandMatch) return -Infinity;
+
   const fileJoined = fileTokens.join('-');
+  const modelJoined = modelTokens.join('-');
+  const expected = [...cleanImageName(brand).split('-'), ...modelTokens].join('-');
   let score = 0;
 
-  // En güçlü eşleşme: temizlenmiş MODEL ifadesi dosya adında birebir/ardışık geçiyorsa
-  // bunu açık ara öne al. Özellikle Dyson gibi aynı seride birden fazla varyant olduğunda
-  // yanlış görsel seçilmesini önler (örn. V15 Detect Slim ≠ V15 Detect Absolute).
-  const modelSlug = modelJoined;
-  if(fileJoined === modelSlug) score += 160;
-  if(cleanBase === modelSlug) score += 150;
-  if(fileJoined.includes(modelSlug)) score += 140;
-  if(modelSlug.includes(fileJoined) && fileJoined.length >= 5) score += 25;
+  // En güçlü durumlar: marka+model veya model ifadesi dosyada ardışık geçiyor.
+  if(cleanBase === expected) score += 300;
+  if(fileJoined === expected) score += 290;
+  if(fileJoined.includes(expected)) score += 280;
+  if(cleanBase === modelJoined) score += 260;
+  if(fileJoined.includes(modelJoined)) score += 250;
 
-  // Marka + model dosya adında birlikteyse ek puan.
-  const brandTokens = brand.split('-').filter(Boolean);
-  const expected = [...brandTokens, ...modelTokens].join('-');
-  if(cleanBase === expected) score += 60;
-  if(fileJoined.includes(expected)) score += 45;
-
-  // Model tokenlarının çoğu dosyada bulunmalı; yanlış ürüne düşmeyi önle.
+  // Model tokenlarının dosyada bulunma oranı.
   const matched = modelTokens.filter(t => fileTokens.includes(t)).length;
-  score += (matched / modelTokens.length) * 30;
-
-  // Dosya adında ürün modelinden hiç token yoksa kabul etme.
+  const ratio = matched / modelTokens.length;
   if(matched === 0) return -Infinity;
+  if(ratio >= 1) score += 100;
+  else if(ratio >= 0.75) score += 45;
+  else if(ratio >= 0.5) score += 10;
+  else return -Infinity;
 
-  // m_/k_/b_ önekleri yalnızca varyanttır; m_ biraz öncelikli olsun.
+  // Modelin sırası dosyada korunuyorsa ek güven.
+  let cursor = 0;
+  for(const token of modelTokens){
+    const pos = fileTokens.indexOf(token, cursor);
+    if(pos === -1) break;
+    cursor = pos + 1;
+  }
+  if(cursor > 0 && cursor >= modelTokens.length) score += 35;
+
+  // Dosya adındaki m_/k_/b_ önekleri varyanttır; eşit durumda küçük avantaj.
   if(/^M-/.test(base)) score += 4;
 
-  // Modelin sonundaki renk/versiyon numarası gibi ekler sorun değildir.
   return score;
 }
-
 async function loadPhotoManifest(){
   try{
     const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos?t=' + Date.now();
@@ -448,7 +481,7 @@ function imageCandidatesForProduct(p){
   if(photoManifestReady && photoManifest.length){
     const ranked = photoManifest
       .map(file => ({file, score:scorePhotoFilename(file.name, p)}))
-      .filter(x => Number.isFinite(x.score))
+      .filter(x => Number.isFinite(x.score) && x.score >= 60)
       .sort((a,b) => b.score - a.score);
 
     ranked.forEach(({file}) => {
@@ -457,7 +490,8 @@ function imageCandidatesForProduct(p){
     });
   }
 
-  // Manifest alınamazsa veya eşleşme bulunamazsa mevcut doğrudan aday sistemi yedek olarak çalışır.
+  // Manifest alınamazsa yalnızca güvenli, marka+model tabanlı doğrudan adayları dene.
+  // Başka markaya ait bir görseli fallback olarak kullanma.
   const names = imageNameAliases(p.m, p.b);
   names.forEach(name => exts.forEach(ext => {
     urls.push(`https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${name}.${ext}`);
@@ -465,7 +499,6 @@ function imageCandidatesForProduct(p){
 
   return [...new Set(urls)];
 }
-
 function getProductImageSources(p){
   if(p.img && /^https?:\/\//i.test(p.img) && !p.autoImage) return [p.img];
   return imageCandidatesForProduct(p);
@@ -501,28 +534,32 @@ function isNonProductRow(p){
   if(!text) return true;
   if(isPromoRow(p)) return true;
 
-  // Excel'deki bölüm/tanıtım başlıklarını ürün gibi gösterme.
-  // Gerçek ürünlerde model veya teknik özellik bulunacağı için başlıkları
-  // özellikle fiyat/spec/stok verisi olmayan satırlarda ayıklıyoruz.
-  const titleLike = [
-    'MARKA MODEL',
-    'ÜRÜN TANIMI',
-    'MODELLERİ',
-    'MODELLERI',
-    'GÜNCELLEME TARİHİ',
-    'GUNCELLEME TARIHI',
-    'WHATSAPP TIKLA MESAJ GÖNDER',
-    'MIX GSM',
-    '1 HAFTA BİREBİR DEĞİŞİM',
-    '1 HAFTA BIREBIR DEGISIM'
+  // Model hücresi boşsa veya yalnızca marka adıysa bu çoğunlukla Excel'deki
+  // bölüm başlığıdır (örn. SAMSUNG, ONEPLUS, TECNO).
+  if(!model || model === brand) {
+    const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
+    if(!hasProductData) return true;
+  }
+
+  // Tanıtım / bilgi satırlarını gerçek ürünlerden ayır.
+  const titleTerms = [
+    'MARKA MODEL','ÜRÜN TANIMI','MODELLERİ','MODELLERI','MODEL LİSTESİ','MODEL LISTESI',
+    'GÜNCELLEME TARİHİ','GUNCELLEME TARIHI','WHATSAPP TIKLA','WHATSAPP SIPARIS','WHATSAPP SİPARİŞ',
+    'TÜM CİHAZLARA','TUM CIHAZLARA','ÜCRETSİZ YAZILIM','UCRETSIZ YAZILIM',
+    'DONANIMSAL SORUNLARA','BİREBİR DEĞİŞİM','BIREBIR DEGISIM',
+    'ANLAŞMALI KARGO','ANLASMALI KARGO','GÜVENLİ VE HIZLI ADRESE','GUVENLI VE HIZLI ADRESE',
+    'FİYATLAR MEVCUT STOK','FIYATLAR MEVCUT STOK','DOLAR KURUNA GÖRE','DOLAR KURUNA GORE',
+    'İLETİŞİM','ILETISIM','GÜNCEL VİTRİN','GUNCEL VITRIN','FİYAT LİSTESİ','FIYAT LISTESI'
   ];
-  const looksLikeTitle = titleLike.some(term => text.includes(term));
+  const looksLikeTitle = titleTerms.some(term => text.includes(term));
   const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
   if(looksLikeTitle && !hasProductData) return true;
 
+  // Çok uzun, cümle biçimli model alanları genellikle açıklama satırıdır.
+  if(model.length > 65 && !p.p && !spec && !p.img) return true;
+
   return false;
 }
-
 function promoCardMarkup(){
   return `<article class="card promo-card" aria-label="Xiaomi Redmi Poco">
     <div class="promo-visual">
@@ -664,7 +701,7 @@ function render(){
  grid.innerHTML = a.length ? promo + a.map(p => {
    const badge = p.stock ? '<span class="stock">● STOKTA</span>' : '<span class="stock no">TÜKENDİ</span>';
    const priceText = p.p == null ? "fiyat bilgisi" : `${fmt(p.p)} TL`;
-   const wa = `https://wa.me/905424818255?text=${encodeURIComponent(`Merhaba İsa Bey, Mix GSM kataloğundan ${p.b} ${p.m} (${p.s}) - ${priceText} cihazınız hakkında bilgi almak istiyorum.`)}`;
+   const wa = `https://wa.me/905424818255?text=${encodeURIComponent(`Merhaba İsa Bey, Mix GSM kataloğundan ${escapeHtml(p.b)} ${escapeHtml(p.m)} (${p.s}) - ${priceText} cihazınız hakkında bilgi almak istiyorum.`)}`;
    const pk = productKey(p);
    const pIndex = products.indexOf(p);
     return `<article class="card" onclick="openProduct(${pIndex})">
@@ -674,9 +711,9 @@ function render(){
        ${autoImageMarkup(p)}
      </div>
      <div class="info">
-       <div class="brand">${p.b}</div>
-       <div class="name">${p.m}</div>
-       <span class="spec">▣ ${p.s || 'Detaylar için tıklayın'}</span>
+       <div class="brand">${escapeHtml(p.b)}</div>
+       <div class="name">${escapeHtml(p.m)}</div>
+       <span class="spec">▣ ${escapeHtml(p.s || 'Detaylar için tıklayın')}</span>
        <div class="bottom">
          <div class="price">
            <small>GÜNCEL FİYAT</small>
