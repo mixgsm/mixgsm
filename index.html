@@ -25,7 +25,8 @@
 :root{--bg:#06080e;--panel:#0d1320;--card:#111a2a;--line:#24314a;--txt:#f8fafc;--muted:#91a0b8;--red:#ef3333;--red2:#991b1b;--blue:#38bdf8;--green:#25d366}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 50% -10%,#18243b 0,#06080e 42%);color:var(--txt);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding-bottom:92px}
 button,input{font:inherit}a{text-decoration:none;color:inherit}
-.hero{padding:28px 16px 22px;text-align:center;border-bottom:1px solid var(--line)}
+.hero{padding:22px 16px 22px;text-align:center;border-bottom:1px solid var(--line)}
+.hero-logo-wrap{display:flex;justify-content:center;margin:0 auto 10px}.hero-logo{width:92px;height:92px;object-fit:cover;border-radius:50%;border:2px solid #263b59;box-shadow:0 12px 35px #0008,0 0 0 6px #0a101b}.brandmark{display:none}
 .badge{display:inline-flex;padding:6px 12px;border-radius:999px;background:#2a1013;border:1px solid #682127;color:#ff8a8a;font-weight:800;font-size:12px}
 h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:950;letter-spacing:-2px}h1 b{color:var(--red)}.sub{color:var(--muted);margin:0;font-size:14px}
 .trust{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:17px auto 0;max-width:900px}.trust span{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#0c1220;color:#cbd5e1;font-size:11px;font-weight:750}.trust .ok{color:#6ee7b7;border-color:#175c48}
@@ -72,7 +73,7 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 <body>
 <header class="hero">
   <div class="badge">🔥 MİX GSM • GÜNCEL KATALOG</div>
-  <div class="brandmark"><div class="logo">M</div><span>MİX <b>GSM</b></span></div>
+  <div class="hero-logo-wrap"><img class="hero-logo" src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg" alt="MİX GSM logosu"></div>
     <h1 style="font-size:18px;letter-spacing:-.2px;margin:6px 0 0">9 Yıllık Tecrübenin Gücüyle Güvenilir Teknoloji</h1>
     <div class="hero-actions"><a href="#catalog">🛍️ Kataloğa Git</a><a href="https://wa.me/905424818255?text=Merhaba%20Mix%20GSM%2C%20katalog%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer">💬 WhatsApp'tan Bize Ulaşın</a></div>
     <div class="xiaomi-assure" style="text-align:center;">⭐ <b>MİX GSM DESTEĞİ:</b> Ürün ve modele göre teknik destek seçenekleri hakkında bilgi almak için WhatsApp üzerinden bize ulaşabilirsiniz.</div>
@@ -83,10 +84,10 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 <section class="controls">
   <div class="search"><i>🔍</i><input id="q" placeholder="Model / marka ara… Türkçe karakter ve küçük-büyük harf sorun olmaz • Örn: MI 15 T, xiaomi 17, s26"></div>
   <div class="filter-label">MARKA</div><div class="filters" id="filters">
-    <button class="active" data-cat="XIAOMI">Xiaomi • Redmi • Poco</button><button data-cat="ALL">Tümü</button><button data-cat="IPHONE">Apple iPhone</button><button data-cat="SAMSUNG">Samsung</button><button data-cat="INFINIX_TECNO">Infinix • Tecno</button><button data-cat="ONEPLUS_OTHERS">OnePlus • Pixel • Gaming</button><button data-cat="PERSONAL_CARE">Dyson • Braun • Philips</button>
+    <button class="active" data-cat="XIAOMI">Xiaomi • Redmi • Poco</button><button data-cat="ALL">Tümü</button><button data-cat="FAVORITES">♥ Favorilerim</button><button data-cat="IPHONE">Apple iPhone</button><button data-cat="SAMSUNG">Samsung</button><button data-cat="INFINIX_TECNO">Infinix • Tecno</button><button data-cat="ONEPLUS_OTHERS">OnePlus • Pixel • Gaming</button><button data-cat="PERSONAL_CARE">Dyson • Braun • Philips</button>
   </div>
   <div class="filter-label category-label">KATEGORİ</div><div class="filters" id="categoryFilters">
-    <button class="active" data-group="ALL">Tümü</button><button data-group="PHONE">📱 Telefon</button><button data-group="PERSONAL_CARE">🧴 Kişisel Bakım</button><button id="favoritesFilter" data-group="FAVORITES">♥ Favorilerim</button>
+    <button class="active" data-group="ALL">Tümü</button><button data-group="PHONE">📱 Telefon</button><button data-group="PERSONAL_CARE">🧴 Kişisel Bakım</button>
   </div>
 </section>
 
@@ -216,12 +217,11 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 <script>
 let products = [];
 let cat = "XIAOMI", group = "ALL", q = "", sort = "default", favOnly = false;
+const CACHE_TTL = 15 * 60 * 1000;
+const SHEET_CACHE_KEY = "mixgsm-sheet-cache-v3";
+const PHOTOS_CACHE_KEY = "mixgsm-photos-cache-v3";
 const favKey = "mixgsm-favorites-v14";
 const productKey = p => `${p.b}|${p.m}|${p.s}`;
-const CACHE_TTL = 15 * 60 * 1000;
-const sheetCacheKey = "mixgsm-sheet-cache-v1";
-const photoCacheKey = "mixgsm-photo-manifest-v1";
-const fallbackImage = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg";
 let favs = [];
 try{
   const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
@@ -501,26 +501,35 @@ function scorePhotoFilename(filename, p){
 
   return score;
 }
-async function loadPhotoManifest(){
-  const now = Date.now();
+function readSessionCache(key){
   try{
-    const cached = JSON.parse(sessionStorage.getItem(photoCacheKey) || 'null');
-    if(cached && Array.isArray(cached.data) && (now - cached.time) < CACHE_TTL){
-      photoManifest = cached.data;
+    const raw = sessionStorage.getItem(key);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || !obj.time || (Date.now() - obj.time) > CACHE_TTL) return null;
+    return obj.value;
+  }catch(e){ return null; }
+}
+function writeSessionCache(key, value){
+  try{ sessionStorage.setItem(key, JSON.stringify({time:Date.now(), value})); }catch(e){}
+}
+
+async function loadPhotoManifest(){
+  try{
+    const cached = readSessionCache(PHOTOS_CACHE_KEY);
+    if(Array.isArray(cached)){
+      photoManifest = cached;
       photoManifestReady = true;
       return;
     }
-  }catch(e){}
-
-  try{
     const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos';
     const res = await fetch(api, {headers:{'Accept':'application/vnd.github+json'}});
     if(!res.ok) throw new Error('GitHub photos listesi alınamadı.');
     const data = await res.json();
     if(Array.isArray(data)){
       photoManifest = data.filter(x => x && x.type === 'file' && /\.(webp|jpg|jpeg|png)$/i.test(x.name));
+      writeSessionCache(PHOTOS_CACHE_KEY, photoManifest);
       photoManifestReady = true;
-      try{ sessionStorage.setItem(photoCacheKey, JSON.stringify({time:now,data:photoManifest})); }catch(e){}
     }
   }catch(e){
     console.warn('Fotoğraf listesi alınamadı; doğrudan aday URL sistemi kullanılacak.', e);
@@ -629,12 +638,12 @@ function tryNextProductImage(img){
     if(index<sources.length){ img.dataset.imageIndex=String(index); img.src=sources[index]; return; }
   }catch(e){}
   img.onerror=null;
-  img.src=fallbackImage;
+  img.src='https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
 }
 
 function autoImageMarkup(p){
   const sources=getProductImageSources(p);
-  const first=sources[0]||fallbackImage;
+  const first=sources[0]||'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
   const encoded=JSON.stringify(sources).replace(/'/g,'&#39;');
   return `<img src="${first}" data-image-sources='${encoded}' data-image-index="0" alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}" loading="lazy" onerror="tryNextProductImage(this)">`;
 }
@@ -651,6 +660,16 @@ function isNonProductRow(p){
   const text = `${brand} ${model}`.replace(/\s+/g,' ').trim();
   if(!text) return true;
   if(isPromoRow(p)) return true;
+  // Marka başlığı / açıklama satırları: model hücresi boşsa ürün değildir.
+  if(!model) return true;
+  const normalizedModel = normalizeTR(model);
+  const normalizedText = normalizeTR(text);
+  if(/\b(model|modelleri|modeller|listesi|liste)\b/.test(normalizedModel) && !/\b(iphone|galaxy|pixel|redmi|poco|mi|oneplus|spark|camon|pova|note|fold|flip|airwrap|lumea|silk|skin|magic)\b/.test(normalizedModel)){
+    return true;
+  }
+  if(/^(samsung|apple|iphone|oneplus|tecno|infinix|google|pixel|nubia|redmagic|dyson|braun|philips|xiaomi|redmi|poco)(\s+(modelleri|modeller|urunleri|ürünleri|listesi|liste))?$/.test(normalizedModel)){
+    return true;
+  }
 
   // Excel'deki bölüm başlıkları hiçbir koşulda ürün olarak gösterilmez.
   // Özellikle model hücresinde başlık yazarken diğer sütunlarda veri kalmış
@@ -700,20 +719,12 @@ async function loadFromGoogleSheets() {
   try {
     grid.innerHTML = '<div class="empty">Ürünler kataloğa yükleniyor... ⏳</div>';
     
-    let tsv = null;
-    const now = Date.now();
-    try{
-      const cached = JSON.parse(sessionStorage.getItem(sheetCacheKey) || 'null');
-      if(cached && typeof cached.tsv === 'string' && (now - cached.time) < CACHE_TTL){
-        tsv = cached.tsv;
-      }
-    }catch(e){}
-
-    if(tsv === null){
-      const res = await fetch(url, {cache:'default'});
+    let tsv = readSessionCache(SHEET_CACHE_KEY);
+    if(!tsv){
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
       tsv = await res.text();
-      try{ sessionStorage.setItem(sheetCacheKey, JSON.stringify({time:now,tsv})); }catch(e){}
+      writeSessionCache(SHEET_CACHE_KEY, tsv);
     }
     const lines = tsv.split('\n');
     
@@ -809,9 +820,8 @@ function escapeHtml(value){
 }
 
 function render(){
- let base = products.filter(p => !isNonProductRow(p) && (cat === "ALL" || p.cat === cat) &&
-   (group === "ALL" || group === "FAVORITES" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE")) &&
-   (!favOnly || favs.includes(productKey(p)))
+ let base = products.filter(p => !isNonProductRow(p) && (favOnly ? favs.includes(productKey(p)) : (cat === "ALL" || p.cat === cat)) &&
+   (group === "ALL" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE"))
  );
  
  let a;
@@ -827,7 +837,7 @@ function render(){
  if(sort === "name") a.sort((x, y) => (x.m).localeCompare(y.m, "tr"));
 
  count.textContent = `${a.length} ürün listeleniyor`;
- const promo = (!q && cat === "ALL" && group === "ALL") ? promoCardMarkup() : "";
+ const promo = (!q && !favOnly && cat === "ALL" && group === "ALL") ? promoCardMarkup() : "";
  grid.innerHTML = a.length ? promo + a.map(p => {
    const badge = p.stock ? '<span class="stock">● STOKTA</span>' : '<span class="stock no">TÜKENDİ</span>';
    const priceText = p.p == null ? "fiyat bilgisi" : `${fmt(p.p)} TL`;
@@ -854,7 +864,7 @@ function render(){
        <div style="margin-top:9px;color:#94a3b8;font-size:10px;font-weight:800;text-align:center">👆 Ürüne dokun → ayrıntıları incele</div>
      </div>
    </article>`;
- }).join("") : `<div class="empty">${favOnly ? 'Henüz favorilere eklediğiniz ürün yok. Ürün kartındaki ♥ simgesine dokunarak favori ekleyebilirsiniz.' : 'Aradığınız kriterde ürün bulunamadı.'}</div>`;
+ }).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
 }
 
 document.querySelector("#q").addEventListener("input", e => {
@@ -876,14 +886,15 @@ document.querySelector("#sort").addEventListener("change", e => { sort = e.targe
 
 document.querySelectorAll("#filters button").forEach(b => {
   b.addEventListener("click", () => {
-    cat = b.dataset.cat;
+    const selected = b.dataset.cat;
+    favOnly = selected === "FAVORITES";
+    cat = favOnly ? "ALL" : selected;
     group = "ALL";
-    favOnly = false;
     document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
     document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
-    const activeGrp = document.querySelector(`#categoryFilters button[data-group="${group}"]`);
-    if (activeGrp) activeGrp.classList.add("active");
+    const allGrp = document.querySelector('#categoryFilters button[data-group="ALL"]');
+    if (allGrp) allGrp.classList.add("active");
     render();
   });
 });
@@ -892,7 +903,7 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
   b.addEventListener("click", () => {
     group = b.dataset.group;
     cat = "ALL";
-    favOnly = group === "FAVORITES";
+    favOnly = false;
     document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
     document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
@@ -909,7 +920,7 @@ function openProduct(i){
  modalImg.dataset.imageSources = JSON.stringify(modalSources);
  modalImg.dataset.imageIndex = "0";
  modalImg.onerror = function(){ tryNextProductImage(this); };
- modalImg.src = modalSources[0] || fallbackImage;
+ modalImg.src = modalSources[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
  modalImg.alt = p.b + " " + p.m;
  document.getElementById("mb").textContent = p.b;
  document.getElementById("mn").textContent = p.m;
@@ -963,15 +974,11 @@ function updateFavs(){
   const n = favs.length;
   document.getElementById("favcount").textContent = n + " favori";
   document.getElementById("comparebar").classList.toggle("show", n > 0);
-  const favBtn = document.getElementById("favoritesFilter");
-  if(favBtn) favBtn.classList.toggle("active", favOnly);
 }
 
 function clearFavs(){
   favs = [];
   localStorage.setItem(favKey, "[]");
-  favOnly = false;
-  if(group === "FAVORITES") group = "ALL";
   updateFavs();
   render();
   showToast("Favoriler temizlendi");
@@ -985,7 +992,6 @@ function showToast(t){
 }
 
 // Start application by fetching Google Sheets
-updateFavs();
 window.addEventListener('DOMContentLoaded', loadFromGoogleSheets);
 </script>
 </body>
