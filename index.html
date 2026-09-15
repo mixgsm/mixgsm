@@ -523,31 +523,113 @@ function cleanImageName(value) {
     .replace(/^-+|-+$/g,'');
 }
 
-function imageCandidatesForProduct(p) {
-  // G sütununda GitHub photos URL'si varsa onu kullan.
-  const githubImage = normalizeGithubImageUrl(p.img);
-  if(githubImage) return [githubImage];
+const GITHUB_PHOTO_FILES = [
+  '.gitkeep',
+  'APPLE-IPHONE-16-PRO-MAX.jpg','APPLE-IPHONE-16-PRO.jpg','APPLE-IPHONE-16.jpg','APPLE-IPHONE-17-PRO-MAX.jpg','APPLE-IPHONE-17-PRO.jpg','APPLE-IPHONE-17.jpg',
+  'BRAUN-SILK-EXPERT-PRO-5.jpg','BRAUN-SKIN-I-EXPERT.jpg','Braun-pro-5.jpg','Braun-skin-i.jpg',
+  'DYSON-AIRWRAP-LONG.jpg','DYSON-AIRWRAP.jpg','Dyson-airstart.jpg','Dyson-airwarp.jpg','Dyson-coanda.jpg','Dyson-gen5-detect-submarine.jpg','Dyson-v16-piston-animal.jpg',
+  'GOOGLE-PIXEL-10-PRO-XL.jpg',
+  'INFINIX-GT-50-PRO.jpg','INFINIX-HOT-60-PRO-2.png','INFINIX-HOT-60-PRO-PLUS.webp','INFINIX-HOT-60-PRO.webp','INFINIX-HOT-60I-5G.jpg','INFINIX-NOTE-50-2.jpg','INFINIX-NOTE-50-PRO-PLUS-2.jpg','INFINIX-NOTE-50-PRO-PLUS.webp','INFINIX-NOTE-50-PRO.webp','INFINIX-NOTE-50.webp','INFINIX-NOTE-60-PRO.webp','INFINIX-SMART-10-PLUS.png','INFINIX-SMART-10.webp','INFINIX-SMART-20.jpg',
+  'MI-15.webp','MI-15T-PRO.jpg','MI-15T.jpg','MI-17-PRO-MAX.webp','MI-17-PRO.webp','MI-17-ULTRA.webp','MI-17.webp','MI-17T-PRO.jpg','MI-17T.jpg',
+  'ONEPLUS-11.jpg','ONEPLUS-12.webp','ONEPLUS-15.webp','PHILIPS-LUMEA-LAZER.jpg',
+  'POCO-F8-PRO.jpg','POCO-F8-ULTRA.jpg','POCO-F9-ULTRA.jpg','POCO-X8-PRO-MAX.jpg','POCO-X8-PRO.jpg',
+  'REDMAGIC-11-PRO-PLUS.webp','REDMAGIC-11-PRO.webp','REDMAGIC-11S-PRO.webp',
+  'REDMI-15.jpg','REDMI-15C.jpg','REDMI-A7-PRO.jpg','REDMI-NOTE-14-PRO-PLUS-5G.jpg','REDMI-NOTE-14-PRO.webp','REDMI-NOTE-14.webp','REDMI-NOTE-15-PRO-PLUS-5G.jpg','REDMI-NOTE-15-PRO.jpg','REDMI-NOTE-15.jpg',
+  'SAMSUNG-S24-ULTRA.jpg','SAMSUNG-S25-ULTRA.jpg','SAMSUNG-S26-ULTRA.jpg','SAMSUNG-Z-FOLD-6.webp','SAMSUNG-Z-FOLD-7.jpg',
+  'TECNO-CAMON-40-PREMIER.webp','TECNO-CAMON-40-PRO-5G.webp','TECNO-CAMON-50-PRO-5G.webp','TECNO-CAMON-NOTE-50-ULTRA.jpg','TECNO-POVA-CURVE-2-5G.jpg','TECNO-POVA-SLIM-5G.jpg','TECNO-SPARK-40-C.jpg','TECNO-SPARK-GO-3.jpg',
+  'b_infinix-hot-60-pro-10.webp','b_infinix-note-50-pro-1.webp','dyson-airwarp-long.jpg','dyson-coanda-x2.png','dyson-gen5-detect-absolute.jpg','dyson-v15-detect-absolute.jpg','gorsel-yok.jpg','k_infinix-note-50-4.webp','k_infinix-note-50-pro-plus-1.webp',
+  'm_apple-iphone-16-4.jpg','m_apple-iphone-16-pro-256gb-3.jpg','m_apple-iphone-16-pro-max-1tb-5.jpg','m_apple-iphone-17-2.jpg','m_apple-iphone-17-pro-1tb-4.jpg','m_apple-iphone-17-pro-max-2tb-10.jpg','m_google-pixel-10-pro-xl-14.jpg',
+  'm_infinix-gt-50-pro-6.jpg','m_infinix-hot-60-pro-9.png','m_infinix-hot-60-pro-plus-7.webp','m_infinix-hot-60i-5g-21.jpg','m_infinix-note-50-1.jpg','m_infinix-note-50-pro-plus-15.jpg','m_infinix-note-60-pro-2.webp','m_infinix-smart-10-2.webp','m_infinix-smart-10-plus-7.png','m_infinix-smart-20-5.jpg',
+  'm_nubia-red-magic-11-pro-1tb-16.webp','m_nubia-red-magic-11-pro-plus-1.webp','m_nubia-redmagic-11s-pro-14.webp','m_oneplus-11-3.jpg','m_oneplus-12-6.webp','m_oneplus-15-13.webp',
+  'm_samsung-galaxy-s24-ultra-5.jpg','m_samsung-galaxy-s25-ultra-512gb-2.jpg','m_samsung-galaxy-s26-ultra-15.jpg','m_samsung-galaxy-z-fold6-32.webp','m_samsung-galaxy-z-fold7-20.jpg',
+  'm_tecno-camon-40-premier-4.webp','m_tecno-camon-40-pro-5g-12gb-4.webp','m_tecno-camon-50-pro-5g-3.webp','m_tecno-camon-50-ultra-12-256gb-15.jpg','m_tecno-pova-curve-2-5g-10.jpg','m_tecno-pova-slim-5g-1.jpg','m_tecno-spark-40c-2.jpg','m_tecno-spark-go-3-2.jpg',
+  'poco-x7-pro.webp'
+].filter(Boolean);
 
-  const brand = cleanImageName(p.b);
-  const model = cleanImageName(p.m);
-  if(!brand || !model) return [];
+function githubPhotoUrl(file) {
+  return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(file)}`;
+}
 
-  let urlName = `${brand}-${model}`;
+function imageMatchKey(value) {
+  return cleanImageName(value)
+    .replace(/^M-/, '')
+    .replace(/^B-/, '')
+    .replace(/^K-/, '')
+    .replace(/^APPLE-IPHONE-/, 'IPHONE-')
+    .replace(/^GOOGLE-PIXEL-/, 'PIXEL-')
+    .replace(/^SAMSUNG-GALAXY-/, 'SAMSUNG-')
+    .replace(/^NUBIA-RED-/, 'RED-')
+    .replace(/^REDMAGIC-/, 'RED-')
+    .replace(/^XIAOMI-/, 'MI-');
+}
 
-  // GitHub photos klasöründeki adlandırma düzeni.
-  if(brand === 'SAMSUNG') {
-    urlName = `SAMSUNG-${model.replace(/^GALAXY-/, '')}`;
-  } else if(brand === 'APPLE' || brand === 'IPHONE') {
-    const cleanModel = model
-      .replace(/^APPLE-?IPHONE-?/, '')
-      .replace(/^IPHONE-?/, '');
-    urlName = `APPLE-IPHONE-${cleanModel}`;
-  } else if(brand === 'XIAOMI' || brand === 'MI' || brand === 'REDMI' || brand === 'POCO') {
-    urlName = model;
+function imageTokens(value) {
+  return imageMatchKey(value).split('-').filter(Boolean);
+}
+
+function imageFileScore(p, file) {
+  if (!file || file === '.gitkeep' || file === 'gorsel-yok.jpg') return -999;
+  const brand = imageMatchKey(p.b);
+  const model = imageMatchKey(p.m);
+  const key = imageMatchKey(file.replace(/\.[^.]+$/, ''));
+  const pt = imageTokens(`${brand}-${model}`);
+  const ft = imageTokens(key);
+  if (!pt.length || !ft.length) return -999;
+
+  let score = 0;
+  const productBrand = cleanImageName(p.b);
+  const fileBrand = ft[0];
+  if (productBrand.includes('APPLE') && !key.includes('IPHONE')) return -999;
+  if (productBrand.includes('SAMSUNG') && !key.includes('SAMSUNG')) return -999;
+  if (productBrand.includes('REDMI') && !key.includes('REDMI')) return -999;
+  if (productBrand.includes('POCO') && !key.includes('POCO')) return -999;
+  if (productBrand.includes('ONEPLUS') && !key.includes('ONEPLUS')) return -999;
+  if (productBrand.includes('INFINIX') && !key.includes('INFINIX')) return -999;
+  if (productBrand.includes('TECNO') && !key.includes('TECNO')) return -999;
+  if (productBrand.includes('DYSON') && !key.includes('DYSON')) return -999;
+  if (productBrand.includes('BRAUN') && !key.includes('BRAUN')) return -999;
+  if (productBrand.includes('PHILIPS') && !key.includes('PHILIPS')) return -999;
+  if (productBrand.includes('GOOGLE') && !key.includes('PIXEL')) return -999;
+  if (productBrand.includes('XIAOMI') || productBrand === 'MI') {
+    if (!key.startsWith('MI-')) return -999;
   }
 
-  const base = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(urlName)}`;
-  return [`${base}.jpg`, `${base}.png`, `${base}.webp`];
+  // Product model tokens must be represented by the filename, except storage/color suffixes.
+  const ignored = new Set(['GB','TB','G','RAM','ROM','BLACK','WHITE','BLUE','GREEN','GRAY','GREY','GLOBAL','EU','TR']);
+  const modelTokens = imageTokens(model).filter(t => !ignored.has(t));
+  const matched = modelTokens.filter(t => ft.includes(t));
+  if (modelTokens.length && matched.length < modelTokens.length) return -999;
+  score += matched.length * 20;
+
+  // Prefer the clean, canonical filenames shown in the photos folder over m_/b_/k_ alternates.
+  if (/^(m_|b_|k_)/i.test(file)) score -= 4;
+  if (file.toLowerCase().endsWith('.jpg')) score += 1;
+  if (file.toLowerCase() === `${key}.jpg`.toLowerCase()) score += 3;
+  return score;
+}
+
+function imageCandidatesForProduct(p) {
+  // 1) G sütunundaki GitHub URL'si her zaman önceliklidir.
+  const githubImage = normalizeGithubImageUrl(p.img);
+  if (githubImage) return [githubImage];
+
+  // 2) G boşsa yalnızca gerçekten mevcut olduğu ekran görüntülerinde görülen
+  //    GitHub photos dosyalarından eşleştir. Artık dosya adı tahmini yok.
+  const ranked = GITHUB_PHOTO_FILES
+    .map(file => ({ file, score: imageFileScore(p, file) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
+
+  if (!ranked.length) return [githubPhotoUrl('gorsel-yok.jpg')];
+
+  // Aynı ürün için yalnızca en güçlü birkaç gerçek dosyayı dene.
+  const topScore = ranked[0].score;
+  const candidates = ranked
+    .filter(x => x.score >= topScore - 2)
+    .slice(0, 4)
+    .map(x => githubPhotoUrl(x.file));
+
+  return candidates.length ? candidates : [githubPhotoUrl('gorsel-yok.jpg')];
 }
 
 function tryNextProductImage(img) {
