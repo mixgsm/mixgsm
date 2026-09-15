@@ -494,24 +494,33 @@ function isPromoRow(p){
 }
 
 function isNonProductRow(p){
-  const text = `${p.b || ''} ${p.m || ''}`.toUpperCase().trim();
+  const brand = String(p.b || '').toUpperCase().trim();
+  const model = String(p.m || '').toUpperCase().trim();
+  const spec = String(p.s || '').trim();
+  const text = `${brand} ${model}`.replace(/\s+/g,' ').trim();
   if(!text) return true;
   if(isPromoRow(p)) return true;
-  return [
-    'MARKA MODEL / ÜRÜN TANIMI',
-    'MARKA MODEL/ÜRÜN TANIMI',
+
+  // Excel'deki bölüm/tanıtım başlıklarını ürün gibi gösterme.
+  // Gerçek ürünlerde model veya teknik özellik bulunacağı için başlıkları
+  // özellikle fiyat/spec/stok verisi olmayan satırlarda ayıklıyoruz.
+  const titleLike = [
+    'MARKA MODEL',
     'ÜRÜN TANIMI',
-    'ONEPLUS MODELLERİ',
-    'SAMSUNG MODELLERİ',
-    'IPHONE MODELLERİ',
-    'APPLE MODELLERİ',
-    'XIAOMI MODELLERİ',
-    'INFINIX MODELLERİ',
-    'TECNO MODELLERİ',
-    'DYSON MODELLERİ',
-    'BRAUN MODELLERİ',
-    'PHILIPS MODELLERİ'
-  ].includes(text);
+    'MODELLERİ',
+    'MODELLERI',
+    'GÜNCELLEME TARİHİ',
+    'GUNCELLEME TARIHI',
+    'WHATSAPP TIKLA MESAJ GÖNDER',
+    'MIX GSM',
+    '1 HAFTA BİREBİR DEĞİŞİM',
+    '1 HAFTA BIREBIR DEGISIM'
+  ];
+  const looksLikeTitle = titleLike.some(term => text.includes(term));
+  const hasProductData = Boolean(spec || p.p != null || p.img || p.battery || p.screen || p.processor || p.camera || p.connectivity || p.registration);
+  if(looksLikeTitle && !hasProductData) return true;
+
+  return false;
 }
 
 function promoCardMarkup(){
