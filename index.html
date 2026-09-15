@@ -465,10 +465,122 @@ function searchScore(p, query) {
 }
 
 function isNonProductRow(p) {
-  const text = `${p.b || ''} ${p.m || ''}`.trim();
-  if(!text) return true;
-  const titleTerms = ['MARKA MODEL','ÜRÜN TANIMI','MODELLERİ','GÜNCELLEME','WHATSAPP','FİYAT LİSTESİ','İLETİŞİM'];
-  return titleTerms.some(term => text.toUpperCase().includes(term));
+  const brand = normalizeTR(p.b || '');
+  const model = normalizeTR(p.m || '');
+  const text = `${brand} ${model}`.trim();
+
+  // Marka/model başlıkları ve boş satırlar ürün değildir.
+  if(!brand || !model) return true;
+
+  const titleTerms = [
+    'marka model','urun tanimi','modelleri','modeller',
+    'guncelleme','whatsapp','fiyat listesi','iletisim',
+    'urunleri','urunler','liste'
+  ];
+  if(titleTerms.some(term => text.includes(term))) return true;
+
+  // "APPLE IPHONE", "IPHONE", "SAMSUNG" gibi yalnızca marka başlıkları.
+  const brandOnly = new Set([
+    'apple','apple iphone','iphone',
+    'samsung','xiaomi','redmi','poco',
+    'infinix','tecno','oneplus','google','pixel',
+    'dyson','braun','philips'
+  ]);
+  if(brandOnly.has(model)) return true;
+
+  // Marka ve model aynıysa ürün değildir.
+  if(model === brand || model.replace(/\s+/g,'') === brand.replace(/\s+/g,'')) return true;
+
+  return false;
+}
+
+
+function normalizeGithubImageUrl(value) {
+  const raw = String(value || '').trim();
+  if(!raw) return '';
+
+  // Yalnızca MİX GSM GitHub deposundaki /photos/ görselleri kabul edilir.
+  if(/^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/photos\//i.test(raw)) {
+    return raw;
+  }
+
+  // GitHub blob linkini raw linke çevir.
+  const blob = raw.match(/^https:\/\/github\.com\/mixgsm\/mixgsm\/blob\/main\/photos\/(.+)$/i);
+  if(blob) {
+    return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${blob[1]}`;
+  }
+
+  return '';
+}
+
+function cleanImageName(value) {
+  return String(value || '')
+    .trim()
+    .toUpperCase()
+    .replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ğ/g,'G')
+    .replace(/Ü/g,'U').replace(/Ö/g,'O').replace(/Ç/g,'C')
+    .replace(/[^A-Z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'');
+}
+
+function imageCandidatesForProduct(p) {
+  // G sütununda GitHub photos URL'si varsa onu kullan.
+  const githubImage = normalizeGithubImageUrl(p.img);
+  if(githubImage) return [githubImage];
+
+  const brand = cleanImageName(p.b);
+  const model = cleanImageName(p.m);
+  if(!brand || !model) return [];
+
+  let urlName = `${brand}-${model}`;
+
+  // GitHub photos klasöründeki adlandırma düzeni.
+  if(brand === 'SAMSUNG') {
+    urlName = `SAMSUNG-${model.replace(/^GALAXY-/, '')}`;
+  } else if(brand === 'APPLE' || brand === 'IPHONE') {
+    const cleanModel = model
+      .replace(/^APPLE-?IPHONE-?/, '')
+      .replace(/^IPHONE-?/, '');
+    urlName = `APPLE-IPHONE-${cleanModel}`;
+  } else if(brand === 'XIAOMI' || brand === 'MI' || brand === 'REDMI' || brand === 'POCO') {
+    urlName = model;
+  }
+
+  const base = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(urlName)}`;
+  return [`${base}.jpg`, `${base}.png`, `${base}.webp`];
+}
+
+function tryNextProductImage(img) {
+  try {
+    const sources = JSON.parse(img.dataset.imageSources || '[]');
+    const index = Number(img.dataset.imageIndex || 0) + 1;
+
+    if(index < sources.length) {
+      img.dataset.imageIndex = String(index);
+      img.src = sources[index];
+      return;
+    }
+  } catch(e) {}
+
+  img.onerror = null;
+  img.src = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+}
+
+function autoImageMarkup(p) {
+  const sources = imageCandidatesForProduct(p);
+
+  if(!sources.length) {
+    return `<img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg" alt="${escapeHtml(p.m)}" loading="lazy">`;
+  }
+
+  const encoded = JSON.stringify(sources).replace(/'/g,'&#39;');
+
+  return `<img src="${sources[0]}"
+    data-image-sources='${encoded}'
+    data-image-index="0"
+    alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}"
+    loading="lazy"
+    onerror="tryNextProductImage(this)">`;
 }
 
 async function loadFromGoogleSheets() {
@@ -516,7 +628,7 @@ async function loadFromGoogleSheets() {
         b: marka, m: model, s: cols[2] || '', 
         p: finalPrice,
         stock: isStock, cat: catType, group: groupType,
-        img: /^https?:\/\//i.test(cols[6] || '') ? cols[6] : '',
+        img: normalizeGithubImageUrl(cols[6] || ''),
         battery: cols[7] || '', screen: cols[8] || '', 
         processor: cols[9] || '', camera: cols[10] || '', 
         connectivity: cols[11] || '', registration: cols[12] || ''
@@ -557,8 +669,7 @@ function render() {
     const pk = `${p.b}|${p.m}|${p.s}`;
     const pIndex = products.indexOf(p);
     
-    const imgSrc = p.img && /^https?:\/\//i.test(p.img) ? escapeHtml(p.img) : 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
-    const imgMarkup = `<img src="${imgSrc}" alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}" loading="lazy" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';">`;
+    const imgMarkup = autoImageMarkup(p);
 
     return `
     <article class="card" onclick="openProduct(${pIndex})">
@@ -624,9 +735,11 @@ function openProduct(i) {
   const p = products[i], modal = document.getElementById("modal");
   const modalImg = document.getElementById("mi");
   
-  const imgSrc = p.img && /^https?:\/\//i.test(p.img) ? p.img : 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
-  modalImg.src = imgSrc;
-  modalImg.onerror = function() { this.onerror=null; this.src='https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg'; };
+  const sources = imageCandidatesForProduct(p);
+  modalImg.dataset.imageSources = JSON.stringify(sources);
+  modalImg.dataset.imageIndex = "0";
+  modalImg.onerror = function() { tryNextProductImage(this); };
+  modalImg.src = sources[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
   
   document.getElementById("mb").textContent = p.b;
   document.getElementById("mn").textContent = p.m;
