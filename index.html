@@ -569,45 +569,69 @@ function imageTokens(value) {
 
 function imageFileScore(p, file) {
   if (!file || file === '.gitkeep' || file === 'gorsel-yok.jpg') return -999;
-  const brand = imageMatchKey(p.b);
-  const model = imageMatchKey(p.m);
-  const key = imageMatchKey(file.replace(/\.[^.]+$/, ''));
-  const pt = imageTokens(`${brand}-${model}`);
-  const ft = imageTokens(key);
-  if (!pt.length || !ft.length) return -999;
 
-  let score = 0;
-  const productBrand = cleanImageName(p.b);
-  const fileBrand = ft[0];
-  if (productBrand.includes('APPLE') && !key.includes('IPHONE')) return -999;
-  if (productBrand.includes('SAMSUNG') && !key.includes('SAMSUNG')) return -999;
-  if (productBrand.includes('REDMI') && !key.includes('REDMI')) return -999;
-  if (productBrand.includes('POCO') && !key.includes('POCO')) return -999;
-  if (productBrand.includes('ONEPLUS') && !key.includes('ONEPLUS')) return -999;
-  if (productBrand.includes('INFINIX') && !key.includes('INFINIX')) return -999;
-  if (productBrand.includes('TECNO') && !key.includes('TECNO')) return -999;
-  if (productBrand.includes('DYSON') && !key.includes('DYSON')) return -999;
-  if (productBrand.includes('BRAUN') && !key.includes('BRAUN')) return -999;
-  if (productBrand.includes('PHILIPS') && !key.includes('PHILIPS')) return -999;
-  if (productBrand.includes('GOOGLE') && !key.includes('PIXEL')) return -999;
-  if (productBrand.includes('XIAOMI') || productBrand === 'MI') {
-    if (!key.startsWith('MI-')) return -999;
-  }
+  const brand = cleanImageName(p.b);
+  const model = cleanImageName(p.m);
+  const fileKey = cleanImageName(file.replace(/\.[^.]+$/, ''));
 
-  // Product model tokens must be represented by the filename, except storage/color suffixes.
-  const ignored = new Set(['GB','TB','G','RAM','ROM','BLACK','WHITE','BLUE','GREEN','GRAY','GREY','GLOBAL','EU','TR']);
-  const modelTokens = imageTokens(model).filter(t => !ignored.has(t));
-  const matched = modelTokens.filter(t => ft.includes(t));
-  if (modelTokens.length && matched.length < modelTokens.length) return -999;
-  score += matched.length * 20;
+  const exactAliases = {
+    'PHILIPS|LUMEA LAZER EPILASYON': ['PHILIPS-LUMEA-LAZER.jpg'],
+    'DYSON|AIRWRAP LONG COMPLETE': ['DYSON-AIRWRAP-LONG.jpg', 'dyson-airwarp-long.jpg'],
+    'XIAOMI|REDMI A7 PRO': ['REDMI-A7-PRO.jpg'],
+    'XIAOMI|REDMI 15C': ['REDMI-15C.jpg'],
+    'XIAOMI|REDMI 15': ['REDMI-15.jpg'],
+    'XIAOMI|REDMI NOTE 14': ['REDMI-NOTE-14.webp'],
+    'XIAOMI|REDMI NOTE 14 PRO 5G': ['REDMI-NOTE-14-PRO.webp'],
+    'XIAOMI|REDMI NOTE 14 PRO PLUS 5G': ['REDMI-NOTE-14-PRO-PLUS-5G.jpg'],
+    'XIAOMI|REDMI NOTE 15': ['REDMI-NOTE-15.jpg'],
+    'XIAOMI|REDMI NOTE 15 PRO 4.5G': ['REDMI-NOTE-15-PRO.jpg'],
+    'XIAOMI|REDMI NOTE 15 PRO 5G': ['REDMI-NOTE-15-PRO.jpg'],
+    'XIAOMI|REDMI NOTE 15 PRO PLUS 5G': ['REDMI-NOTE-15-PRO-PLUS-5G.jpg'],
+    'XIAOMI|POCO X7 PRO': ['poco-x7-pro.webp'],
+    'XIAOMI|POCO X8 PRO': ['POCO-X8-PRO.jpg'],
+    'XIAOMI|POCO X8 PRO MAX': ['POCO-X8-PRO-MAX.jpg'],
+    'XIAOMI|POCO F8 PRO': ['POCO-F8-PRO.jpg'],
+    'XIAOMI|POCO F8 ULTRA': ['POCO-F8-ULTRA.jpg'],
+    'XIAOMI|POCO F9 ULTRA': ['POCO-F9-ULTRA.jpg']
+  };
 
-  // Prefer the clean, canonical filenames shown in the photos folder over m_/b_/k_ alternates.
+  const aliasFiles = exactAliases[`${brand}|${model}`];
+  if (aliasFiles && aliasFiles.some(f => f.toLowerCase() === file.toLowerCase())) return 1000;
+
+  if (brand === 'APPLE' && !fileKey.includes('IPHONE')) return -999;
+  if (brand === 'SAMSUNG' && !fileKey.includes('SAMSUNG')) return -999;
+  if (brand === 'ONEPLUS' && !fileKey.includes('ONEPLUS')) return -999;
+  if (brand === 'INFINIX' && !fileKey.includes('INFINIX')) return -999;
+  if (brand === 'TECNO' && !fileKey.includes('TECNO')) return -999;
+  if (brand === 'DYSON' && !fileKey.includes('DYSON')) return -999;
+  if (brand === 'BRAUN' && !fileKey.includes('BRAUN')) return -999;
+  if (brand === 'PHILIPS' && !fileKey.includes('PHILIPS')) return -999;
+  if (brand === 'GOOGLE' && !fileKey.includes('PIXEL')) return -999;
+  if (brand === 'REDMI' && !fileKey.includes('REDMI')) return -999;
+  if (brand === 'POCO' && !fileKey.includes('POCO')) return -999;
+  if (brand === 'XIAOMI' && !/^(MI|REDMI|POCO)-/.test(fileKey)) return -999;
+
+  const ignored = new Set([
+    'GB','TB','G','RAM','ROM','BLACK','WHITE','BLUE','GREEN','GRAY','GREY',
+    'GLOBAL','EU','TR','COMPLETE','EPILASYON','5G','4G','4','5'
+  ]);
+
+  let modelTokens = imageTokens(model).filter(t => !ignored.has(t));
+  if (brand === 'XIAOMI') modelTokens = modelTokens.filter(t => t !== 'XIAOMI');
+
+  const matched = modelTokens.filter(t => fileKey.includes(t));
+  if (!matched.length) return -999;
+
+  let score = matched.length * 20;
+  if (modelTokens.length && matched.length === modelTokens.length) score += 20;
+  else if (modelTokens.length >= 2 && matched.length >= modelTokens.length - 1) score += 10;
+
   if (/^(m_|b_|k_)/i.test(file)) score -= 4;
   if (file.toLowerCase().endsWith('.jpg')) score += 1;
-  if (file.toLowerCase() === `${key}.jpg`.toLowerCase()) score += 3;
+  if (file.toLowerCase() === `${fileKey}.jpg`.toLowerCase()) score += 3;
+
   return score;
 }
-
 function imageCandidatesForProduct(p) {
   // 1) G sütunundaki GitHub URL'si her zaman önceliklidir.
   const githubImage = normalizeGithubImageUrl(p.img);
