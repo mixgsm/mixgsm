@@ -219,7 +219,7 @@ let products = [];
 let cat = "XIAOMI", group = "ALL", q = "", sort = "default", favOnly = false;
 const CACHE_TTL = 15 * 60 * 1000;
 const SHEET_CACHE_KEY = "mixgsm-sheet-cache-v3";
-const PHOTOS_CACHE_KEY = "mixgsm-photos-cache-v3";
+const PHOTOS_CACHE_KEY = "mixgsm-photos-cache-v4";
 const favKey = "mixgsm-favorites-v14";
 const productKey = p => `${p.b}|${p.m}|${p.s}`;
 let favs = [];
@@ -571,10 +571,19 @@ function canonicalImageBaseCandidates(p){
     const m = model.replace(/^NUBIA-?/, '').replace(/^REDMAGIC-?/, '').replace(/^RED-MAGIC-?/, '');
     add(`REDMAGIC-${m}`);
     add(`NUBIA-REDMAGIC-${m}`);
+    // Daha önce photos klasöründe kullanılan gerçek dosya adları da doğrudan denenir.
+    if(/^11-PRO$/.test(m)) add('m_nubia-red-magic-11-pro-1tb-16');
+    if(/^11-PRO-PLUS$/.test(m)) add('m_nubia-red-magic-11-pro-plus-1');
+    if(/^11S-PRO$/.test(m)) add('m_nubia-redmagic-11s-pro-14');
   }
   if(brand === 'DYSON') add(`DYSON-${model.replace(/^DYSON-/, '')}`);
   if(brand === 'BRAUN') add(`BRAUN-${model.replace(/^BRAUN-/, '')}`);
-  if(brand === 'PHILIPS') add(`PHILIPS-${model.replace(/^PHILIPS-/, '')}`);
+  if(brand === 'PHILIPS'){
+    const m = model.replace(/^PHILIPS-/, '');
+    add(`PHILIPS-${m}`);
+    if(/LUMEA-LAZER/.test(m)) add('PHILIPS-LUMEA-LAZER');
+    if(/LUMEA-IPL/.test(m)) add('PHILIPS-LUMEA-IPL');
+  }
   if(brand === 'TECNO'){
     if(/^CAMON-NOTE-50-ULTRA/.test(model)) add('TECNO-CAMON-NOTE-50-ULTRA');
     if(/^SPARK-40-C/.test(model)) add('TECNO-SPARK-40-C');
@@ -595,7 +604,7 @@ function imageCandidatesForProduct(p){
   const exts = ['webp','jpg','jpeg','png'];
   const urls = [];
   const addUrl = (name, ext) => {
-    const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(name)}.${ext}`;
+    const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(name)}.${ext}?v=2`;
     if(!urls.includes(url)) urls.push(url);
   };
 
@@ -610,7 +619,7 @@ function imageCandidatesForProduct(p){
       .sort((a,b) => b.score - a.score);
 
     ranked.forEach(({file}) => {
-      const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(file.name)}`;
+      const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(file.name)}?v=2`;
       if(!urls.includes(url)) urls.push(url);
     });
   }
