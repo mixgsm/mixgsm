@@ -272,21 +272,68 @@ function cleanImageName(value){
     .replace(/[^A-Z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 }
 
-function imageNameAliases(model){
+let photoManifest = [];
+let photoManifestReady = false;
+
+function imageNameAliases(model, brand=''){
   const key = cleanImageName(model);
-  if(!key) return [];
-  const aliases = [key];
+  const brandKey = cleanImageName(brand);
+  if(!key && !brandKey) return [];
+  const aliases = [];
   const add = v => { if(v && !aliases.includes(v)) aliases.push(v); };
 
-  // Varyant/ülke ibarelerini kaldırarak en yakın mevcut görsele düş.
-  add(key.replace(/-GLOBAL$/, ''));
-  add(key.replace(/-5G$/, ''));
-  add(key.replace(/-4-5G$/, ''));
-  add(key.replace(/-4G$/, ''));
-  add(key.replace(/-PLUS-5G$/, ''));
-  add(key.replace(/-PLUS$/, ''));
+  add(key);
+  add(brandKey ? `${brandKey}-${key}` : '');
 
-  // Mağazada bulunan görseller için güvenli yakın-model eşleşmeleri.
+  // Fotoğraf klasöründeki m_/k_/b_ gibi ön ekleri eşleştirebilmek için
+  // ön eksiz ve marka+model tabanlı adları da kullan.
+  const baseKeys = [key, brandKey ? `${brandKey}-${key}` : ''].filter(Boolean);
+  baseKeys.forEach(base => {
+    add(`M-${base}`);
+    add(`K-${base}`);
+    add(`B-${base}`);
+  });
+
+  // Yaygın marka isim varyasyonları.
+  const brandAliases = {
+    'SAMSUNG':['SAMSUNG','SAMSUNG-GALAXY'],
+    'APPLE':['APPLE','APPLE-IPHONE','IPHONE'],
+    'IPHONE':['APPLE','APPLE-IPHONE','IPHONE'],
+    'GOOGLE':['GOOGLE','GOOGLE-PIXEL','PIXEL'],
+    'PIXEL':['GOOGLE','GOOGLE-PIXEL','PIXEL'],
+    'ONEPLUS':['ONEPLUS'],
+    'INFINIX':['INFINIX'],
+    'TECNO':['TECNO'],
+    'NUBIA':['NUBIA','NUBIA-REDMAGIC'],
+    'REDMAGIC':['NUBIA-REDMAGIC','REDMAGIC'],
+    'DYSON':['DYSON'],
+    'BRAUN':['BRAUN'],
+    'PHILIPS':['PHILIPS'],
+    'XIAOMI':['XIAOMI','MI'],
+    'MI':['MI','XIAOMI'],
+    'REDMI':['REDMI'],
+    'POCO':['POCO']
+  };
+
+  (brandAliases[brandKey] || [brandKey]).forEach(b => {
+    if(!b) return;
+    add(`${b}-${key}`);
+    add(`M-${b}-${key}`);
+    add(`K-${b}-${key}`);
+    add(`B-${b}-${key}`);
+  });
+
+  // Varyant/ülke ibarelerini kaldırarak en yakın mevcut görsele düş.
+  [key, ...aliases].forEach(v => {
+    add(v.replace(/-GLOBAL$/, ''));
+    add(v.replace(/-5G$/, ''));
+    add(v.replace(/-4-5G$/, ''));
+    add(v.replace(/-4G$/, ''));
+    add(v.replace(/-PLUS-5G$/, ''));
+    add(v.replace(/-PLUS$/, ''));
+  });
+
+  // Mağazada bulunan Xiaomi görselleri için mevcut güvenli yakın-model eşleşmeleri.
   if(/^MI-17-ULTRA/.test(key)) add('MI-17-ULTRA');
   if(/^MI-17-PRO-MAX/.test(key)) add('MI-17-PRO-MAX');
   if(/^MI-17-PRO/.test(key)) add('MI-17-PRO');
@@ -319,21 +366,101 @@ function imageNameAliases(model){
   if(/^POCO-F8-ULTRA/.test(key)) add('POCO-F8-ULTRA');
   if(/^POCO-F9-ULTRA/.test(key)) add('POCO-F9-ULTRA');
 
-  // GitHub dosya adları büyük/küçük harfe duyarlı olabilir.
-  // Aynı modelin küçük harfli dosya adını da dene (örn. poco-x7-pro.webp).
   aliases.slice().forEach(v => add(v.toLowerCase()));
-
   return aliases;
 }
 
+function normalizeImageBase(value){
+  return cleanImageName(String(value || '').replace(/\.[^.]+$/,''));
+}
+
+function imageTokens(value){
+  return normalizeImageBase(value)
+    .replace(/^(M|K|B)-/, '')
+    .split('-')
+    .filter(Boolean);
+}
+
+function scorePhotoFilename(filename, p){
+  const base = normalizeImageBase(filename);
+  if(!base) return -Infinity;
+  const cleanBase = base.replace(/^(M|K|B)-/, '');
+  const model = cleanImageName(p.m);
+  const brand = cleanImageName(p.b);
+  const modelTokens = imageTokens(model);
+  const fileTokens = imageTokens(base);
+  if(!modelTokens.length) return -Infinity;
+
+  const modelJoined = modelTokens.join('-');
+  const fileJoined = fileTokens.join('-');
+  let score = 0;
+
+  // En güçlü eşleşme: model adının tamamı dosyada geçiyor.
+  if(fileJoined === modelJoined) score += 100;
+  if(cleanBase === modelJoined) score += 90;
+  if(fileJoined.includes(modelJoined)) score += 72;
+  if(modelJoined.includes(fileJoined) && fileJoined.length >= 4) score += 35;
+
+  // Marka + model dosya adında birlikteyse ek puan.
+  const brandTokens = brand.split('-').filter(Boolean);
+  const expected = [...brandTokens, ...modelTokens].join('-');
+  if(cleanBase === expected) score += 60;
+  if(fileJoined.includes(expected)) score += 45;
+
+  // Model tokenlarının çoğu dosyada bulunmalı; yanlış ürüne düşmeyi önle.
+  const matched = modelTokens.filter(t => fileTokens.includes(t)).length;
+  score += (matched / modelTokens.length) * 30;
+
+  // Dosya adında ürün modelinden hiç token yoksa kabul etme.
+  if(matched === 0) return -Infinity;
+
+  // m_/k_/b_ önekleri yalnızca varyanttır; m_ biraz öncelikli olsun.
+  if(/^M-/.test(base)) score += 4;
+
+  // Modelin sonundaki renk/versiyon numarası gibi ekler sorun değildir.
+  return score;
+}
+
+async function loadPhotoManifest(){
+  try{
+    const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos';
+    const res = await fetch(api, {cache:'no-store', headers:{'Accept':'application/vnd.github+json'}});
+    if(!res.ok) throw new Error('GitHub photos listesi alınamadı.');
+    const data = await res.json();
+    if(Array.isArray(data)){
+      photoManifest = data.filter(x => x && x.type === 'file' && /\.(webp|jpg|jpeg|png)$/i.test(x.name));
+      photoManifestReady = true;
+    }
+  }catch(e){
+    console.warn('Fotoğraf listesi alınamadı; doğrudan aday URL sistemi kullanılacak.', e);
+    photoManifest = [];
+    photoManifestReady = false;
+  }
+}
+
 function imageCandidatesForProduct(p){
-  const names = imageNameAliases(p.m);
   const exts = ['webp','jpg','jpeg','png'];
   const urls = [];
+
+  if(photoManifestReady && photoManifest.length){
+    const ranked = photoManifest
+      .map(file => ({file, score:scorePhotoFilename(file.name, p)}))
+      .filter(x => Number.isFinite(x.score))
+      .sort((a,b) => b.score - a.score);
+
+    ranked.forEach(({file}) => {
+      const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(file.name)}`;
+      if(!urls.includes(url)) urls.push(url);
+    });
+  }
+
+  // Manifest alınamazsa veya eşleşme bulunamazsa mevcut doğrudan aday sistemi yedek olarak çalışır.
+  const names = imageNameAliases(p.m, p.b);
   names.forEach(name => exts.forEach(ext => {
     urls.push(`https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${name}.${ext}`);
   }));
-  return urls;
+
+  return [...new Set(urls)];
 }
 
 function getProductImageSources(p){
@@ -355,12 +482,33 @@ function autoImageMarkup(p){
   const sources=getProductImageSources(p);
   const first=sources[0]||'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
   const encoded=JSON.stringify(sources).replace(/'/g,'&#39;');
-  return `<img src="${first}" data-image-sources='${encoded}' data-image-index="0" alt="${p.b} ${p.m}" loading="lazy" onerror="tryNextProductImage(this)">`;
+  return `<img src="${first}" data-image-sources='${encoded}' data-image-index="0" alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}" loading="lazy" onerror="tryNextProductImage(this)">`;
 }
 
 function isPromoRow(p){
   const text = `${p.b || ''} ${p.m || ''}`.toUpperCase();
   return text.includes('XIAOMI & REDMI & POCO') || text.includes('XIAOMI REDMI POCO');
+}
+
+function isNonProductRow(p){
+  const text = `${p.b || ''} ${p.m || ''}`.toUpperCase().trim();
+  if(!text) return true;
+  if(isPromoRow(p)) return true;
+  return [
+    'MARKA MODEL / ÜRÜN TANIMI',
+    'MARKA MODEL/ÜRÜN TANIMI',
+    'ÜRÜN TANIMI',
+    'ONEPLUS MODELLERİ',
+    'SAMSUNG MODELLERİ',
+    'IPHONE MODELLERİ',
+    'APPLE MODELLERİ',
+    'XIAOMI MODELLERİ',
+    'INFINIX MODELLERİ',
+    'TECNO MODELLERİ',
+    'DYSON MODELLERİ',
+    'BRAUN MODELLERİ',
+    'PHILIPS MODELLERİ'
+  ].includes(text);
 }
 
 function promoCardMarkup(){
@@ -385,7 +533,7 @@ async function loadFromGoogleSheets() {
   try {
     grid.innerHTML = '<div class="empty">Ürünler kataloğa yükleniyor... ⏳</div>';
     
-    const res = await fetch(url);
+    const res = await fetch(url + '&t=' + Date.now(), {cache:'no-store'});
     if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
     
     const tsv = await res.text();
@@ -423,7 +571,7 @@ async function loadFromGoogleSheets() {
       if(!marka && !model) continue; 
       
       let price = parseInt(fiyatStr.replace(/[^0-9]/g, ''));
-      let isStock = !(stokStr === 'yok' || stokStr === 'tükendi' || stokStr === '0');
+      let isStock = ['var','stokta','evet','mevcut','available'].includes(stokStr);
       
       let catType = "PHONE";
       if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "IPHONE";
@@ -459,6 +607,7 @@ async function loadFromGoogleSheets() {
     }
     
     products = newProducts;
+    await loadPhotoManifest();
     render();
 
   } catch (err) {
@@ -467,8 +616,17 @@ async function loadFromGoogleSheets() {
   }
 }
 
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 function render(){
- let base = products.filter(p => !isPromoRow(p) && (cat === "ALL" || p.cat === cat) &&
+ let base = products.filter(p => !isNonProductRow(p) && (cat === "ALL" || p.cat === cat) &&
    (group === "ALL" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE"))
  );
  
