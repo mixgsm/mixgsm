@@ -86,7 +86,7 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
     <button class="active" data-cat="XIAOMI">Xiaomi • Redmi • Poco</button><button data-cat="ALL">Tümü</button><button data-cat="IPHONE">Apple iPhone</button><button data-cat="SAMSUNG">Samsung</button><button data-cat="INFINIX_TECNO">Infinix • Tecno</button><button data-cat="ONEPLUS_OTHERS">OnePlus • Pixel • Gaming</button><button data-cat="PERSONAL_CARE">Dyson • Braun • Philips</button>
   </div>
   <div class="filter-label category-label">KATEGORİ</div><div class="filters" id="categoryFilters">
-    <button class="active" data-group="ALL">Tümü</button><button data-group="PHONE">📱 Telefon</button><button data-group="PERSONAL_CARE">🧴 Kişisel Bakım</button>
+    <button class="active" data-group="ALL">Tümü</button><button data-group="PHONE">📱 Telefon</button><button data-group="PERSONAL_CARE">🧴 Kişisel Bakım</button><button id="favoritesFilter" data-group="FAVORITES">♥ Favorilerim</button>
   </div>
 </section>
 
@@ -215,9 +215,13 @@ h1{font-size:clamp(34px,8vw,54px);line-height:1;margin:12px 0 7px;font-weight:95
 
 <script>
 let products = [];
-let cat = "XIAOMI", group = "ALL", q = "", sort = "default";
+let cat = "XIAOMI", group = "ALL", q = "", sort = "default", favOnly = false;
 const favKey = "mixgsm-favorites-v14";
 const productKey = p => `${p.b}|${p.m}|${p.s}`;
+const CACHE_TTL = 15 * 60 * 1000;
+const sheetCacheKey = "mixgsm-sheet-cache-v1";
+const photoCacheKey = "mixgsm-photo-manifest-v1";
+const fallbackImage = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg";
 let favs = [];
 try{
   const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
@@ -498,14 +502,25 @@ function scorePhotoFilename(filename, p){
   return score;
 }
 async function loadPhotoManifest(){
+  const now = Date.now();
   try{
-    const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos?t=' + Date.now();
-    const res = await fetch(api, {cache:'no-store', headers:{'Accept':'application/vnd.github+json'}});
+    const cached = JSON.parse(sessionStorage.getItem(photoCacheKey) || 'null');
+    if(cached && Array.isArray(cached.data) && (now - cached.time) < CACHE_TTL){
+      photoManifest = cached.data;
+      photoManifestReady = true;
+      return;
+    }
+  }catch(e){}
+
+  try{
+    const api = 'https://api.github.com/repos/mixgsm/mixgsm/contents/photos';
+    const res = await fetch(api, {headers:{'Accept':'application/vnd.github+json'}});
     if(!res.ok) throw new Error('GitHub photos listesi alınamadı.');
     const data = await res.json();
     if(Array.isArray(data)){
       photoManifest = data.filter(x => x && x.type === 'file' && /\.(webp|jpg|jpeg|png)$/i.test(x.name));
       photoManifestReady = true;
+      try{ sessionStorage.setItem(photoCacheKey, JSON.stringify({time:now,data:photoManifest})); }catch(e){}
     }
   }catch(e){
     console.warn('Fotoğraf listesi alınamadı; doğrudan aday URL sistemi kullanılacak.', e);
@@ -614,12 +629,12 @@ function tryNextProductImage(img){
     if(index<sources.length){ img.dataset.imageIndex=String(index); img.src=sources[index]; return; }
   }catch(e){}
   img.onerror=null;
-  img.src='https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+  img.src=fallbackImage;
 }
 
 function autoImageMarkup(p){
   const sources=getProductImageSources(p);
-  const first=sources[0]||'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+  const first=sources[0]||fallbackImage;
   const encoded=JSON.stringify(sources).replace(/'/g,'&#39;');
   return `<img src="${first}" data-image-sources='${encoded}' data-image-index="0" alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}" loading="lazy" onerror="tryNextProductImage(this)">`;
 }
@@ -685,10 +700,21 @@ async function loadFromGoogleSheets() {
   try {
     grid.innerHTML = '<div class="empty">Ürünler kataloğa yükleniyor... ⏳</div>';
     
-    const res = await fetch(url + '&t=' + Date.now(), {cache:'no-store'});
-    if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
-    
-    const tsv = await res.text();
+    let tsv = null;
+    const now = Date.now();
+    try{
+      const cached = JSON.parse(sessionStorage.getItem(sheetCacheKey) || 'null');
+      if(cached && typeof cached.tsv === 'string' && (now - cached.time) < CACHE_TTL){
+        tsv = cached.tsv;
+      }
+    }catch(e){}
+
+    if(tsv === null){
+      const res = await fetch(url, {cache:'default'});
+      if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
+      tsv = await res.text();
+      try{ sessionStorage.setItem(sheetCacheKey, JSON.stringify({time:now,tsv})); }catch(e){}
+    }
     const lines = tsv.split('\n');
     
     if (lines.length < 2) throw new Error("Excel tablosu boş veya format hatalı.");
@@ -784,7 +810,8 @@ function escapeHtml(value){
 
 function render(){
  let base = products.filter(p => !isNonProductRow(p) && (cat === "ALL" || p.cat === cat) &&
-   (group === "ALL" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE"))
+   (group === "ALL" || group === "FAVORITES" || (group === "PHONE" && p.cat !== "PERSONAL_CARE") || (group === "PERSONAL_CARE" && p.cat === "PERSONAL_CARE")) &&
+   (!favOnly || favs.includes(productKey(p)))
  );
  
  let a;
@@ -827,7 +854,7 @@ function render(){
        <div style="margin-top:9px;color:#94a3b8;font-size:10px;font-weight:800;text-align:center">👆 Ürüne dokun → ayrıntıları incele</div>
      </div>
    </article>`;
- }).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+ }).join("") : `<div class="empty">${favOnly ? 'Henüz favorilere eklediğiniz ürün yok. Ürün kartındaki ♥ simgesine dokunarak favori ekleyebilirsiniz.' : 'Aradığınız kriterde ürün bulunamadı.'}</div>`;
 }
 
 document.querySelector("#q").addEventListener("input", e => {
@@ -835,6 +862,7 @@ document.querySelector("#q").addEventListener("input", e => {
   if (q.length > 0) {
     cat = "ALL";
     group = "ALL";
+    favOnly = false;
     document.querySelectorAll("#filters button, #categoryFilters button").forEach(x => x.classList.remove("active"));
     const allCatBtn = document.querySelector('#filters button[data-cat="ALL"]');
     const allGrpBtn = document.querySelector('#categoryFilters button[data-group="ALL"]');
@@ -850,11 +878,12 @@ document.querySelectorAll("#filters button").forEach(b => {
   b.addEventListener("click", () => {
     cat = b.dataset.cat;
     group = "ALL";
+    favOnly = false;
     document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
     document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
-    const allGrp = document.querySelector('#categoryFilters button[data-group="ALL"]');
-    if (allGrp) allGrp.classList.add("active");
+    const activeGrp = document.querySelector(`#categoryFilters button[data-group="${group}"]`);
+    if (activeGrp) activeGrp.classList.add("active");
     render();
   });
 });
@@ -863,6 +892,7 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
   b.addEventListener("click", () => {
     group = b.dataset.group;
     cat = "ALL";
+    favOnly = group === "FAVORITES";
     document.querySelectorAll("#categoryFilters button").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
     document.querySelectorAll("#filters button").forEach(x => x.classList.remove("active"));
@@ -879,7 +909,7 @@ function openProduct(i){
  modalImg.dataset.imageSources = JSON.stringify(modalSources);
  modalImg.dataset.imageIndex = "0";
  modalImg.onerror = function(){ tryNextProductImage(this); };
- modalImg.src = modalSources[0] || 'https://via.placeholder.com/250x250/111a2a/38bdf8?text=Gorsel+Yok';
+ modalImg.src = modalSources[0] || fallbackImage;
  modalImg.alt = p.b + " " + p.m;
  document.getElementById("mb").textContent = p.b;
  document.getElementById("mn").textContent = p.m;
@@ -933,11 +963,15 @@ function updateFavs(){
   const n = favs.length;
   document.getElementById("favcount").textContent = n + " favori";
   document.getElementById("comparebar").classList.toggle("show", n > 0);
+  const favBtn = document.getElementById("favoritesFilter");
+  if(favBtn) favBtn.classList.toggle("active", favOnly);
 }
 
 function clearFavs(){
   favs = [];
   localStorage.setItem(favKey, "[]");
+  favOnly = false;
+  if(group === "FAVORITES") group = "ALL";
   updateFavs();
   render();
   showToast("Favoriler temizlendi");
@@ -951,6 +985,7 @@ function showToast(t){
 }
 
 // Start application by fetching Google Sheets
+updateFavs();
 window.addEventListener('DOMContentLoaded', loadFromGoogleSheets);
 </script>
 </body>
