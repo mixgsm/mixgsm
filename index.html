@@ -289,9 +289,9 @@ function imageNameAliases(model, brand=''){
   // ön eksiz ve marka+model tabanlı adları da kullan.
   const baseKeys = [key, brandKey ? `${brandKey}-${key}` : ''].filter(Boolean);
   baseKeys.forEach(base => {
-    add(`M-${base}`);
-    add(`K-${base}`);
-    add(`B-${base}`);
+    add(`M-${base}`); add(`M_${base}`);
+    add(`K-${base}`); add(`K_${base}`);
+    add(`B-${base}`); add(`B_${base}`);
   });
 
   // Yaygın marka isim varyasyonları.
@@ -326,8 +326,14 @@ function imageNameAliases(model, brand=''){
   // Fotoğraf klasöründeki gerçek adlandırma farklılıkları için güvenli model eşdeğerleri.
   const addModelAlias = v => {
     if(!v) return;
-    add(v); add(`M-${v}`); add(`K-${v}`); add(`B-${v}`);
-    add(v.toLowerCase()); add(`m-${v.toLowerCase()}`);
+    add(v);
+    add(`M-${v}`); add(`M_${v}`);
+    add(`K-${v}`); add(`K_${v}`);
+    add(`B-${v}`); add(`B_${v}`);
+    add(v.toLowerCase());
+    add(`m-${v.toLowerCase()}`); add(`m_${v.toLowerCase()}`);
+    add(`k-${v.toLowerCase()}`); add(`k_${v.toLowerCase()}`);
+    add(`b-${v.toLowerCase()}`); add(`b_${v.toLowerCase()}`);
   };
   if(brandKey === 'SAMSUNG'){
     if(/^Z-FOLD-?6/.test(key)) ['SAMSUNG-Z-FOLD-6','SAMSUNG-GALAXY-Z-FOLD-6','SAMSUNG-GALAXY-Z-FOLD6'].forEach(addModelAlias);
@@ -508,10 +514,71 @@ async function loadPhotoManifest(){
   }
 }
 
+function canonicalImageBaseCandidates(p){
+  const brand = cleanImageName(p.b);
+  const model = cleanImageName(p.m);
+  const out = [];
+  const add = v => { if(v && !out.includes(v)) out.push(v); };
+  if(!brand || !model) return out;
+
+  // Yeni photos standardı: MARKA-MODEL.ext
+  add(`${brand}-${model}`);
+  add(model);
+
+  // Marka/model için güvenli gerçek dosya adları.
+  if(brand === 'SAMSUNG'){
+    const m = model.replace(/^GALAXY-/, '');
+    add(`SAMSUNG-${m}`);
+    add(`SAMSUNG-GALAXY-${m}`);
+    if(/^Z-FOLD-?6/.test(m)) add('SAMSUNG-Z-FOLD-6');
+    if(/^Z-FOLD-?7/.test(m)) add('SAMSUNG-Z-FOLD-7');
+  }
+  if(brand === 'APPLE' || brand === 'IPHONE'){
+    const m = model.replace(/^APPLE-?IPHONE-?/, '').replace(/^IPHONE-?/, '');
+    add(`APPLE-IPHONE-${m}`);
+    add(`IPHONE-${m}`);
+  }
+  if(brand === 'GOOGLE' || brand === 'PIXEL'){
+    const m = model.replace(/^GOOGLE-?PIXEL-?/, '').replace(/^PIXEL-?/, '');
+    add(`GOOGLE-PIXEL-${m}`);
+    add(`PIXEL-${m}`);
+  }
+  if(brand === 'NUBIA' || brand === 'REDMAGIC'){
+    const m = model.replace(/^NUBIA-?/, '').replace(/^REDMAGIC-?/, '').replace(/^RED-MAGIC-?/, '');
+    add(`REDMAGIC-${m}`);
+    add(`NUBIA-REDMAGIC-${m}`);
+  }
+  if(brand === 'DYSON') add(`DYSON-${model.replace(/^DYSON-/, '')}`);
+  if(brand === 'BRAUN') add(`BRAUN-${model.replace(/^BRAUN-/, '')}`);
+  if(brand === 'PHILIPS') add(`PHILIPS-${model.replace(/^PHILIPS-/, '')}`);
+  if(brand === 'TECNO'){
+    if(/^CAMON-NOTE-50-ULTRA/.test(model)) add('TECNO-CAMON-NOTE-50-ULTRA');
+    if(/^SPARK-40-C/.test(model)) add('TECNO-SPARK-40-C');
+  }
+  if(brand === 'XIAOMI' || brand === 'MI'){
+    add(model.replace(/^XIAOMI-/, ''));
+    add(model.replace(/^MI-/, 'MI-'));
+  }
+  if(brand === 'REDMI') add(model.replace(/^REDMI-/, 'REDMI-'));
+  if(brand === 'POCO') add(`POCO-${model.replace(/^POCO-/, '')}`);
+  if(brand === 'ONEPLUS') add(`ONEPLUS-${model.replace(/^ONEPLUS-/, '')}`);
+  if(brand === 'INFINIX') add(`INFINIX-${model.replace(/^INFINIX-/, '')}`);
+
+  return out;
+}
+
 function imageCandidatesForProduct(p){
   const exts = ['webp','jpg','jpeg','png'];
   const urls = [];
+  const addUrl = (name, ext) => {
+    const url = `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(name)}.${ext}`;
+    if(!urls.includes(url)) urls.push(url);
+  };
 
+  // 1) Yeni standart isimleri doğrudan dene. GitHub API çalışmasa bile görsel bulunur.
+  canonicalImageBaseCandidates(p).forEach(name => exts.forEach(ext => addUrl(name, ext)));
+
+  // 2) GitHub manifest varsa mevcut/eski varyantları güvenli şekilde sırala.
   if(photoManifestReady && photoManifest.length){
     const ranked = photoManifest
       .map(file => ({file, score:scorePhotoFilename(file.name, p)}))
@@ -524,12 +591,9 @@ function imageCandidatesForProduct(p){
     });
   }
 
-  // Manifest alınamazsa yalnızca güvenli, marka+model tabanlı doğrudan adayları dene.
-  // Başka markaya ait bir görseli fallback olarak kullanma.
+  // 3) Eski/özel aliaslar son güvenli fallback olarak kalsın.
   const names = imageNameAliases(p.m, p.b);
-  names.forEach(name => exts.forEach(ext => {
-    urls.push(`https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${name}.${ext}`);
-  }));
+  names.forEach(name => exts.forEach(ext => addUrl(name, ext)));
 
   return [...new Set(urls)];
 }
