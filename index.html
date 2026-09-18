@@ -547,6 +547,10 @@ const GITHUB_PHOTO_FILES = [
   'poco-x7-pro.webp'
 ].filter(Boolean);
 
+// Sabit listede eslesme bulunamayan YENI urunler icin, sadece ihtiyac aninda
+// GitHub'daki fotograf klasorunun canli listesiyle bir kez tamamlanir.
+let EXTRA_PHOTO_FILES = [];
+
 function githubPhotoUrl(file) {
   return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${encodeURIComponent(file)}`;
 }
@@ -575,25 +579,53 @@ function imageFileScore(p, file) {
   const model = cleanImageName(p.m);
   const fileKey = cleanImageName(file.replace(/\.[^.]+$/, ''));
 
+  // NOT: Anahtarlar cleanImageName(marka)+'|'+cleanImageName(model) formatiyla
+  // BIREBIR eslesecek sekilde (tire ile, bosluksuz) yazilmalidir - aksi halde
+  // bu liste sessizce devre disi kalir ve asagidaki genel puanlama mantigina
+  // duser (bu, daha once Pro/Pro Max/Plus modellerinin birbirine karismasina
+  // sebep olan gercek bir hataydi).
   const exactAliases = {
-    'PHILIPS|LUMEA LAZER EPILASYON': ['PHILIPS-LUMEA-LAZER.jpg'],
-    'DYSON|AIRWRAP LONG COMPLETE': ['DYSON-AIRWRAP-LONG.jpg', 'dyson-airwarp-long.jpg'],
-    'XIAOMI|REDMI A7 PRO': ['REDMI-A7-PRO.jpg'],
-    'XIAOMI|REDMI 15C': ['REDMI-15C.jpg'],
-    'XIAOMI|REDMI 15': ['REDMI-15.jpg'],
-    'XIAOMI|REDMI NOTE 14': ['REDMI-NOTE-14.webp'],
-    'XIAOMI|REDMI NOTE 14 PRO 5G': ['REDMI-NOTE-14-PRO.webp'],
-    'XIAOMI|REDMI NOTE 14 PRO PLUS 5G': ['REDMI-NOTE-14-PRO-PLUS-5G.jpg'],
-    'XIAOMI|REDMI NOTE 15': ['REDMI-NOTE-15.jpg'],
-    'XIAOMI|REDMI NOTE 15 PRO 4.5G': ['REDMI-NOTE-15-PRO.jpg'],
-    'XIAOMI|REDMI NOTE 15 PRO 5G': ['REDMI-NOTE-15-PRO.jpg'],
-    'XIAOMI|REDMI NOTE 15 PRO PLUS 5G': ['REDMI-NOTE-15-PRO-PLUS-5G.jpg'],
-    'XIAOMI|POCO X7 PRO': ['poco-x7-pro.webp'],
-    'XIAOMI|POCO X8 PRO': ['POCO-X8-PRO.jpg'],
-    'XIAOMI|POCO X8 PRO MAX': ['POCO-X8-PRO-MAX.jpg'],
-    'XIAOMI|POCO F8 PRO': ['POCO-F8-PRO.jpg'],
-    'XIAOMI|POCO F8 ULTRA': ['POCO-F8-ULTRA.jpg'],
-    'XIAOMI|POCO F9 ULTRA': ['POCO-F9-ULTRA.jpg']
+    'PHILIPS|PHILIPS-LUMEA-LAZER-EPILASYON': ['PHILIPS-LUMEA-LAZER.jpg'],
+    'DYSON|DYSON-AIRWRAP-LONG-COMPLETE': ['DYSON-AIRWRAP-LONG.jpg', 'dyson-airwarp-long.jpg'],
+    'XIAOMI|REDMI-A7-PRO': ['REDMI-A7-PRO.jpg'],
+    'XIAOMI|REDMI-15C': ['REDMI-15C.jpg'],
+    'XIAOMI|REDMI-15': ['REDMI-15.jpg'],
+    'XIAOMI|REDMI-NOTE-14': ['REDMI-NOTE-14.webp'],
+    'XIAOMI|REDMI-NOTE-14-PRO-5G': ['REDMI-NOTE-14-PRO.webp'],
+    'XIAOMI|REDMI-NOTE-14-PRO-PLUS-5G': ['REDMI-NOTE-14-PRO-PLUS-5G.jpg'],
+    'XIAOMI|REDMI-NOTE-15': ['REDMI-NOTE-15.jpg'],
+    'XIAOMI|REDMI-NOTE-15-PRO-4-5G': ['REDMI-NOTE-15-PRO.jpg'],
+    'XIAOMI|REDMI-NOTE-15-PRO-5G': ['REDMI-NOTE-15-PRO.jpg'],
+    'XIAOMI|REDMI-NOTE-15-PRO-PLUS-5G': ['REDMI-NOTE-15-PRO-PLUS-5G.jpg'],
+    'XIAOMI|POCO-X7-PRO': ['poco-x7-pro.webp'],
+    'XIAOMI|POCO-X8-PRO': ['POCO-X8-PRO.jpg'],
+    'XIAOMI|POCO-X8-PRO-MAX': ['POCO-X8-PRO-MAX.jpg'],
+    'XIAOMI|POCO-F8-PRO': ['POCO-F8-PRO.jpg'],
+    'XIAOMI|POCO-F8-ULTRA': ['POCO-F8-ULTRA.jpg'],
+    'XIAOMI|POCO-F9-ULTRA': ['POCO-F9-ULTRA.jpg'],
+    'XIAOMI|MI-15T': ['MI-15T.jpg'],
+    'XIAOMI|MI-15T-PRO': ['MI-15T-PRO.jpg'],
+    'XIAOMI|MI-17T': ['MI-17T.jpg'],
+    'XIAOMI|MI-17T-PRO': ['MI-17T-PRO.jpg'],
+    'XIAOMI|MI-15': ['MI-15.webp'],
+    'XIAOMI|MI-17': ['MI-17.webp'],
+    'XIAOMI|MI-17-PRO': ['MI-17-PRO.webp'],
+    'XIAOMI|MI-17-PRO-MAX': ['MI-17-PRO-MAX.webp'],
+    'XIAOMI|MI-17-ULTRA': ['MI-17-ULTRA.webp'],
+    'XIAOMI|MI-17-ULTRA-GLOBAL': ['MI-17-ULTRA.webp'],
+    'XIAOMI|MI-17-ULTRA-LEICA-EDITION': ['MI-17-ULTRA.webp'],
+    'INFINIX|SMART-10': ['INFINIX-SMART-10.webp'],
+    'INFINIX|SMART-10-PLUS': ['INFINIX-SMART-10-PLUS.png'],
+    'INFINIX|NOTE-50-PRO': ['INFINIX-NOTE-50-PRO.webp'],
+    'INFINIX|NOTE-50-PRO-PLUS': ['INFINIX-NOTE-50-PRO-PLUS.webp'],
+    'RED-MAGIC|REDMAGIC-11-PRO': ['REDMAGIC-11-PRO.webp'],
+    'RED-MAGIC|REDMAGIC-11S-PRO': ['REDMAGIC-11S-PRO.webp'],
+    'IPHONE|IPHONE-16': ['APPLE-IPHONE-16.jpg'],
+    'IPHONE|IPHONE-16-PRO': ['APPLE-IPHONE-16-PRO.jpg'],
+    'IPHONE|IPHONE-16-PRO-MAX': ['APPLE-IPHONE-16-PRO-MAX.jpg'],
+    'IPHONE|IPHONE-17': ['APPLE-IPHONE-17.jpg'],
+    'IPHONE|IPHONE-17-PRO': ['APPLE-IPHONE-17-PRO.jpg'],
+    'IPHONE|IPHONE-17-PRO-MAX': ['APPLE-IPHONE-17-PRO-MAX.jpg']
   };
 
   const aliasFiles = exactAliases[`${brand}|${model}`];
@@ -623,9 +655,17 @@ function imageFileScore(p, file) {
   const matched = modelTokens.filter(t => fileKey.includes(t));
   if (!matched.length) return -999;
 
+  // Dosya adinda modelde olmayan fazladan kelime varsa (PRO/PLUS/MAX/ULTRA gibi
+  // ayirici ekler dahil), bu dosya farkli/daha ust bir varyant olabilir demektir.
+  // Boyle dosyalari cezalandirarak, tam eslesen dosyanin her zaman kazanmasini saglar.
+  const fileTokens = imageTokens(fileKey).filter(t => !ignored.has(t));
+  const extraTokens = fileTokens.filter(t => !modelTokens.includes(t));
+
   let score = matched.length * 20;
   if (modelTokens.length && matched.length === modelTokens.length) score += 20;
   else if (modelTokens.length >= 2 && matched.length >= modelTokens.length - 1) score += 10;
+
+  score -= extraTokens.length * 25;
 
   if (/^(m_|b_|k_)/i.test(file)) score -= 4;
   if (file.toLowerCase().endsWith('.jpg')) score += 1;
@@ -633,14 +673,40 @@ function imageFileScore(p, file) {
 
   return score;
 }
+async function loadExtraPhotoFilesIfNeeded(productList) {
+  const hasUnmatched = productList.some(p => {
+    if (normalizeGithubImageUrl(p.img)) return false;
+    return !GITHUB_PHOTO_FILES.some(file => imageFileScore(p, file) > 0);
+  });
+  if (!hasUnmatched) return;
+
+  try {
+    const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
+      headers: { 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+
+    const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
+    EXTRA_PHOTO_FILES = data
+      .map(item => item.name)
+      .filter(name => name && /\.(jpg|jpeg|png|webp)$/i.test(name) && !known.has(name.toLowerCase()));
+  } catch (e) {
+    // Sessizce yoksay: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
+  }
+}
+
 function imageCandidatesForProduct(p) {
   // 1) G sütunundaki GitHub URL'si her zaman önceliklidir.
   const githubImage = normalizeGithubImageUrl(p.img);
   if (githubImage) return [githubImage];
 
   // 2) G boşsa yalnızca gerçekten mevcut olduğu ekran görüntülerinde görülen
-  //    GitHub photos dosyalarından eşleştir. Artık dosya adı tahmini yok.
-  const ranked = GITHUB_PHOTO_FILES
+  //    GitHub photos dosyalarından eşleştir. Sabit listede yoksa, sayfa
+  //    yüklenirken tespit edilmişse EXTRA_PHOTO_FILES'taki yeni dosyalar da denenir.
+  const allPhotoFiles = GITHUB_PHOTO_FILES.concat(EXTRA_PHOTO_FILES);
+  const ranked = allPhotoFiles
     .map(file => ({ file, score: imageFileScore(p, file) }))
     .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
@@ -748,6 +814,7 @@ async function loadFromGoogleSheets() {
     }
     
     products = newProducts;
+    await loadExtraPhotoFilesIfNeeded(products);
     render();
   } catch (err) {
     grid.innerHTML = `<div class="empty">Katalog şu anda yenileniyor. Lütfen sayfayı yenileyin veya WhatsApp üzerinden güncel stok/fiyat sorabilirsiniz.<br><br><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" style="display:inline-flex;margin-top:15px;justify-content:center;">💬 WhatsApp'tan Ürün Sor</a></div>`;
