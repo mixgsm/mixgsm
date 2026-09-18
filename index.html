@@ -189,6 +189,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 /* Catalog Topline */
 .wrap { min-width: 0; }
+.cache-notice { background: rgba(230,57,70,0.1); color: var(--accent); border: 1px solid rgba(230,57,70,0.22); padding: 12px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 500; line-height: 1.5; margin-bottom: 14px; }
 .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 13px; }
 .count { color: var(--muted); font-weight: 400; }
 .sort { background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 12.5px; cursor: pointer; }
@@ -561,6 +562,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       </div>
       <button class="filter-toggle-btn" id="filterToggleBtn" onclick="openFilterDrawer()"><svg class="icon"><use href="#ic-filter"></use></svg> Filtrele</button>
     </div>
+    <div class="cache-notice" id="cacheNotice" style="display:none;" role="status">Bağlantı sorunu nedeniyle son başarılı katalog verisi gösteriliyor. Fiyat ve stok bilgisi güncel olmayabilir, WhatsApp'tan teyit alabilirsiniz.</div>
     <div class="topline">
       <div class="count-wrap">
         <span class="count" id="count">Yükleniyor...</span>
@@ -814,6 +816,23 @@ try {
   favs = Array.isArray(saved) ? saved : [];
 } catch(e) { favs = [] }
 
+// GUVENLIK/DAYANIKLILIK: localStorage.setItem gizli (private/incognito)
+// sekmede, depolama kotasi dolduğunda veya kullanici tarayici ayarlarindan
+// depolamayi engellediginde hata firlatabilir. Bu durumda favori islemi
+// sadece bu oturumda (sayfa hafizasinda) calismaya devam etsin, tum site
+// cokmesin - kullaniciya sessizce bir kez bilgi verilir.
+let favStorageWarned = false;
+function saveFavsToStorage() {
+  try {
+    localStorage.setItem(favKey, JSON.stringify(favs));
+  } catch (e) {
+    if (!favStorageWarned) {
+      favStorageWarned = true;
+      showToast('Favoriler bu oturumda çalışıyor ancak tarayıcınızda saklanamıyor.');
+    }
+  }
+}
+
 // Favori anahtari: depolama formati degismiyor (eski kayitli favoriler
 // bozulmasin diye), ama KARSILASTIRMA normalizeTR ile yapiliyor - boylece
 // sheet'te marka/model yazimindaki kucuk farklar (bosluk, buyuk/kucuk harf
@@ -891,16 +910,31 @@ function normalizeTR(v) {
     .replace(/[^a-z0-9]+/g," ").trim();
 }
 
-// Urun paylasim linki icin okunabilir "slug" uretir (orn. "xiaomi-poco-x8-pro").
-// Sadece marka+model kullanilir; RAM/hafiza varyantlari ayni linki paylasir
-// (linkten acildiginda o modelin ilk eslesen varyanti gosterilir).
-function productSlug(p) {
+// Urun paylasim linki icin okunabilir "slug" uretir (orn. "xiaomi-poco-x8-pro-256-8").
+// Marka+model tabanina, varsa RAM/hafiza varyant bilgisindeki sayilar eklenir,
+// boylece ayni modelin farkli varyantlari BIRBIRINDEN FARKLI link uretir.
+function productBaseSlug(p) {
   return normalizeTR(`${p.b} ${p.m}`).trim().replace(/\s+/g, '-');
 }
 
+function productVariantSuffix(p) {
+  const nums = String(p.s || '').match(/\d+/g);
+  return nums && nums.length ? nums.join('-') : '';
+}
+
+function productSlug(p) {
+  const base = productBaseSlug(p);
+  const suffix = productVariantSuffix(p);
+  return suffix ? `${base}-${suffix}` : base;
+}
+
+// ESKI (varyantsiz) linkler bozulmasin diye: once yeni (tam) formatla arar,
+// bulamazsa marka+model tabanina gore ilk eslesen urune duser.
 function findProductBySlug(slug) {
   if (!slug) return -1;
-  return products.findIndex(p => productSlug(p) === slug);
+  const exactIdx = products.findIndex(p => productSlug(p) === slug);
+  if (exactIdx > -1) return exactIdx;
+  return products.findIndex(p => productBaseSlug(p) === slug);
 }
 
 function searchScore(p, query) {
@@ -1312,11 +1346,31 @@ function autoImageMarkup(p) {
     onerror="tryNextProductImage(this)">`;
 }
 
+// Google Sheets'e ulasilamadiginda gosterilecek son basarili katalogu
+// tarayicida saklamak icin ayri bir anahtar (favoriler anahtariyla
+// karismasin diye). Sadece bir DAYANIKLILIK/yedek mekanizmasidir; Google
+// Sheets veri kaynagini degistirmez, sadece baglanti hatasinda devreye girer.
+const catalogCacheKey = "mixgsm-catalog-cache-v1";
+
+function saveCatalogCache(list) {
+  try {
+    localStorage.setItem(catalogCacheKey, JSON.stringify({ ts: Date.now(), products: list }));
+  } catch (e) { /* kota/gizli mod - sessizce yoksay, site calismaya devam eder */ }
+}
+
+function loadCatalogCache() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(catalogCacheKey) || "null");
+    if (raw && Array.isArray(raw.products) && raw.products.length) return raw.products;
+  } catch (e) { /* bozuk cache - yoksay */ }
+  return null;
+}
+
 async function loadFromGoogleSheets() {
   const url = "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
   try {
     grid.innerHTML = '<div class="empty">Katalog yükleniyor... ⏳</div>';
-    
+
     const res = await fetch(url + '&t=' + Date.now(), {cache: 'no-store'});
     if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
     const tsv = await res.text();
@@ -1388,6 +1442,9 @@ async function loadFromGoogleSheets() {
     }
     
     products = newProducts;
+    saveCatalogCache(newProducts);
+    const cacheNoticeEl = document.getElementById('cacheNotice');
+    if (cacheNoticeEl) cacheNoticeEl.style.display = 'none';
     await loadExtraPhotoFilesIfNeeded(products);
     renderRamFilterOptions();
     render();
@@ -1404,12 +1461,48 @@ async function loadFromGoogleSheets() {
       if (idx > -1) renderProductModal(products[idx]);
     }
   } catch (err) {
+    // DAYANIKLILIK: canli Google Sheets baglantisi basarisiz oldu. Eger daha
+    // once basariyla yuklenmis bir katalog tarayicida sakliysa, musteriyi
+    // tamamen bos/hata ekraniyla karsilamak yerine o son bilinen katalogu
+    // ACIKCA "guncel olmayabilir" uyarisiyla birlikte gosteriyoruz. Cache de
+    // yoksa mevcut hata ekrani aynen korunuyor.
+    const cached = loadCatalogCache();
+    if (cached && cached.length) {
+      products = cached;
+      const cacheNoticeEl = document.getElementById('cacheNotice');
+      if (cacheNoticeEl) cacheNoticeEl.style.display = 'block';
+      try {
+        renderRamFilterOptions();
+        render();
+        updateProductSchema();
+        renderHeroProduct();
+        renderFeatured();
+        computeBudgetThreshold();
+        const hashMatch = location.hash.match(/^#urun\/(.+)$/);
+        if (hashMatch) {
+          const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
+          if (idx > -1) renderProductModal(products[idx]);
+        }
+        return;
+      } catch (renderErr) { /* cache verisiyle render de basarisiz olursa asagidaki genel hataya dus */ }
+    }
     grid.innerHTML = `<div class="empty">Katalog şu anda yenileniyor. Lütfen sayfayı yenileyin veya WhatsApp üzerinden güncel stok/fiyat sorabilirsiniz.<br><br><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" style="display:inline-flex;margin-top:15px;justify-content:center;"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp'tan Ürün Sor</a></div>`;
   }
 }
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// GUVENLIK: bir degeri, HTML onclick="...('...')" gibi CIFT TIRNAKLI bir
+// attribute icindeki TEK TIRNAKLI bir JS string literaline guvenle gomer.
+// Once JS-string kacisi (ters bolu + tek tirnak), sonra HTML-attribute
+// kacisi (escapeHtml) uygulanir. Bu kritik: urun marka/model/varyant metni
+// dogrudan Google Sheets'ten geldigi icin cift tirnak veya baska ozel
+// karakter icerebilir - onceki kod yalnizca tek tirnaklari kaciriyordu ve
+// bir hucrede cift tirnak olsa attribute'tan kacip script enjekte edilebilirdi.
+function jsAttr(value) {
+  return escapeHtml(String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 }
 
 function render() {
@@ -1473,22 +1566,27 @@ function render() {
   }).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
 }
 
-document.querySelector("#q").addEventListener("input", e => { 
-  q = e.target.value.trim(); 
-  
+// Arama debounce: kullanici her harfe bastiginda degil, yazmayi ~300ms
+// kestiginde render() calisir. Davranis degismiyor - sadece her tus vurusunda
+// tum kataloğun yeniden cizilmesini onluyor (performans).
+let searchDebounceTimer = null;
+document.querySelector("#q").addEventListener("input", e => {
+  q = e.target.value.trim();
+
   if (q.length > 0) {
     cat = "ALL";
     group = "ALL";
-    
+
     document.querySelectorAll(".filter-group button").forEach(x => x.classList.remove("active"));
-    
+
     const fAll = document.querySelector('#filters button[data-cat="ALL"]');
     const cAll = document.querySelector('#categoryFilters button[data-group="ALL"]');
     if (fAll) fAll.classList.add("active");
     if (cAll) cAll.classList.add("active");
   }
-  
-  render(); 
+
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(render, 300);
 });
 
 document.querySelector("#sort").addEventListener("change", e => { sort = e.target.value; render(); });
@@ -1583,6 +1681,17 @@ document.querySelectorAll('#quickusePills button').forEach(btn => {
   });
 });
 
+// GUVENLIK/STABILITE: birden fazla modal/cekmece ust uste acilip
+// kapanirsa (orn. baska bir modal acikken bu kapanirsa), arka plan
+// kaydirmasi SADECE gercekten hicbir modal/cekmece kalmadiysa tekrar
+// acilsin. Aksi halde hala acik bir modal varken arkaplan kayabilirdi.
+function anyModalOpen() {
+  const modalIds = ['modal', 'comparemodal', 'favmodal', 'findermodal', 'legalmodal'];
+  if (modalIds.some(id => { const el = document.getElementById(id); return el && el.classList.contains('open'); })) return true;
+  const panel = document.getElementById('filterPanel');
+  return !!(panel && panel.classList.contains('open'));
+}
+
 // Filtre çekmecesi (mobil <=900px)
 function openFilterDrawer() {
   document.getElementById('filterPanel').classList.add('open');
@@ -1592,7 +1701,7 @@ function openFilterDrawer() {
 function closeFilterDrawer() {
   document.getElementById('filterPanel').classList.remove('open');
   document.getElementById('filterBackdrop').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyModalOpen()) document.body.style.overflow = '';
 }
 
 // Tükenen bir ürün için katalogdaki STOKTA OLAN diger urunler arasindan
@@ -1652,7 +1761,21 @@ function renderProductModal(p) {
   
   document.getElementById("mb").textContent = p.b;
   document.getElementById("mn").textContent = p.m;
-  document.getElementById("mp").innerHTML = p.p === null ? `<span style="color:var(--whatsapp);font-size:22px;font-weight:600;">WhatsApp'tan Fiyat Sorunuz</span>` : `${fmt(p.p)} TL`;
+  // GUVENLIK: innerHTML yerine DOM/textContent kullanarak yaziliyor - fiyat
+  // alani zaten sayisal olarak dogrulanmis olsa da (bkz. loadFromGoogleSheets),
+  // bu ekstra bir koruma katmanidir (defense-in-depth).
+  const mpEl = document.getElementById("mp");
+  mpEl.textContent = "";
+  if (p.p === null) {
+    const span = document.createElement("span");
+    span.style.color = "var(--whatsapp)";
+    span.style.fontSize = "22px";
+    span.style.fontWeight = "600";
+    span.textContent = "WhatsApp'tan Fiyat Sorunuz";
+    mpEl.appendChild(span);
+  } else {
+    mpEl.textContent = `${fmt(p.p)} TL`;
+  }
   
   document.getElementById("outOfStockWarn").style.display = p.stock === "OUT" ? "block" : "none";
   renderSimilarProducts(p);
@@ -1703,7 +1826,7 @@ function openProduct(i) {
 
 function closeProduct() {
   document.getElementById("modal").classList.remove("open");
-  document.body.style.overflow = "";
+  if (!anyModalOpen()) document.body.style.overflow = "";
 
   // Urun kapatilinca linki temiz ana sayfa adresine geri al.
   try {
@@ -1731,7 +1854,7 @@ function toggleFav(e, index) {
   } else {
     favs.push(pk);
   }
-  localStorage.setItem(favKey, JSON.stringify(favs));
+  saveFavsToStorage();
   updateFavs(); render();
 }
 
@@ -1823,7 +1946,7 @@ function openCompareModal() {
 
 function closeCompareModal() {
   document.getElementById('comparemodal').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyModalOpen()) document.body.style.overflow = '';
 }
 
 function renderCompareTable() {
@@ -1852,7 +1975,7 @@ function renderCompareTable() {
       <img class="compare-thumb" src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
       <div>${escapeHtml(p.b)}</div>
       <div>${escapeHtml(p.m)}</div>
-      <button class="compare-remove" onclick="removeFromCompare('${pk.replace(/'/g, "\\'")}')">Kaldır ✕</button>
+      <button class="compare-remove" onclick="removeFromCompare('${jsAttr(pk)}')">Kaldır ✕</button>
     </th>`;
   });
   html += '</tr></thead><tbody>';
@@ -1871,7 +1994,7 @@ function updateFavs() {
   updateFloatingBarsLayout();
 }
 
-function clearFavs() { favs = []; localStorage.setItem(favKey, "[]"); updateFavs(); render(); closeFavModal(); showToast("Favoriler temizlendi"); }
+function clearFavs() { favs = []; saveFavsToStorage(); updateFavs(); render(); closeFavModal(); showToast("Favoriler temizlendi"); }
 
 // --- Favoriler paneli (Faz 9) ---
 function getFavProducts() {
@@ -1886,7 +2009,7 @@ function getFavProducts() {
 function removeFav(pk) {
   const target = normalizedFavKey(pk);
   favs = favs.filter(k => normalizedFavKey(k) !== target);
-  localStorage.setItem(favKey, JSON.stringify(favs));
+  saveFavsToStorage();
   updateFavs(); render();
   if (!favs.length) { closeFavModal(); return; }
   renderFavList();
@@ -1899,7 +2022,7 @@ function openLegalModal() {
 
 function closeLegalModal() {
   document.getElementById('legalmodal').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyModalOpen()) document.body.style.overflow = '';
 }
 
 function openFavModal() {
@@ -1911,7 +2034,7 @@ function openFavModal() {
 
 function closeFavModal() {
   document.getElementById('favmodal').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyModalOpen()) document.body.style.overflow = '';
 }
 
 function renderFavList() {
@@ -1936,7 +2059,7 @@ function renderFavList() {
         <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
         <div class="fav-item-price">${priceText}</div>
       </div>
-      <button class="compare-remove" onclick="removeFav('${pk.replace(/'/g, "\\'")}')">Kaldır ✕</button>
+      <button class="compare-remove" onclick="removeFav('${jsAttr(pk)}')">Kaldır ✕</button>
     </div>`;
   }).join('') + '</div>';
 
@@ -1984,7 +2107,7 @@ function openFinderModal() {
 
 function closeFinderModal() {
   document.getElementById('findermodal').classList.remove('open');
-  document.body.style.overflow = '';
+  if (!anyModalOpen()) document.body.style.overflow = '';
 }
 
 function restartFinder() { renderFinderStep(1); }
@@ -2110,7 +2233,7 @@ window.addEventListener('popstate', () => {
     if (idx > -1) { renderProductModal(products[idx]); return; }
   }
   document.getElementById("modal").classList.remove("open");
-  document.body.style.overflow = "";
+  if (!anyModalOpen()) document.body.style.overflow = "";
 });
 
 window.addEventListener('DOMContentLoaded', () => { loadFromGoogleSheets(); updateFavs(); initReviewsSlider(); });
