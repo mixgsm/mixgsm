@@ -503,7 +503,7 @@ a { text-decoration: none; color: inherit; }
   </div>
   <div>
     📍 Karagöz Mah. Karahoca Sk. No:26/D Şahinbey/Gaziantep<br><br>
-    <a href="#" onclick="showToast('KVKK Aydınlatma: Sitemiz katalog niteliğinde olup veri toplamamaktadır. İletişim süreçleri WhatsApp üzerinden yürütülür.'); return false;" style="text-decoration:underline;">KVKK ve Gizlilik Politikası</a>
+    <a href="#" onclick="openLegalModal(); return false;" style="text-decoration:underline;">KVKK ve Gizlilik Politikası</a>
   </div>
 </footer>
 
@@ -603,6 +603,21 @@ a { text-decoration: none; color: inherit; }
     <button class="close" onclick="closeCompareModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;">×</button>
     <div style="clear:both;"></div>
     <div id="compareTableWrap" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
+<div class="comparemodal" id="legalmodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeLegalModal()">
+  <div class="comparebox" style="max-width:640px;">
+    <button class="close" onclick="closeLegalModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;">×</button>
+    <div style="clear:both;"></div>
+    <h2 style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
+    <div style="color:var(--muted);font-size:14px;line-height:1.8;">
+      <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan herhangi bir form bulunmamaktadır.</p>
+      <p><strong>Favoriler ve karşılaştırma listesi:</strong> Favori ürünleriniz ve karşılaştırma listeniz yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
+      <p><strong>Çerez ve takip:</strong> Site herhangi bir çerez (cookie) veya ziyaretçi takip/analiz yazılımı (ör. Google Analytics, Facebook Pixel) kullanmamaktadır.</p>
+      <p><strong>WhatsApp, telefon ve Google Maps yönlendirmeleri:</strong> Sitedeki "WhatsApp'tan Yaz", "Aramak İçin Tıkla" ve "Google Maps" gibi butonlar sizi ilgili üçüncü taraf uygulama/servise yönlendirir. Bu servisler üzerinden bizimle paylaştığınız bilgiler (isim, telefon numarası, mesaj içeriği vb.), yalnızca sizinle iletişime geçip talebinizi karşılamak amacıyla kullanılır ve söz konusu platformların (WhatsApp/Meta, Google) kendi gizlilik politikalarına tabidir.</p>
+      <p><strong>İletişim:</strong> Bu konudaki sorularınız için bize WhatsApp veya telefon üzerinden ulaşabilirsiniz.</p>
+    </div>
   </div>
 </div>
 
@@ -1570,6 +1585,16 @@ function removeFav(pk) {
   renderFavList();
 }
 
+function openLegalModal() {
+  document.getElementById('legalmodal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLegalModal() {
+  document.getElementById('legalmodal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function openFavModal() {
   if (!favs.length) { showToast('Henüz favori ürününüz yok.'); return; }
   renderFavList();
@@ -1759,7 +1784,7 @@ function closeLightbox() {
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); closeFinderModal(); }
+  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); closeFinderModal(); closeLegalModal(); }
 });
 
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
