@@ -127,6 +127,7 @@ a { text-decoration: none; color: inherit; }
 .card:hover .visual img { transform: scale(1.05); }
 .stock { position: absolute; right: 12px; top: 12px; background: rgba(37, 211, 102, 0.15); color: var(--wa-green); font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; z-index: 2; border: 1px solid rgba(37, 211, 102, 0.3); }
 .stock.no { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+.stock.ask { background: rgba(215, 170, 75, 0.15); color: var(--gold); border-color: rgba(215, 170, 75, 0.35); }
 .fav { position: absolute; left: 12px; top: 12px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--panel); color: var(--muted); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
 .fav.active { color: var(--brand-red); border-color: var(--brand-red); }
 
@@ -711,8 +712,13 @@ async function loadFromGoogleSheets() {
       if(!marka && !model) continue;
       
       let stokWords = normalizeTR(cols[4] || '').split(/\s+/);
-      let isStock = stokWords.some(w => ['var', 'stokta', 'mevcut', 'evet'].includes(w)) && 
-                    !stokWords.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w));
+      let stockStatus = 'OUT';
+      if (stokWords.some(w => ['sor', 'sorunuz', 'soru'].includes(w))) {
+        stockStatus = 'ASK';
+      } else if (stokWords.some(w => ['var', 'stokta', 'mevcut', 'evet'].includes(w)) &&
+                 !stokWords.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w))) {
+        stockStatus = 'IN';
+      }
       
       let rawPrice = cols[3] || '';
       let cleanPrice = rawPrice.replace(/[,.]\d{1,2}(?!\d)/g, '').replace(/[^0-9]/g, '');
@@ -733,7 +739,7 @@ async function loadFromGoogleSheets() {
       newProducts.push({
         b: marka, m: model, s: cols[2] || '', 
         p: finalPrice,
-        stock: isStock, cat: catType, group: groupType,
+        stock: stockStatus, cat: catType, group: groupType,
         img: normalizeGithubImageUrl(cols[6] || ''),
         battery: cols[7] || '', screen: cols[8] || '', 
         processor: cols[9] || '', camera: cols[10] || '', 
@@ -770,7 +776,9 @@ function render() {
   count.textContent = `${filtered.length} ürün listeleniyor`;
   
   grid.innerHTML = filtered.length ? filtered.map(p => {
-    const badge = p.stock ? '<span class="stock">● Stokta</span>' : '<span class="stock no">Tükendi</span>';
+    const badge = p.stock === 'IN' ? '<span class="stock">● Stokta</span>'
+      : p.stock === 'ASK' ? '<span class="stock ask">💬 Sorunuz</span>'
+      : '<span class="stock no">Tükendi</span>';
     const priceDisplay = p.p === null ? `<strong class="price-query">WhatsApp'tan Sor</strong>` : `<strong>${fmt(p.p)} <em>TL</em></strong>`;
     const pk = `${p.b}|${p.m}|${p.s}`;
     const pIndex = products.indexOf(p);
@@ -851,7 +859,7 @@ function openProduct(i) {
   document.getElementById("mn").textContent = p.m;
   document.getElementById("mp").innerHTML = p.p === null ? `<span style="color:var(--gold);font-size:22px;">WhatsApp'tan Fiyat Sorunuz</span>` : `${fmt(p.p)} TL`;
   
-  document.getElementById("outOfStockWarn").style.display = p.stock ? "none" : "block";
+  document.getElementById("outOfStockWarn").style.display = p.stock === "OUT" ? "block" : "none";
 
   const setRow = (id, val) => {
     const tr = document.getElementById(`tr-${id}`);
