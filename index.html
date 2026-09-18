@@ -112,6 +112,23 @@ a { text-decoration: none; color: inherit; }
 .filter-group button { white-space: nowrap; background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 99px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; }
 .filter-group button.active { background: var(--txt); color: #000; border-color: var(--txt); }
 
+.adv-filters { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; }
+.adv-filters summary { font-size: 13px; font-weight: 800; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--txt); }
+.adv-filters summary::-webkit-details-marker { display: none; }
+.adv-filters summary::after { content: '⚙️ +'; color: var(--muted); font-size: 13px; }
+.adv-filters[open] summary::after { content: '⚙️ −'; }
+.adv-body { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.adv-row-label { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; }
+.adv-price-row { display: flex; gap: 10px; align-items: center; }
+.adv-price-row input { width: 120px; background: #0b0f17; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 8px 10px; font-size: 13px; }
+.adv-price-row span { color: var(--muted); font-size: 13px; }
+.filter-group-adv { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-group-adv button { white-space: nowrap; background: #0b0f17; border: 1px solid var(--border); color: var(--muted); border-radius: 99px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+.filter-group-adv button.active { background: var(--gold); color: #000; border-color: var(--gold); }
+.adv-checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--txt); cursor: pointer; }
+.adv-select { background: #0b0f17; border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: 8px 10px; font-size: 13px; }
+.adv-clear { align-self: flex-start; background: transparent; border: 0; color: var(--brand-red); font-size: 12px; font-weight: 800; cursor: pointer; }
+
 /* Catalog Topline */
 .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
 .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 13px; }
@@ -349,6 +366,38 @@ a { text-decoration: none; color: inherit; }
     <button data-cat="INFINIX_TECNO">Infinix • Tecno</button>
     <button data-cat="OTHER">Diğerleri</button>
   </div>
+
+  <details class="adv-filters" id="advFilters">
+    <summary>Gelişmiş Filtreler</summary>
+    <div class="adv-body">
+      <div>
+        <div class="adv-row-label">FİYAT ARALIĞI (TL)</div>
+        <div class="adv-price-row">
+          <input type="number" id="priceMinInput" placeholder="Min" min="0">
+          <span>—</span>
+          <input type="number" id="priceMaxInput" placeholder="Max" min="0">
+        </div>
+      </div>
+      <div>
+        <div class="adv-row-label">RAM</div>
+        <div class="filter-group-adv" id="ramFilterGroup"></div>
+      </div>
+      <div>
+        <div class="adv-row-label">BAĞLANTI</div>
+        <label class="adv-checkbox"><input type="checkbox" id="only5GCheck"> Sadece 5G destekli modeller</label>
+      </div>
+      <div>
+        <div class="adv-row-label">BATARYA</div>
+        <select class="adv-select" id="minBatterySelect">
+          <option value="0">Farketmez</option>
+          <option value="5000">5.000 mAh ve üzeri</option>
+          <option value="6000">6.000 mAh ve üzeri</option>
+          <option value="7000">7.000 mAh ve üzeri</option>
+        </select>
+      </div>
+      <button class="adv-clear" id="advClearBtn">Gelişmiş filtreleri temizle</button>
+    </div>
+  </details>
 </section>
 
 <main class="wrap">
@@ -563,6 +612,8 @@ a { text-decoration: none; color: inherit; }
 <script>
 let products = [];
 let cat = "ALL", group = "ALL", q = "", sort = "default";
+// Gelismis filtreler (Faz 11)
+let ramFilter = "ALL", only5G = false, minBattery = 0, priceMin = null, priceMax = null;
 const favKey = "mixgsm-favorites-v15";
 let favs = [];
 // Karsilastirma listesi (favorilerden bagimsiz, gecici, sayfa yenilenince sifirlanir).
@@ -583,6 +634,52 @@ function normalizedFavKey(rawKey) {
 function isFav(p) {
   const target = normalizedFavKey(favKeyOf(p));
   return favs.some(k => normalizedFavKey(k) === target);
+}
+
+// --- Gelismis filtre yardimcilari (Faz 11) ---
+// RAM/Hafiza sutunu serbest metin ("8 GB / 256 GB" gibi) - ilk sayiyi RAM
+// olarak okuyoruz. Format uymuyorsa null donuyor (o urun RAM filtresine dahil edilmez).
+function extractRAM(specText) {
+  const m = String(specText || '').match(/(\d+)\s*gb/i);
+  return m ? `${m[1]} GB` : null;
+}
+
+// Baglanti sutununda gercekten "5G" yaziyor mu (kelime olarak) kontrol eder;
+// "4,5 G" gibi farkli bir ifadeyi 5G ile karistirmaz.
+function is5GConnectivity(connText) {
+  const text = String(connText || '');
+  // Once "4.5G" / "4,5 G" gibi ifadeleri metinden cikar - bunlar gercek 5G
+  // degildir, "5G" ile karistirilmamali.
+  const cleaned = text.replace(/4\s*[.,]\s*5\s*g/gi, '');
+  // Kalan metinde, hemen onunde baska bir rakam/nokta olmayan bagimsiz "5G" var mi?
+  return /(?:^|[^0-9.,])5\s*g\b/i.test(cleaned);
+}
+
+function getAvailableRAMs() {
+  const set = new Set();
+  products.forEach(p => {
+    if (p.group !== 'PHONE') return;
+    const ram = extractRAM(p.s);
+    if (ram) set.add(ram);
+  });
+  return Array.from(set).sort((a, b) => parseInt(a) - parseInt(b));
+}
+
+function renderRamFilterOptions() {
+  const wrap = document.getElementById('ramFilterGroup');
+  if (!wrap) return;
+  const rams = getAvailableRAMs();
+  if (!rams.length) { wrap.innerHTML = '<span style="color:var(--muted);font-size:12px;">Katalogda RAM verisi bulunamadı.</span>'; return; }
+  wrap.innerHTML = '<button data-ram="ALL" class="active">Tümü</button>' +
+    rams.map(r => `<button data-ram="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join('');
+  wrap.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      ramFilter = b.dataset.ram;
+      wrap.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    });
+  });
 }
 
 const grid = document.querySelector("#grid");
@@ -989,6 +1086,7 @@ async function loadFromGoogleSheets() {
     
     products = newProducts;
     await loadExtraPhotoFilesIfNeeded(products);
+    renderRamFilterOptions();
     render();
 
     // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx), katalog yuklendikten
@@ -1008,9 +1106,14 @@ function escapeHtml(value) {
 }
 
 function render() {
-  let filtered = products.filter(p => !isNonProductRow(p) && 
+  let filtered = products.filter(p => !isNonProductRow(p) &&
     (cat === "ALL" || p.cat === cat) &&
-    (group === "ALL" || p.group === group)
+    (group === "ALL" || p.group === group) &&
+    (ramFilter === "ALL" || extractRAM(p.s) === ramFilter) &&
+    (!only5G || is5GConnectivity(p.connectivity)) &&
+    (!minBattery || extractLeadingNumber(p.battery) >= minBattery) &&
+    (priceMin === null || (p.p !== null && p.p >= priceMin)) &&
+    (priceMax === null || (p.p !== null && p.p <= priceMax))
   );
   
   if(q) {
@@ -1097,6 +1200,37 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
     b.classList.add("active");
     render();
   });
+});
+
+// --- Gelismis filtre kontrolleri (Faz 11) ---
+document.getElementById("priceMinInput").addEventListener("input", e => {
+  const v = e.target.value.trim();
+  priceMin = v === '' ? null : Math.max(0, parseInt(v, 10) || 0);
+  render();
+});
+document.getElementById("priceMaxInput").addEventListener("input", e => {
+  const v = e.target.value.trim();
+  priceMax = v === '' ? null : Math.max(0, parseInt(v, 10) || 0);
+  render();
+});
+document.getElementById("only5GCheck").addEventListener("change", e => {
+  only5G = e.target.checked;
+  render();
+});
+document.getElementById("minBatterySelect").addEventListener("change", e => {
+  minBattery = parseInt(e.target.value, 10) || 0;
+  render();
+});
+document.getElementById("advClearBtn").addEventListener("click", () => {
+  ramFilter = "ALL"; only5G = false; minBattery = 0; priceMin = null; priceMax = null;
+  document.getElementById("priceMinInput").value = '';
+  document.getElementById("priceMaxInput").value = '';
+  document.getElementById("only5GCheck").checked = false;
+  document.getElementById("minBatterySelect").value = '0';
+  document.querySelectorAll('#ramFilterGroup button').forEach(x => x.classList.remove('active'));
+  const ramAllBtn = document.querySelector('#ramFilterGroup button[data-ram="ALL"]');
+  if (ramAllBtn) ramAllBtn.classList.add('active');
+  render();
 });
 
 // Tükenen bir ürün için katalogdaki STOKTA OLAN diger urunler arasindan
