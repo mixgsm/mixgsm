@@ -160,6 +160,14 @@ a { text-decoration: none; color: inherit; }
 .modalname { font-size: 28px; font-weight: 900; margin: 4px 0 16px; line-height: 1.1; }
 .modalprice { font-size: 28px; color: #fff; font-weight: 800; margin-bottom: 24px; }
 .modal-stock-warn { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 20px; border: 1px solid rgba(239, 68, 68, 0.2); display: none; }
+.similar-box { display: none; margin-bottom: 20px; }
+.similar-box .similar-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.similar-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+.similar-item { flex: 0 0 auto; width: 110px; cursor: pointer; background: var(--card-bg, rgba(255,255,255,0.03)); border: 1px solid var(--border); border-radius: 10px; padding: 8px; text-align: center; transition: 0.2s; }
+.similar-item:hover { border-color: var(--gold); }
+.similar-item img { width: 100%; height: 60px; object-fit: contain; margin-bottom: 6px; }
+.similar-item .similar-name { font-size: 10px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.similar-item .similar-price { font-size: 11px; font-weight: 800; color: var(--gold); }
 
 .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
 .spec-table td { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -407,6 +415,11 @@ a { text-decoration: none; color: inherit; }
       
       <div id="outOfStockWarn" class="modal-stock-warn">
         ⚠️ Bu ürün şu an stoklarımızda bulunmamaktadır. Alternatif modeller için WhatsApp'tan bilgi alabilirsiniz.
+      </div>
+
+      <div id="similarBox" class="similar-box">
+        <div class="similar-title">Şunlar İlginizi Çekebilir</div>
+        <div class="similar-list" id="similarList"></div>
       </div>
 
       <table class="spec-table">
@@ -938,6 +951,51 @@ document.querySelectorAll("#categoryFilters button").forEach(b => {
   });
 });
 
+// Tükenen bir ürün için katalogdaki STOKTA OLAN diger urunler arasindan
+// benzerlerini bulur: once ayni marka grubu (cat), sonra fiyat yakinligi
+// esas alinir. Sadece gercekten sheet'ten gelen, stokta olan urunler
+// onerilir - hicbir veri uydurulmaz.
+function getSimilarProducts(p) {
+  const candidates = products.filter(other =>
+    other.stock === 'IN' &&
+    other.group === p.group &&
+    !(other.b === p.b && other.m === p.m && other.s === p.s)
+  );
+
+  const scored = candidates.map(other => {
+    let score = (other.cat === p.cat) ? 100 : 0;
+    if (p.p !== null && other.p !== null) {
+      score -= Math.abs(other.p - p.p) / 1000;
+    }
+    return { other, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 4).map(x => x.other);
+}
+
+function renderSimilarProducts(p) {
+  const similarBox = document.getElementById("similarBox");
+  const similarList = document.getElementById("similarList");
+
+  if (p.stock !== "OUT") { similarBox.style.display = "none"; return; }
+
+  const similar = getSimilarProducts(p);
+  if (!similar.length) { similarBox.style.display = "none"; return; }
+
+  similarBox.style.display = "block";
+  similarList.innerHTML = similar.map(sp => {
+    const spIndex = products.indexOf(sp);
+    const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
+    return `<div class="similar-item" onclick="openProduct(${spIndex})">
+      <img src="${spImg}" alt="${escapeHtml(sp.m)}" loading="lazy">
+      <div class="similar-name">${escapeHtml(sp.m)}</div>
+      <div class="similar-price">${spPrice}</div>
+    </div>`;
+  }).join('');
+}
+
 function openProduct(i) {
   const p = products[i], modal = document.getElementById("modal");
   const modalImg = document.getElementById("mi");
@@ -953,6 +1011,7 @@ function openProduct(i) {
   document.getElementById("mp").innerHTML = p.p === null ? `<span style="color:var(--gold);font-size:22px;">WhatsApp'tan Fiyat Sorunuz</span>` : `${fmt(p.p)} TL`;
   
   document.getElementById("outOfStockWarn").style.display = p.stock === "OUT" ? "block" : "none";
+  renderSimilarProducts(p);
 
   const setRow = (id, val) => {
     const tr = document.getElementById(`tr-${id}`);
