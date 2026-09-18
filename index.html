@@ -792,9 +792,15 @@ async function loadFromGoogleSheets() {
         stockStatus = 'IN';
       }
       
+      // Fiyat: veri yok / hatali / sifir / metin (orn. "SORUNUZ") - tum bu
+      // durumlarda musteriye YANLIS ya da UYDURMA bir rakam gostermek yerine
+      // "WhatsApp'tan Sor" gosteriyoruz (finalPrice = null). Gercek, makul
+      // araliktaki (100 TL - 300.000 TL) bir sayi varsa onu kullaniyoruz.
       let rawPrice = cols[3] || '';
+      let isNegativePrice = /^\s*-/.test(rawPrice);
       let cleanPrice = rawPrice.replace(/[,.]\d{1,2}(?!\d)/g, '').replace(/[^0-9]/g, '');
-      let finalPrice = cleanPrice ? parseInt(cleanPrice, 10) : null;
+      let parsedPrice = cleanPrice ? parseInt(cleanPrice, 10) : NaN;
+      let finalPrice = (!isNegativePrice && Number.isFinite(parsedPrice) && parsedPrice >= 100 && parsedPrice <= 300000) ? parsedPrice : null;
 
       let catType = "OTHER";
       if(marka.includes('APPLE') || marka.includes('IPHONE')) catType = "APPLE";
