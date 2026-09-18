@@ -227,6 +227,11 @@ a { text-decoration: none; color: inherit; }
 
 /* Toast */
 .toast { position: fixed; left: 50%; top: 20px; transform: translate(-50%, -20px); z-index: 500; background: #fff; color: #000; padding: 12px 24px; border-radius: 99px; font-weight: 700; font-size: 13px; opacity: 0; pointer-events: none; transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+.wa-float { position: fixed; right: 20px; bottom: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--wa-green); display: flex; align-items: center; justify-content: center; z-index: 150; box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45); text-decoration: none; animation: wa-pulse 2.5s infinite; }
+.wa-float-icon { font-size: 26px; line-height: 1; }
+@keyframes wa-pulse { 0% { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45), 0 0 0 0 rgba(37, 211, 102, 0.5); } 70% { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45), 0 0 0 14px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45), 0 0 0 0 rgba(37, 211, 102, 0); } }
+@media(max-width: 720px) { .wa-float { right: 16px; bottom: 16px; width: 52px; height: 52px; } }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 @media(max-width: 768px) {
@@ -448,6 +453,10 @@ a { text-decoration: none; color: inherit; }
 </div>
 
 <div class="toast" id="toast"></div>
+
+<a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp'tan Bize Yazın">
+  <span class="wa-float-icon">💬</span>
+</a>
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" aria-label="Kapat">×</button>
