@@ -176,6 +176,8 @@ a { text-decoration: none; color: inherit; }
 .spec-table tr:last-child td { border-bottom: none; }
 
 .modalwa { display: block; text-align: center; background: var(--wa-green); color: #000; border-radius: 12px; padding: 16px; font-weight: 900; font-size: 15px; text-decoration: none; }
+.gsmarena-link { display: block; text-align: center; background: transparent; color: var(--gold); border: 1px solid rgba(215, 170, 75, 0.4); border-radius: 12px; padding: 12px; font-weight: 700; font-size: 13px; text-decoration: none; margin-bottom: 12px; transition: 0.2s; }
+.gsmarena-link:hover { background: rgba(215, 170, 75, 0.08); }
 
 /* Comparebar / Favbar */
 .comparebar { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(120px); z-index: 120; background: var(--panel); border: 1px solid var(--border); border-radius: 99px; padding: 10px 20px; display: flex; align-items: center; gap: 16px; transition: 0.3s; opacity: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
@@ -432,7 +434,9 @@ a { text-decoration: none; color: inherit; }
         <tr id="tr-registration"><td>Kayıt Durumu</td><td id="mfregistration"></td></tr>
         <tr id="tr-warranty"><td>Garanti / İade</td><td id="mfwarranty"></td></tr>
       </table>
-      
+
+      <a id="mGsmarena" class="gsmarena-link" target="_blank" rel="noopener noreferrer">🔍 Tüm Teknik Özellikleri GSMArena'da İncele</a>
+
       <a id="mw" class="modalwa" target="_blank" rel="noopener noreferrer">💬 Bu Ürünü Sor</a>
     </div>
   </div>
@@ -1026,6 +1030,19 @@ function openProduct(i) {
 
   const waText = `Merhaba MİX GSM, katalogdan ${p.b} ${p.m} ${p.s ? '('+p.s+')' : ''} modeli hakkında stok ve fiyat bilgisi almak istiyorum.`;
   document.getElementById("mw").href = `https://wa.me/905424818255?text=${encodeURIComponent(waText)}`;
+
+  // Sadece telefonlar icin GSMArena arama linki gosteriliyor (kisisel bakim
+  // urunleri GSMArena'da yok). Kendi verimizi degil, dogrudan GSMArena'nin
+  // kendi arama sonucunu actigimiz icin yanlis/uydurma bir teknik bilgi
+  // riski yok.
+  const gsmLink = document.getElementById("mGsmarena");
+  if (p.group === "PHONE") {
+    const gsmQuery = encodeURIComponent(`${p.b} ${p.m}`.trim());
+    gsmLink.href = `https://www.gsmarena.com/results.php3?sQuickSearch=yes&sName=${gsmQuery}`;
+    gsmLink.style.display = "block";
+  } else {
+    gsmLink.style.display = "none";
+  }
   
   modal.classList.add("open");
   document.body.style.overflow = "hidden";
