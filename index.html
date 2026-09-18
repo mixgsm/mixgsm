@@ -153,6 +153,8 @@ a { text-decoration: none; color: inherit; }
 .modalbox { width: min(900px, 100%); max-height: 90vh; overflow: auto; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; position: relative; transform: scale(0.95); transition: transform 0.3s ease; display: grid; grid-template-columns: 1fr 1fr; }
 .modal.open .modalbox { transform: scale(1); }
 .close { position: absolute; right: 16px; top: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); color: #fff; font-size: 20px; cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
+.share-btn { position: absolute; right: 60px; top: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); color: #fff; font-size: 16px; cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
+.share-btn:hover { border-color: var(--gold); }
 .modalvisual { background: #0b0f17; display: flex; align-items: center; justify-content: center; padding: 40px; }
 .modalvisual img { max-width: 100%; max-height: 400px; object-fit: contain; }
 .modalinfo { padding: 40px 30px; }
@@ -412,6 +414,7 @@ a { text-decoration: none; color: inherit; }
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mn" onclick="if(event.target===this)closeProduct()">
   <div class="modalbox">
     <button class="close" onclick="closeProduct()" aria-label="Kapat">×</button>
+    <button class="share-btn" onclick="copyProductLink()" aria-label="Ürün Linkini Kopyala">🔗</button>
     <div class="modalvisual">
       <img id="mi" src="" alt="Ürün Görseli">
     </div>
@@ -483,6 +486,18 @@ function normalizeTR(v) {
     .replace(/ğ/g,"g").replace(/Ğ/g,"g").replace(/ü/g,"u").replace(/Ü/g,"u")
     .replace(/ö/g,"o").replace(/Ö/g,"o").replace(/ç/g,"c").replace(/Ç/g,"c")
     .replace(/[^a-z0-9]+/g," ").trim();
+}
+
+// Urun paylasim linki icin okunabilir "slug" uretir (orn. "xiaomi-poco-x8-pro").
+// Sadece marka+model kullanilir; RAM/hafiza varyantlari ayni linki paylasir
+// (linkten acildiginda o modelin ilk eslesen varyanti gosterilir).
+function productSlug(p) {
+  return normalizeTR(`${p.b} ${p.m}`).trim().replace(/\s+/g, '-');
+}
+
+function findProductBySlug(slug) {
+  if (!slug) return -1;
+  return products.findIndex(p => productSlug(p) === slug);
 }
 
 function searchScore(p, query) {
@@ -866,6 +881,14 @@ async function loadFromGoogleSheets() {
     products = newProducts;
     await loadExtraPhotoFilesIfNeeded(products);
     render();
+
+    // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx), katalog yuklendikten
+    // sonra ilgili urunu otomatik ac.
+    const hashMatch = location.hash.match(/^#urun\/(.+)$/);
+    if (hashMatch) {
+      const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
+      if (idx > -1) renderProductModal(products[idx]);
+    }
   } catch (err) {
     grid.innerHTML = `<div class="empty">Katalog şu anda yenileniyor. Lütfen sayfayı yenileyin veya WhatsApp üzerinden güncel stok/fiyat sorabilirsiniz.<br><br><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" style="display:inline-flex;margin-top:15px;justify-content:center;">💬 WhatsApp'tan Ürün Sor</a></div>`;
   }
@@ -1009,8 +1032,8 @@ function renderSimilarProducts(p) {
   }).join('');
 }
 
-function openProduct(i) {
-  const p = products[i], modal = document.getElementById("modal");
+function renderProductModal(p) {
+  const modal = document.getElementById("modal");
   const modalImg = document.getElementById("mi");
   
   const sources = imageCandidatesForProduct(p);
@@ -1058,9 +1081,36 @@ function openProduct(i) {
   modal.querySelector('.close').focus();
 }
 
+function openProduct(i) {
+  const p = products[i];
+  renderProductModal(p);
+
+  // Urun linki: adres cubugunu bu urune ozel, paylasilabilir bir linke
+  // gunceller (sayfayi yeniden yuklemeden, history.pushState ile).
+  try {
+    const newUrl = location.pathname + location.search + '#urun/' + productSlug(p);
+    history.pushState({ productSlug: productSlug(p) }, '', newUrl);
+  } catch (e) {}
+}
+
 function closeProduct() {
   document.getElementById("modal").classList.remove("open");
   document.body.style.overflow = "";
+
+  // Urun kapatilinca linki temiz ana sayfa adresine geri al.
+  try {
+    if (location.hash.startsWith('#urun/')) {
+      history.pushState({}, '', location.pathname + location.search);
+    }
+  } catch (e) {}
+}
+
+function copyProductLink() {
+  navigator.clipboard.writeText(location.href).then(() => {
+    showToast('Ürün linki kopyalandı!');
+  }).catch(() => {
+    showToast('Link kopyalanamadı, adres çubuğundan kopyalayabilirsiniz.');
+  });
 }
 
 function toggleFav(e, index) {
@@ -1094,6 +1144,18 @@ function closeLightbox() {
 
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closeProduct(); closeLightbox(); }
+});
+
+// Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
+// tutarli kalsin: link hala #urun/... ise o urunu ac, degilse kapat.
+window.addEventListener('popstate', () => {
+  const hashMatch = location.hash.match(/^#urun\/(.+)$/);
+  if (hashMatch && products.length) {
+    const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
+    if (idx > -1) { renderProductModal(products[idx]); return; }
+  }
+  document.getElementById("modal").classList.remove("open");
+  document.body.style.overflow = "";
 });
 
 window.addEventListener('DOMContentLoaded', () => { loadFromGoogleSheets(); updateFavs(); });
