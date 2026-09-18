@@ -187,6 +187,29 @@ a { text-decoration: none; color: inherit; }
 .comparebar span { font-size: 13px; font-weight: 700; color: #fff; }
 .comparebar button { border: 0; background: transparent; color: var(--brand-red); font-size: 12px; font-weight: 800; cursor: pointer; }
 
+.compare-toggle { border: 1px solid var(--border); background: var(--panel); color: var(--muted); font-size: 11px; font-weight: 700; padding: 7px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+.compare-toggle.active { background: rgba(215, 170, 75, 0.15); color: var(--gold); border-color: rgba(215, 170, 75, 0.4); }
+.card.comparing { border-color: rgba(215, 170, 75, 0.5); }
+
+.comparetraybar { position: fixed; left: 20px; bottom: 20px; z-index: 121; background: var(--panel); border: 1px solid var(--border); border-radius: 99px; padding: 10px 18px; display: flex; align-items: center; gap: 14px; transition: 0.3s; opacity: 0; transform: translateY(120px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.comparetraybar.show { opacity: 1; transform: translateY(0); }
+.comparetraybar span { font-size: 13px; font-weight: 700; color: #fff; }
+.comparetraybar button { border: 0; cursor: pointer; font-weight: 800; font-size: 12px; border-radius: 99px; padding: 7px 14px; }
+.comparetraybar .btn-view { background: var(--gold); color: #000; }
+.comparetraybar .btn-clear { background: transparent; color: var(--brand-red); }
+@media(max-width: 720px) { .comparetraybar { left: 12px; right: 12px; bottom: 84px; justify-content: space-between; } }
+
+.comparemodal { position: fixed; inset: 0; z-index: 310; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+.comparemodal.open { display: flex; }
+.comparebox { background: var(--card); border: 1px solid var(--border); border-radius: 20px; max-width: 1000px; width: 100%; max-height: 90vh; overflow: auto; position: relative; padding: 30px; }
+.comparetable { width: 100%; border-collapse: collapse; }
+.comparetable th, .comparetable td { padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px; text-align: center; vertical-align: top; }
+.comparetable th { color: #fff; font-weight: 700; }
+.comparetable th, .comparetable td { min-width: 130px; }
+.comparetable th:first-child, .comparetable td:first-child { text-align: left; color: var(--muted); font-weight: 700; white-space: nowrap; min-width: 110px; }
+.compare-remove { background: transparent; border: 0; color: var(--brand-red); cursor: pointer; font-size: 11px; font-weight: 800; margin-top: 6px; }
+.compare-thumb { width: 70px; height: 70px; object-fit: contain; margin: 0 auto 8px; display: block; }
+
 /* Store Section */
 .store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
@@ -455,6 +478,20 @@ a { text-decoration: none; color: inherit; }
   <button onclick="clearFavs()">Temizle</button>
 </div>
 
+<div class="comparetraybar" id="comparetraybar">
+  <span id="comparecount">0 ürün seçildi</span>
+  <button class="btn-view" id="compareViewBtn" onclick="openCompareModal()">Karşılaştır</button>
+  <button class="btn-clear" onclick="clearCompare()">Temizle</button>
+</div>
+
+<div class="comparemodal" id="comparemodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeCompareModal()">
+  <div class="comparebox">
+    <button class="close" onclick="closeCompareModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;">×</button>
+    <div style="clear:both;"></div>
+    <div id="compareTableWrap" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp'tan Bize Yazın">
@@ -471,6 +508,8 @@ let products = [];
 let cat = "ALL", group = "ALL", q = "", sort = "default";
 const favKey = "mixgsm-favorites-v15";
 let favs = [];
+// Karsilastirma listesi (favorilerden bagimsiz, gecici, sayfa yenilenince sifirlanir).
+let compareList = [];
 try {
   const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
   favs = Array.isArray(saved) ? saved : [];
@@ -926,8 +965,10 @@ function render() {
     const imgMarkup = autoImageMarkup(p);
     const tagMarkup = p.tagLabel ? `<span class="tagbadge ${p.tagClass}">${escapeHtml(p.tagLabel)}</span>` : '';
 
+    const isComparing = compareList.includes(pk);
+
     return `
-    <article class="card" onclick="openProduct(${pIndex})">
+    <article class="card ${isComparing ? "comparing" : ""}" onclick="openProduct(${pIndex})">
       <div class="visual">
         ${tagMarkup}
         ${badge}
@@ -943,6 +984,7 @@ function render() {
             <small>GÜNCEL FİYAT</small>
             ${priceDisplay}
           </div>
+          <button class="compare-toggle ${isComparing ? "active" : ""}" onclick="toggleCompare(event, ${pIndex})">⇄ ${isComparing ? "Seçildi" : "Karşılaştır"}</button>
         </div>
       </div>
     </article>`;
@@ -1121,6 +1163,101 @@ function toggleFav(e, index) {
   updateFavs(); render();
 }
 
+// --- Karsilastirma (Faz 8) ---
+function toggleCompare(e, index) {
+  e.stopPropagation();
+  const p = products[index];
+  const pk = `${p.b}|${p.m}|${p.s}`;
+  if (compareList.includes(pk)) {
+    compareList = compareList.filter(x => x !== pk);
+  } else {
+    if (compareList.length >= 4) {
+      showToast('En fazla 4 ürünü karşılaştırabilirsiniz.');
+      return;
+    }
+    compareList.push(pk);
+  }
+  updateCompareBar();
+  render();
+}
+
+function updateCompareBar() {
+  document.getElementById('comparecount').textContent = `${compareList.length} ürün seçildi`;
+  document.getElementById('comparetraybar').classList.toggle('show', compareList.length > 0);
+  document.getElementById('compareViewBtn').style.display = compareList.length >= 2 ? 'inline-block' : 'none';
+}
+
+function clearCompare() {
+  compareList = [];
+  updateCompareBar();
+  render();
+}
+
+function getCompareProducts() {
+  return compareList
+    .map(pk => products.find(p => `${p.b}|${p.m}|${p.s}` === pk))
+    .filter(Boolean);
+}
+
+function removeFromCompare(pk) {
+  compareList = compareList.filter(x => x !== pk);
+  updateCompareBar();
+  render();
+  if (compareList.length < 2) { closeCompareModal(); return; }
+  renderCompareTable();
+}
+
+function openCompareModal() {
+  if (compareList.length < 2) { showToast('Karşılaştırmak için en az 2 ürün seçin.'); return; }
+  renderCompareTable();
+  document.getElementById('comparemodal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCompareModal() {
+  document.getElementById('comparemodal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderCompareTable() {
+  const items = getCompareProducts();
+  const wrap = document.getElementById('compareTableWrap');
+
+  // Sadece gercekten sheet'ten gelen alanlar gosteriliyor; hicbir deger uydurulmuyor.
+  const rows = [
+    ['Fiyat', p => p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`],
+    ['RAM / Hafıza', p => p.s || '-'],
+    ['Stok', p => p.stock === 'IN' ? 'Stokta' : p.stock === 'ASK' ? 'Sorunuz' : 'Tükendi'],
+    ['Batarya', p => p.battery || '-'],
+    ['Ekran', p => p.screen || '-'],
+    ['İşlemci', p => p.processor || '-'],
+    ['Kamera', p => p.camera || '-'],
+    ['Bağlantı', p => p.connectivity || '-'],
+    ['Kayıt Durumu', p => p.registration || '-'],
+    ['Garanti / İade', p => p.warranty || '-'],
+  ];
+
+  let html = '<table class="comparetable"><thead><tr><th></th>';
+  items.forEach(p => {
+    const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const pk = `${p.b}|${p.m}|${p.s}`;
+    html += `<th>
+      <img class="compare-thumb" src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+      <div>${escapeHtml(p.b)}</div>
+      <div>${escapeHtml(p.m)}</div>
+      <button class="compare-remove" onclick="removeFromCompare('${pk.replace(/'/g, "\\'")}')">Kaldır ✕</button>
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(([label, getter]) => {
+    html += `<tr><td>${escapeHtml(label)}</td>`;
+    items.forEach(p => { html += `<td>${escapeHtml(String(getter(p)))}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
 function updateFavs() {
   document.getElementById("favcount").textContent = `${favs.length} favori`;
   document.getElementById("comparebar").classList.toggle("show", favs.length > 0);
@@ -1143,7 +1280,7 @@ function closeLightbox() {
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeProduct(); closeLightbox(); }
+  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); }
 });
 
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
