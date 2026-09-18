@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080808">
+<!-- GÜVENLİK: CSP (Content Security Policy). GitHub Pages statik barındırma
+     olduğu için gerçek bir HTTP header (en güçlü/tam koruma) yerine bu meta
+     etiketiyle uygulanıyor - meta ile "frame-ancestors" ve "report-uri" gibi
+     bazı yönergeler desteklenmiyor (tarayıcı bunları sessizce yok sayar,
+     hataya sebep olmaz). script-src/style-src içinde 'unsafe-inline' hâlâ
+     var çünkü ürün kartları gibi HER render() çağrısında yeniden oluşturulan
+     dinamik elementlerdeki onclick'ler ve <style> bloğu bunu gerektiriyor;
+     bunları tamamen kaldırmak site mimarisini baştan yazmayı gerektirir
+     (bkz. "mevcut sistemi bozma" kuralı). Buna rağmen bu politika gerçek bir
+     koruma sağlıyor: harici/enjekte script-style kaynaklarını, izinsiz
+     ağ bağlantılarını ve form/nesne tabanlı saldırı yüzeylerini kapatıyor. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <link rel="icon" href="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg">
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
@@ -237,7 +249,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .share-btn { position: absolute; right: 56px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
 .share-btn svg.icon { font-size: 15px; }
 .share-btn:hover, .close:hover { border-color: rgba(255,255,255,0.24); }
-.modalvisual { background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 40px; min-width: 0; }
+.modalvisual { background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 40px; min-width: 0; min-height: 300px; }
 .modalvisual img { max-width: 100%; max-height: 380px; object-fit: contain; }
 .modalinfo { padding: 36px 30px; min-width: 0; }
 .modalbrand { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
@@ -476,11 +488,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </div>
 
 <div class="catalog-layout">
-  <div class="filter-drawer-backdrop" id="filterBackdrop" onclick="closeFilterDrawer()"></div>
+  <div class="filter-drawer-backdrop" id="filterBackdrop"></div>
   <aside class="filter-panel" id="filterPanel">
     <div class="filter-panel-head">
       <h3>Filtrele</h3>
-      <button class="close" onclick="closeFilterDrawer()" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      <button class="close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
     </div>
 
     <div class="filter-block">
@@ -515,7 +527,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     </div>
 
     <div class="filter-block">
-      <button class="btn-finder" style="width:100%;" onclick="openFinderModal()"><svg class="icon"><use href="#ic-compass"></use></svg> Telefonumu Bul (Sihirbaz)</button>
+      <button class="btn-finder" style="width:100%;"><svg class="icon"><use href="#ic-compass"></use></svg> Telefonumu Bul (Sihirbaz)</button>
     </div>
 
     <div class="filter-block">
@@ -525,9 +537,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
           <div>
             <div class="adv-row-label">Fiyat Aralığı (TL)</div>
             <div class="adv-price-row">
-              <input type="number" id="priceMinInput" placeholder="Min" min="0">
+              <input type="number" id="priceMinInput" placeholder="Min" min="0" aria-label="Minimum fiyat (TL)">
               <span>—</span>
-              <input type="number" id="priceMaxInput" placeholder="Max" min="0">
+              <input type="number" id="priceMaxInput" placeholder="Max" min="0" aria-label="Maksimum fiyat (TL)">
             </div>
           </div>
           <div>
@@ -540,7 +552,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
           </div>
           <div>
             <div class="adv-row-label">Batarya</div>
-            <select class="adv-select" id="minBatterySelect">
+            <select class="adv-select" id="minBatterySelect" aria-label="Minimum batarya kapasitesi">
               <option value="0">Farketmez</option>
               <option value="5000">5.000 mAh ve üzeri</option>
               <option value="6000">6.000 mAh ve üzeri</option>
@@ -560,7 +572,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
         <svg class="icon"><use href="#ic-search"></use></svg>
         <input id="q" placeholder="Model veya marka ara... (Örn: POCO X8, iPhone 15)" aria-label="Ürün Ara">
       </div>
-      <button class="filter-toggle-btn" id="filterToggleBtn" onclick="openFilterDrawer()"><svg class="icon"><use href="#ic-filter"></use></svg> Filtrele</button>
+      <button class="filter-toggle-btn" id="filterToggleBtn"><svg class="icon"><use href="#ic-filter"></use></svg> Filtrele</button>
     </div>
     <div class="cache-notice" id="cacheNotice" style="display:none;" role="status">Bağlantı sorunu nedeniyle son başarılı katalog verisi gösteriliyor. Fiyat ve stok bilgisi güncel olmayabilir, WhatsApp'tan teyit alabilirsiniz.</div>
     <div class="topline">
@@ -607,9 +619,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </div>
 <section class="store-grid">
   <div class="store-gallery">
-    <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" onclick="openLightbox(this.src)">
-    <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" onclick="openLightbox(this.src)">
-    <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" onclick="openLightbox(this.src)">
+    <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy">
+    <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy">
+    <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy">
   </div>
   <div class="store-info">
     <h3>Mix GSM İsa ASLAN</h3>
@@ -660,16 +672,16 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <div class="footer-line">
     Karagöz Mah. Karahoca Sk. No:26/D Şahinbey/Gaziantep<br>
     <a href="tel:+905424818255">+90 542 481 82 55</a> · <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp'tan Yaz</a><br><br>
-    <a href="#" onclick="openLegalModal(); return false;">KVKK ve Gizlilik Politikası</a><br><br>
+    <a href="#">KVKK ve Gizlilik Politikası</a><br><br>
     © 2026 MİX GSM
   </div>
 </footer>
 
 <!-- Modals & Overlays -->
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mn" onclick="if(event.target===this)closeProduct()">
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mn">
   <div class="modalbox">
-    <button class="close" onclick="closeProduct()" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-    <button class="share-btn" onclick="copyProductLink()" aria-label="Ürün Linkini Kopyala"><svg class="icon"><use href="#ic-share"></use></svg></button>
+    <button class="close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+    <button class="share-btn" aria-label="Ürün Linkini Kopyala"><svg class="icon"><use href="#ic-share"></use></svg></button>
     <div class="modalvisual">
       <img id="mi" src="" alt="Ürün Görseli">
     </div>
@@ -707,13 +719,13 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 <div class="comparebar" id="comparebar">
   <span id="favcount">0 favori</span>
-  <button class="btn-view-fav" onclick="openFavModal()">Gör</button>
-  <button onclick="clearFavs()">Temizle</button>
+  <button class="btn-view-fav">Gör</button>
+  <button>Temizle</button>
 </div>
 
-<div class="comparemodal" id="favmodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeFavModal()">
+<div class="comparemodal" id="favmodal" role="dialog" aria-modal="true">
   <div class="comparebox">
-    <button class="close" onclick="closeFavModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
+    <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
     <h2 style="margin:0 0 16px;font-size:20px;">Favorilerim</h2>
     <div id="favListWrap"></div>
@@ -721,9 +733,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </div>
 
-<div class="comparemodal" id="findermodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeFinderModal()">
+<div class="comparemodal" id="findermodal" role="dialog" aria-modal="true">
   <div class="comparebox" style="max-width:600px;">
-    <button class="close" onclick="closeFinderModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
+    <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
     <h2 style="margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:8px;"><svg class="icon"><use href="#ic-compass"></use></svg> Telefonumu Bul</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Birkaç soruyla sana uygun modelleri önerelim. Öneriler yalnızca güncel katalogdaki gerçek stok ve fiyat verilerine dayanır.</p>
@@ -745,28 +757,29 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
     <div id="finderResults" class="finder-step" style="display:none;">
       <div id="finderResultsWrap"></div>
-      <button class="btn-finder" style="width:100%;margin-top:12px;" onclick="restartFinder()"><svg class="icon"><use href="#ic-refresh"></use></svg> Baştan Başla</button>
+      <button class="btn-finder" style="width:100%;margin-top:12px;"><svg class="icon"><use href="#ic-refresh"></use></svg> Baştan Başla</button>
     </div>
   </div>
 </div>
 
 <div class="comparetraybar" id="comparetraybar">
   <span id="comparecount">0 ürün seçildi</span>
-  <button class="btn-view" id="compareViewBtn" onclick="openCompareModal()">Karşılaştır</button>
-  <button class="btn-clear" onclick="clearCompare()">Temizle</button>
+  <button class="btn-view" id="compareViewBtn">Karşılaştır</button>
+  <button class="btn-clear">Temizle</button>
 </div>
 
-<div class="comparemodal" id="comparemodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeCompareModal()">
+<div class="comparemodal" id="comparemodal" role="dialog" aria-modal="true">
   <div class="comparebox">
-    <button class="close" onclick="closeCompareModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
+    <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
+    <label class="adv-checkbox" style="margin-bottom:14px;"><input type="checkbox" id="compareDiffOnly"> Sadece Farkları Göster</label>
     <div id="compareTableWrap" style="overflow-x:auto;"></div>
   </div>
 </div>
 
-<div class="comparemodal" id="legalmodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeLegalModal()">
+<div class="comparemodal" id="legalmodal" role="dialog" aria-modal="true">
   <div class="comparebox" style="max-width:640px;">
-    <button class="close" onclick="closeLegalModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
+    <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
     <h2 style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
     <div style="color:var(--muted);font-size:14px;line-height:1.8;">
@@ -786,15 +799,15 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </a>
 
 <nav class="bottom-nav" aria-label="Alt gezinme">
-  <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;"><svg class="icon"><use href="#ic-home"></use></svg>Ana Sayfa</a>
+  <a href="#"><svg class="icon"><use href="#ic-home"></use></svg>Ana Sayfa</a>
   <a href="#catalog"><svg class="icon"><use href="#ic-grid"></use></svg>Katalog</a>
-  <button onclick="bottomNavCompare()"><svg class="icon"><use href="#ic-compare"></use></svg>Karşılaştır<span class="bn-badge" id="bnCompareBadge">0</span></button>
+  <button><svg class="icon"><use href="#ic-compare"></use></svg>Karşılaştır<span class="bn-badge" id="bnCompareBadge">0</span></button>
   <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="bn-wa"><svg class="icon"><use href="#ic-chat"></use></svg>WhatsApp</a>
 </nav>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<div class="lightbox" id="lightbox">
   <button class="lightbox-close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-  <img id="lightbox-img" src="" alt="Büyük Görsel" onclick="event.stopPropagation()">
+  <img id="lightbox-img" src="" alt="Büyük Görsel">
 </div>
 
 <script>
@@ -811,6 +824,9 @@ const favKey = "mixgsm-favorites-v15";
 let favs = [];
 // Karsilastirma listesi (favorilerden bagimsiz, gecici, sayfa yenilenince sifirlanir).
 let compareList = [];
+// "Sadece Farkları Göster" - karsilastirma tablosunda urunler arasinda AYNI
+// olan satirlari gizleme tercihi (gecici, sayfa yenilenince sifirlanir).
+let compareDiffOnly = false;
 try {
   const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
   favs = Array.isArray(saved) ? saved : [];
@@ -1034,7 +1050,7 @@ function renderFeatured() {
     <article class="card" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
       <div class="visual">
         <span class="stock">● Stokta</span>
-        <img src="${img}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy">
       </div>
       <div class="info">
         <div class="brand">${escapeHtml(p.b)}</div>
@@ -1082,13 +1098,21 @@ function normalizeGithubImageUrl(value) {
   const raw = String(value || '').trim();
   if(!raw) return '';
 
-  // Yalnızca MİX GSM GitHub deposundaki /photos/ görselleri kabul edilir.
-  if(/^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/photos\//i.test(raw)) {
+  // GÜVENLİK: Yalnızca MİX GSM GitHub deposundaki /photos/ görselleri kabul
+  // edilir. Onemli: sadece BASLANGICI degil, TUM string'i (sonuna kadar $)
+  // ve sadece guvenli dosya adi karakterlerini (harf/rakam/nokta/tire/alt
+  // cizgi/% kodlama) kabul ediyoruz. Eskiden sadece "basliyor mu" kontrol
+  // ediliyordu; bu, Sheets'teki gorsel hucresine izinli linkin ARDINDAN
+  // fazladan karakter (orn. " onerror=...) eklenerek HTML'e enjekte
+  // edilebilecegi gercek bir XSS acigiydi. Simdi tam ve guvenli eslesme
+  // sart, aksi halde link reddedilir (gorsel "bulunamadi" yedegine duser).
+  const directMatch = raw.match(/^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/photos\/[A-Za-z0-9._%-]+$/i);
+  if (directMatch) {
     return raw;
   }
 
-  // GitHub blob linkini raw linke çevir.
-  const blob = raw.match(/^https:\/\/github\.com\/mixgsm\/mixgsm\/blob\/main\/photos\/(.+)$/i);
+  // GitHub blob linkini raw linke çevir (aynı güvenli karakter seti şartıyla).
+  const blob = raw.match(/^https:\/\/github\.com\/mixgsm\/mixgsm\/blob\/main\/photos\/([A-Za-z0-9._%-]+)$/i);
   if(blob) {
     return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/${blob[1]}`;
   }
@@ -1338,7 +1362,7 @@ function autoImageMarkup(p) {
 
   const encoded = JSON.stringify(sources).replace(/'/g,'&#39;');
 
-  return `<img src="${sources[0]}"
+  return `<img src="${escapeHtml(sources[0])}"
     data-image-sources='${encoded}'
     data-image-index="0"
     alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}"
@@ -1697,6 +1721,10 @@ function openFilterDrawer() {
   document.getElementById('filterPanel').classList.add('open');
   document.getElementById('filterBackdrop').classList.add('open');
   document.body.style.overflow = 'hidden';
+  // ERISILEBILIRLIK: klavye/ekran okuyucu kullanan kullanicilar acilan
+  // cekmeceye odaklansin (mevcut urun modalindaki ayni davranis).
+  const closeBtn = document.querySelector('#filterPanel .close');
+  if (closeBtn) closeBtn.focus();
 }
 function closeFilterDrawer() {
   document.getElementById('filterPanel').classList.remove('open');
@@ -1742,7 +1770,7 @@ function renderSimilarProducts(p) {
     const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
     return `<div class="similar-item" onclick="openProduct(${spIndex})" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
-      <img src="${spImg}" alt="${escapeHtml(sp.m)}" loading="lazy">
+      <img src="${escapeHtml(spImg)}" alt="${escapeHtml(sp.m)}" loading="lazy">
       <div class="similar-name">${escapeHtml(sp.m)}</div>
       <div class="similar-price">${spPrice}</div>
     </div>`;
@@ -1942,6 +1970,8 @@ function openCompareModal() {
   renderCompareTable();
   document.getElementById('comparemodal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  const closeBtn = document.querySelector('#comparemodal .close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeCompareModal() {
@@ -1972,19 +2002,35 @@ function renderCompareTable() {
     const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const pk = `${p.b}|${p.m}|${p.s}`;
     html += `<th>
-      <img class="compare-thumb" src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+      <img class="compare-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
       <div>${escapeHtml(p.b)}</div>
       <div>${escapeHtml(p.m)}</div>
       <button class="compare-remove" onclick="removeFromCompare('${jsAttr(pk)}')">Kaldır ✕</button>
     </th>`;
   });
   html += '</tr></thead><tbody>';
+
+  // "Sadece Farkları Göster" acikken, karsilastirilan TUM urunlerde birebir
+  // ayni deger olan satirlar (orn. hepsinde ayni ekran boyutu) gizlenir.
+  // Yeni bir karsilastirma sistemi degil, mevcut tabloya eklenen basit bir
+  // goruntuleme filtresidir - veri/mantik degismez.
+  const diffOnly = compareDiffOnly && items.length > 1;
+  let visibleRowCount = 0;
   rows.forEach(([label, getter]) => {
+    const values = items.map(p => String(getter(p)));
+    const allSame = values.every(v => v === values[0]);
+    if (diffOnly && allSame) return;
+    visibleRowCount++;
     html += `<tr><td>${escapeHtml(label)}</td>`;
-    items.forEach(p => { html += `<td>${escapeHtml(String(getter(p)))}</td>`; });
+    values.forEach(v => { html += `<td>${escapeHtml(v)}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table>';
+
+  if (diffOnly && visibleRowCount === 0) {
+    html += '<div class="fav-empty">Seçili ürünler arasında fark bulunamadı, tüm özellikler aynı.</div>';
+  }
+
   wrap.innerHTML = html;
 }
 
@@ -2018,6 +2064,8 @@ function removeFav(pk) {
 function openLegalModal() {
   document.getElementById('legalmodal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  const closeBtn = document.querySelector('#legalmodal .close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeLegalModal() {
@@ -2030,6 +2078,8 @@ function openFavModal() {
   renderFavList();
   document.getElementById('favmodal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  const closeBtn = document.querySelector('#favmodal .close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeFavModal() {
@@ -2055,7 +2105,7 @@ function renderFavList() {
     const pIndex = products.indexOf(p);
     return `<div class="fav-item">
       <div onclick="closeFavModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-        <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
         <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
         <div class="fav-item-price">${priceText}</div>
       </div>
@@ -2103,6 +2153,8 @@ function openFinderModal() {
   renderFinderStep(1);
   document.getElementById('findermodal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  const closeBtn = document.querySelector('#findermodal .close');
+  if (closeBtn) closeBtn.focus();
 }
 
 function closeFinderModal() {
@@ -2189,7 +2241,7 @@ function showFinderResults() {
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
         return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-          <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+          <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
           <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
           <div class="fav-item-price">${priceText}</div>
         </div>`;
@@ -2254,6 +2306,73 @@ function initReviewsSlider() {
   }
   dots.forEach((d, i) => d.addEventListener('click', () => show(i)));
 }
+
+// --- CSP HAZIRLIGI: statik (dinamik olarak yeniden render EDILMEYEN) HTML
+// üzerindeki inline onclick="..." handler'ları addEventListener'a taşıyoruz.
+// Davranış birebir aynı kalıyor; sadece güvenlik/bakım/CSP-uyumluluğu için
+// event bağlama yöntemi değişiyor. Ürün kartları, karşılaştırma tablosu,
+// favoriler/finder sonuçları gibi HER render() çağrısında YENİDEN
+// OLUŞTURULAN dinamik elementlerdeki onclick'lere BİLEREK DOKUNULMADI -
+// bunlar için event delegation gerekirdi ki bu, "mevcut sistemi bozma"
+// kuralına aykırı, gereksiz bir mimari değişiklik olurdu.
+(function bindStaticEventListeners() {
+  const on = (selector, handler, root) => {
+    const el = (root || document).querySelector(selector);
+    if (el) el.addEventListener('click', handler);
+  };
+  const onAll = (selector, handler, root) => {
+    (root || document).querySelectorAll(selector).forEach(el => el.addEventListener('click', handler));
+  };
+  const onBackdropClick = (id, closeFn) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', e => { if (e.target === el) closeFn(); });
+  };
+
+  on('#filterBackdrop', closeFilterDrawer);
+  on('.close', closeFilterDrawer, document.getElementById('filterPanel'));
+  on('.btn-finder', openFinderModal, document.getElementById('filterPanel'));
+  on('#filterToggleBtn', openFilterDrawer);
+  onAll('.store-gallery img', function() { openLightbox(this.src); });
+  on('.footer-line a[href="#"]', e => { e.preventDefault(); openLegalModal(); });
+
+  onBackdropClick('modal', closeProduct);
+  on('.close', closeProduct, document.getElementById('modal'));
+  on('.share-btn', copyProductLink, document.getElementById('modal'));
+
+  on('.btn-view-fav', openFavModal, document.getElementById('comparebar'));
+  on('button:not(.btn-view-fav)', clearFavs, document.getElementById('comparebar'));
+
+  onBackdropClick('favmodal', closeFavModal);
+  on('.close', closeFavModal, document.getElementById('favmodal'));
+
+  onBackdropClick('findermodal', closeFinderModal);
+  on('.close', closeFinderModal, document.getElementById('findermodal'));
+  on('.btn-finder', restartFinder, document.getElementById('findermodal'));
+
+  on('#compareViewBtn', openCompareModal, document.getElementById('comparetraybar'));
+  on('.btn-clear', clearCompare, document.getElementById('comparetraybar'));
+
+  onBackdropClick('comparemodal', closeCompareModal);
+  on('.close', closeCompareModal, document.getElementById('comparemodal'));
+
+  onBackdropClick('legalmodal', closeLegalModal);
+  on('.close', closeLegalModal, document.getElementById('legalmodal'));
+
+  on('.bottom-nav a[href="#"]', e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  on('.bottom-nav button', bottomNavCompare);
+
+  on('#lightbox', closeLightbox);
+  on('#lightbox-img', e => e.stopPropagation());
+
+  const diffOnlyCheck = document.getElementById('compareDiffOnly');
+  if (diffOnlyCheck) {
+    diffOnlyCheck.addEventListener('change', () => {
+      compareDiffOnly = diffOnlyCheck.checked;
+      renderCompareTable();
+    });
+  }
+})();
 </script>
 </body>
 </html>
