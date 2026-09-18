@@ -186,6 +186,16 @@ a { text-decoration: none; color: inherit; }
 .comparebar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .comparebar span { font-size: 13px; font-weight: 700; color: #fff; }
 .comparebar button { border: 0; background: transparent; color: var(--brand-red); font-size: 12px; font-weight: 800; cursor: pointer; }
+.comparebar .btn-view-fav { color: var(--gold); }
+
+.fav-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.fav-item { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+.fav-item:hover { border-color: var(--gold); }
+.fav-item img { width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; }
+.fav-item .fav-item-name { font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fav-item .fav-item-price { font-size: 12px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+.fav-item .compare-remove { display: block; width: 100%; }
+.fav-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
 
 .compare-toggle { border: 1px solid var(--border); background: var(--panel); color: var(--muted); font-size: 11px; font-weight: 700; padding: 7px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
 .compare-toggle.active { background: rgba(215, 170, 75, 0.15); color: var(--gold); border-color: rgba(215, 170, 75, 0.4); }
@@ -475,7 +485,18 @@ a { text-decoration: none; color: inherit; }
 
 <div class="comparebar" id="comparebar">
   <span id="favcount">0 favori</span>
+  <button class="btn-view-fav" onclick="openFavModal()">Gör</button>
   <button onclick="clearFavs()">Temizle</button>
+</div>
+
+<div class="comparemodal" id="favmodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeFavModal()">
+  <div class="comparebox">
+    <button class="close" onclick="closeFavModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;">×</button>
+    <div style="clear:both;"></div>
+    <h2 style="margin:0 0 16px;font-size:20px;">Favorilerim</h2>
+    <div id="favListWrap"></div>
+    <a id="favWaShare" class="modalwa" target="_blank" rel="noopener noreferrer" style="margin-top:16px;">💬 Favorileri WhatsApp'tan Gönder</a>
+  </div>
 </div>
 
 <div class="comparetraybar" id="comparetraybar">
@@ -514,6 +535,19 @@ try {
   const saved = JSON.parse(localStorage.getItem(favKey) || "[]");
   favs = Array.isArray(saved) ? saved : [];
 } catch(e) { favs = [] }
+
+// Favori anahtari: depolama formati degismiyor (eski kayitli favoriler
+// bozulmasin diye), ama KARSILASTIRMA normalizeTR ile yapiliyor - boylece
+// sheet'te marka/model yazimindaki kucuk farklar (bosluk, buyuk/kucuk harf
+// vb.) favorinin sessizce "kaybolmasina" sebep olmuyor.
+function favKeyOf(p) { return `${p.b}|${p.m}|${p.s}`; }
+function normalizedFavKey(rawKey) {
+  return String(rawKey || '').split('|').map(part => normalizeTR(part)).join('|');
+}
+function isFav(p) {
+  const target = normalizedFavKey(favKeyOf(p));
+  return favs.some(k => normalizedFavKey(k) === target);
+}
 
 const grid = document.querySelector("#grid");
 const count = document.querySelector("#count");
@@ -959,7 +993,7 @@ function render() {
       : p.stock === 'ASK' ? '<span class="stock ask">💬 Sorunuz</span>'
       : '<span class="stock no">Tükendi</span>';
     const priceDisplay = p.p === null ? `<strong class="price-query">WhatsApp'tan Sor</strong>` : `<strong>${fmt(p.p)} <em>TL</em></strong>`;
-    const pk = `${p.b}|${p.m}|${p.s}`;
+    const pk = favKeyOf(p);
     const pIndex = products.indexOf(p);
     
     const imgMarkup = autoImageMarkup(p);
@@ -972,7 +1006,7 @@ function render() {
       <div class="visual">
         ${tagMarkup}
         ${badge}
-        <button class="fav ${favs.includes(pk) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="Favoriye ekle">${favs.includes(pk) ? "♥" : "♡"}</button>
+        <button class="fav ${isFav(p) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="Favoriye ekle">${isFav(p) ? "♥" : "♡"}</button>
         ${imgMarkup}
       </div>
       <div class="info">
@@ -1157,8 +1191,14 @@ function copyProductLink() {
 
 function toggleFav(e, index) {
   e.stopPropagation();
-  const pk = `${products[index].b}|${products[index].m}|${products[index].s}`;
-  if(favs.includes(pk)) favs = favs.filter(x => x !== pk); else favs.push(pk);
+  const p = products[index];
+  const pk = favKeyOf(p);
+  const target = normalizedFavKey(pk);
+  if (favs.some(k => normalizedFavKey(k) === target)) {
+    favs = favs.filter(k => normalizedFavKey(k) !== target);
+  } else {
+    favs.push(pk);
+  }
   localStorage.setItem(favKey, JSON.stringify(favs));
   updateFavs(); render();
 }
@@ -1263,7 +1303,75 @@ function updateFavs() {
   document.getElementById("comparebar").classList.toggle("show", favs.length > 0);
 }
 
-function clearFavs() { favs = []; localStorage.setItem(favKey, "[]"); updateFavs(); render(); showToast("Favoriler temizlendi"); }
+function clearFavs() { favs = []; localStorage.setItem(favKey, "[]"); updateFavs(); render(); closeFavModal(); showToast("Favoriler temizlendi"); }
+
+// --- Favoriler paneli (Faz 9) ---
+function getFavProducts() {
+  return favs
+    .map(k => {
+      const target = normalizedFavKey(k);
+      return products.find(p => normalizedFavKey(favKeyOf(p)) === target);
+    })
+    .filter(Boolean);
+}
+
+function removeFav(pk) {
+  const target = normalizedFavKey(pk);
+  favs = favs.filter(k => normalizedFavKey(k) !== target);
+  localStorage.setItem(favKey, JSON.stringify(favs));
+  updateFavs(); render();
+  if (!favs.length) { closeFavModal(); return; }
+  renderFavList();
+}
+
+function openFavModal() {
+  if (!favs.length) { showToast('Henüz favori ürününüz yok.'); return; }
+  renderFavList();
+  document.getElementById('favmodal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFavModal() {
+  document.getElementById('favmodal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderFavList() {
+  const items = getFavProducts();
+  const wrap = document.getElementById('favListWrap');
+  const shareLink = document.getElementById('favWaShare');
+
+  if (!items.length) {
+    wrap.innerHTML = '<div class="fav-empty">Henüz favori ürününüz yok.</div>';
+    shareLink.style.display = 'none';
+    return;
+  }
+
+  wrap.innerHTML = '<div class="fav-list">' + items.map(p => {
+    const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
+    const pk = favKeyOf(p);
+    const pIndex = products.indexOf(p);
+    return `<div class="fav-item">
+      <div onclick="closeFavModal(); openProduct(${pIndex});">
+        <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+        <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
+        <div class="fav-item-price">${priceText}</div>
+      </div>
+      <button class="compare-remove" onclick="removeFav('${pk.replace(/'/g, "\\'")}')">Kaldır ✕</button>
+    </div>`;
+  }).join('') + '</div>';
+
+  shareLink.style.display = 'block';
+  // Musteriye gonderilecek mesajda SADECE sheet'ten gelen gercek fiyat/model
+  // bilgisi kullaniliyor, hicbir sey uydurulmuyor.
+  let waText = 'Merhaba MİX GSM, favorilerime eklediğim şu ürünlerle ilgileniyorum:\n\n';
+  items.forEach(p => {
+    const priceText = p.p === null ? 'fiyat sorulacak' : `${fmt(p.p)} TL`;
+    waText += `• ${p.b} ${p.m}${p.s ? ' (' + p.s + ')' : ''} - ${priceText}\n`;
+  });
+  shareLink.href = `https://wa.me/905424818255?text=${encodeURIComponent(waText)}`;
+}
 
 function showToast(t) {
   const x = document.getElementById("toast");
@@ -1280,7 +1388,7 @@ function closeLightbox() {
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); }
+  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); }
 });
 
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
