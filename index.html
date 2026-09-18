@@ -77,6 +77,7 @@ a { text-decoration: none; color: inherit; }
 .hero-brands { font-size: 14px; color: var(--brand-red); font-weight: 700; margin-bottom: 30px; }
 .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .btn-primary { background: var(--txt); color: #000; padding: 14px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; }
+.btn-finder { background: var(--gold); color: #000; padding: 14px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; border: 0; cursor: pointer; font-family: inherit; }
 .btn-whatsapp { background: #1a242f; color: var(--wa-green); border: 1px solid #2d3c4e; padding: 14px 24px; border-radius: 12px; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; }
 .btn-whatsapp:hover { border-color: var(--wa-green); }
 
@@ -197,6 +198,11 @@ a { text-decoration: none; color: inherit; }
 .fav-item .compare-remove { display: block; width: 100%; }
 .fav-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0; }
 
+.finder-q { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+.finder-options { display: flex; flex-direction: column; gap: 10px; }
+.finder-opt { text-align: left; background: var(--panel); border: 1px solid var(--border); color: var(--txt); padding: 14px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: inherit; }
+.finder-opt:hover { border-color: var(--gold); background: rgba(215, 170, 75, 0.08); }
+
 .compare-toggle { border: 1px solid var(--border); background: var(--panel); color: var(--muted); font-size: 11px; font-weight: 700; padding: 7px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
 .compare-toggle.active { background: rgba(215, 170, 75, 0.15); color: var(--gold); border-color: rgba(215, 170, 75, 0.4); }
 .card.comparing { border-color: rgba(215, 170, 75, 0.5); }
@@ -305,6 +311,7 @@ a { text-decoration: none; color: inherit; }
   <p class="hero-brands">Xiaomi • Redmi • POCO • Samsung • Apple iPhone • Diğer Markalar</p>
   <div class="hero-actions">
     <a href="#catalog" class="btn-primary">📱 Ürünleri İncele</a>
+    <button class="btn-finder" onclick="openFinderModal()">🧭 Telefonumu Bul</button>
     <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="btn-whatsapp">💬 WhatsApp'tan Bilgi Al</a>
   </div>
 </header>
@@ -496,6 +503,35 @@ a { text-decoration: none; color: inherit; }
     <h2 style="margin:0 0 16px;font-size:20px;">Favorilerim</h2>
     <div id="favListWrap"></div>
     <a id="favWaShare" class="modalwa" target="_blank" rel="noopener noreferrer" style="margin-top:16px;">💬 Favorileri WhatsApp'tan Gönder</a>
+  </div>
+</div>
+
+<div class="comparemodal" id="findermodal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeFinderModal()">
+  <div class="comparebox" style="max-width:600px;">
+    <button class="close" onclick="closeFinderModal()" aria-label="Kapat" style="position:sticky;float:right;top:0;">×</button>
+    <div style="clear:both;"></div>
+    <h2 style="margin:0 0 4px;font-size:20px;">🧭 Telefonumu Bul</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Birkaç soruyla sana uygun modelleri önerelim. Öneriler yalnızca güncel katalogdaki gerçek stok ve fiyat verilerine dayanır.</p>
+
+    <div id="finderStep1" class="finder-step">
+      <div class="finder-q">1/3 — Bütçen ne kadar?</div>
+      <div class="finder-options" id="finderBudgetOpts"></div>
+    </div>
+
+    <div id="finderStep2" class="finder-step" style="display:none;">
+      <div class="finder-q">2/3 — Senin için en önemlisi hangisi?</div>
+      <div class="finder-options" id="finderPriorityOpts"></div>
+    </div>
+
+    <div id="finderStep3" class="finder-step" style="display:none;">
+      <div class="finder-q">3/3 — Marka tercihin var mı?</div>
+      <div class="finder-options" id="finderBrandOpts"></div>
+    </div>
+
+    <div id="finderResults" class="finder-step" style="display:none;">
+      <div id="finderResultsWrap"></div>
+      <button class="btn-finder" style="width:100%;margin-top:12px;" onclick="restartFinder()">🔄 Baştan Başla</button>
+    </div>
   </div>
 </div>
 
@@ -1373,6 +1409,131 @@ function renderFavList() {
   shareLink.href = `https://wa.me/905424818255?text=${encodeURIComponent(waText)}`;
 }
 
+// --- Telefonumu Bul sihirbazi (Faz 10) ---
+const finderState = { budget: null, priority: null, brand: null };
+
+const FINDER_BUDGETS = [
+  { label: '15.000 TL altı', min: 0, max: 15000 },
+  { label: '15.000 - 30.000 TL', min: 15000, max: 30000 },
+  { label: '30.000 - 50.000 TL', min: 30000, max: 50000 },
+  { label: '50.000 TL üzeri', min: 50000, max: Infinity },
+];
+
+const FINDER_PRIORITIES = [
+  { label: '📷 Kamera', key: 'camera' },
+  { label: '🔋 Batarya', key: 'battery' },
+  { label: '⚡ Performans / Oyun', key: 'performance' },
+  { label: '💰 Fiyat / Performans', key: 'value' },
+];
+
+const FINDER_BRANDS = [
+  { label: 'Apple', cat: 'APPLE' },
+  { label: 'Samsung', cat: 'SAMSUNG' },
+  { label: 'Xiaomi / Redmi / POCO', cat: 'XIAOMI' },
+  { label: 'Farketmez', cat: 'ALL' },
+];
+
+function openFinderModal() {
+  finderState.budget = null; finderState.priority = null; finderState.brand = null;
+  renderFinderStep(1);
+  document.getElementById('findermodal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFinderModal() {
+  document.getElementById('findermodal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function restartFinder() { renderFinderStep(1); }
+
+function renderFinderStep(step) {
+  ['finderStep1', 'finderStep2', 'finderStep3', 'finderResults'].forEach((id, i) => {
+    document.getElementById(id).style.display = (i + 1 === step) ? 'block' : 'none';
+  });
+  if (step === 1) {
+    document.getElementById('finderBudgetOpts').innerHTML = FINDER_BUDGETS.map((b, i) =>
+      `<button class="finder-opt" onclick="selectFinderBudget(${i})">${escapeHtml(b.label)}</button>`
+    ).join('');
+  } else if (step === 2) {
+    document.getElementById('finderPriorityOpts').innerHTML = FINDER_PRIORITIES.map((p, i) =>
+      `<button class="finder-opt" onclick="selectFinderPriority(${i})">${p.label}</button>`
+    ).join('');
+  } else if (step === 3) {
+    document.getElementById('finderBrandOpts').innerHTML = FINDER_BRANDS.map((b, i) =>
+      `<button class="finder-opt" onclick="selectFinderBrand(${i})">${escapeHtml(b.label)}</button>`
+    ).join('');
+  }
+}
+
+function selectFinderBudget(i) { finderState.budget = FINDER_BUDGETS[i]; renderFinderStep(2); }
+function selectFinderPriority(i) { finderState.priority = FINDER_PRIORITIES[i]; renderFinderStep(3); }
+function selectFinderBrand(i) { finderState.brand = FINDER_BRANDS[i]; showFinderResults(); }
+
+function extractLeadingNumber(str) {
+  const m = String(str || '').replace(',', '.').match(/[\d.]+/);
+  return m ? parseFloat(m[0]) : 0;
+}
+
+// Islemci metnindeki bilinen anahtar kelimelere gore kaba bir performans
+// kademesi tahmini. Kesin bir benchmark degildir, sadece siralama icin
+// yardimci bir ipucudur - musteriye "en guclu" gibi kesin bir iddia
+// olarak sunulmaz.
+const FINDER_PERF_TIER3 = /snapdragon 8|dimensity 9|dimensity 8|a19|a18|a17|tensor/i;
+const FINDER_PERF_TIER2 = /snapdragon 7|snapdragon 6s|dimensity 7|helio g99/i;
+function perfTierOf(p) {
+  const text = p.processor || '';
+  if (FINDER_PERF_TIER3.test(text)) return 3;
+  if (FINDER_PERF_TIER2.test(text)) return 2;
+  return 1;
+}
+
+function showFinderResults() {
+  const { budget, priority, brand } = finderState;
+  let candidates = products.filter(p =>
+    p.group === 'PHONE' &&
+    p.p !== null &&
+    p.p >= budget.min && p.p < budget.max &&
+    (brand.cat === 'ALL' || p.cat === brand.cat)
+  );
+
+  // Once stokta olanlari goster; hic stokta olan yoksa "sorunuz" durumundakileri
+  // de dahil et (ama tukenmis olanlari asla onerme).
+  const inStock = candidates.filter(p => p.stock === 'IN');
+  candidates = inStock.length ? inStock : candidates.filter(p => p.stock !== 'OUT');
+
+  const scoreOf = (p) => {
+    if (priority.key === 'camera') return extractLeadingNumber(p.camera);
+    if (priority.key === 'battery') return extractLeadingNumber(p.battery);
+    if (priority.key === 'performance') return perfTierOf(p) * 1000000 - p.p;
+    return -p.p; // 'value': butce icinde en uygun fiyatli olan basta
+  };
+
+  candidates.sort((a, b) => scoreOf(b) - scoreOf(a));
+  const results = candidates.slice(0, 3);
+
+  const wrap = document.getElementById('finderResultsWrap');
+  if (!results.length) {
+    const waMsg = encodeURIComponent('Merhaba MİX GSM, bütçeme uygun telefon önerisi almak istiyorum.');
+    wrap.innerHTML = `<div class="fav-empty">Bu kriterlere tam uyan bir ürün bulamadık. Farklı bir bütçe deneyebilir ya da doğrudan WhatsApp'tan sorabilirsin.</div>
+      <a href="https://wa.me/905424818255?text=${waMsg}" target="_blank" rel="noopener noreferrer" class="modalwa" style="margin-top:12px;display:block;">💬 WhatsApp'tan Sor</a>`;
+  } else {
+    wrap.innerHTML = '<div class="finder-q">Senin için önerilerimiz:</div><div class="fav-list">' +
+      results.map(p => {
+        const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+        const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
+        const pIndex = products.indexOf(p);
+        return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});">
+          <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
+          <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
+          <div class="fav-item-price">${priceText}</div>
+        </div>`;
+      }).join('') + '</div>';
+  }
+
+  renderFinderStep(4);
+}
+
 function showToast(t) {
   const x = document.getElementById("toast");
   x.textContent = t; x.classList.add("show");
@@ -1388,7 +1549,7 @@ function closeLightbox() {
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); }
+  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); closeFinderModal(); }
 });
 
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
