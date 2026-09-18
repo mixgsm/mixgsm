@@ -63,6 +63,7 @@
   --bottomnav-h: 60px;
 }
 * { box-sizing: border-box; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; padding-bottom: 32px; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; }
@@ -136,7 +137,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .catalog-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
 .search { position: relative; flex: 1; }
 .search input { width: 100%; height: 46px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text); padding: 0 16px 0 42px; font-size: 14px; transition: border-color .15s; }
-.search input:focus { border-color: rgba(255,255,255,0.28); outline: none; }
+.search input:focus { border-color: rgba(255,255,255,0.28); }
+.search input:focus:not(:focus-visible) { outline: none; }
 .search svg.icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 17px; }
 .filter-toggle-btn { display: none; height: 46px; padding: 0 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--text); font-size: 13px; font-weight: 500; align-items: center; gap: 8px; cursor: pointer; flex: 0 0 auto; }
 @media(max-width: 900px) { .filter-toggle-btn { display: inline-flex; } }
@@ -146,7 +148,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .filter-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
 .filter-group { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; flex-wrap: wrap; }
 .filter-group::-webkit-scrollbar { display: none; }
-.filter-group button { white-space: nowrap; background: var(--surface); border: 1px solid var(--line); color: var(--muted); border-radius: 99px; padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: .15s; min-height: 38px; }
+.filter-group button { white-space: nowrap; background: var(--surface); border: 1px solid var(--line); color: var(--muted); border-radius: 99px; padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: .15s; min-height: 44px; }
 .filter-group button.active { background: var(--text); color: #0a0a0a; border-color: var(--text); font-weight: 600; }
 
 .quickuse-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
@@ -220,7 +222,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .price-query { font-size: 14px !important; color: var(--whatsapp) !important; font-weight: 600 !important; }
 .empty { text-align: center; padding: 60px 20px; background: var(--surface); border: 1px dashed var(--line); border-radius: 16px; grid-column: 1/-1; color: var(--muted); font-size: 14px; }
 
-.compare-toggle { border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 11px; font-weight: 500; padding: 8px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; min-height: 34px; }
+.compare-toggle { border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 11px; font-weight: 500; padding: 8px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; min-height: 44px; }
 .compare-toggle svg.icon { font-size: 13px; }
 .compare-toggle.active { background: rgba(245,245,245,0.1); color: var(--text); border-color: rgba(255,255,255,0.25); }
 
@@ -345,7 +347,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* FAQ */
 .faq-grid { max-width: 760px; margin: 0 auto; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
 .faq-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; }
-.faq-card summary { font-size: 14px; font-weight: 500; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 24px; }
+.faq-card summary { font-size: 14px; font-weight: 500; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; }
 .faq-card summary::-webkit-details-marker { display: none; }
 .faq-card summary::after { content: '+'; color: var(--muted); font-size: 18px; font-weight: 400; flex-shrink: 0; }
 .faq-card[open] summary::after { content: '−'; }
@@ -775,7 +777,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="wa-float" aria-label="WhatsApp'tan Bize Yazın">
   <svg class="icon"><use href="#ic-chat"></use></svg>
@@ -995,7 +997,7 @@ function renderFeatured() {
     const pIndex = products.indexOf(p);
     const img = imageCandidatesForProduct(p)[0];
     return `
-    <article class="card" onclick="openProduct(${pIndex})">
+    <article class="card" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
       <div class="visual">
         <span class="stock">● Stokta</span>
         <img src="${img}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy">
@@ -1200,6 +1202,14 @@ function imageFileScore(p, file) {
 
   const matched = modelTokens.filter(t => fileKey.includes(t));
   if (!matched.length) return -999;
+
+  // Nesil/model numarasi (S24, IPHONE-16, NOTE-15 gibi salt sayisal token'lar)
+  // dosya adinda hic gecmiyorsa, bu farkli bir nesil/model demektir; boyle bir
+  // eslesmeye asla izin verme (Pro/Pro Max/Ultra karismasiyla ayni kategori hata
+  // - ornegin stokta olmayan "iPhone 15 Pro Max" icin yanlislikla "iPhone 16 Pro
+  // Max" gorseli secilmesin diye).
+  const missingTokens = modelTokens.filter(t => !matched.includes(t));
+  if (missingTokens.some(t => /^\d+$/.test(t))) return -999;
 
   // Dosya adinda modelde olmayan fazladan kelime varsa (PRO/PLUS/MAX/ULTRA gibi
   // ayirici ekler dahil), bu dosya farkli/daha ust bir varyant olabilir demektir.
@@ -1440,11 +1450,11 @@ function render() {
     const isComparing = compareList.includes(pk);
 
     return `
-    <article class="card ${isComparing ? "comparing" : ""}" onclick="openProduct(${pIndex})">
+    <article class="card ${isComparing ? "comparing" : ""}" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
       <div class="visual">
         ${tagMarkup}
         ${badge}
-        <button class="fav ${isFav(p) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="Favoriye ekle"><svg class="icon"><use href="#ic-heart"></use></svg></button>
+        <button class="fav ${isFav(p) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="${isFav(p) ? "Favorilerden çıkar" : "Favoriye ekle"}"><svg class="icon"><use href="#ic-heart"></use></svg></button>
         ${imgMarkup}
       </div>
       <div class="info">
@@ -1622,7 +1632,7 @@ function renderSimilarProducts(p) {
     const spIndex = products.indexOf(sp);
     const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
-    return `<div class="similar-item" onclick="openProduct(${spIndex})">
+    return `<div class="similar-item" onclick="openProduct(${spIndex})" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
       <img src="${spImg}" alt="${escapeHtml(sp.m)}" loading="lazy">
       <div class="similar-name">${escapeHtml(sp.m)}</div>
       <div class="similar-price">${spPrice}</div>
@@ -1921,7 +1931,7 @@ function renderFavList() {
     const pk = favKeyOf(p);
     const pIndex = products.indexOf(p);
     return `<div class="fav-item">
-      <div onclick="closeFavModal(); openProduct(${pIndex});">
+      <div onclick="closeFavModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
         <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
         <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
         <div class="fav-item-price">${priceText}</div>
@@ -2055,7 +2065,7 @@ function showFinderResults() {
         const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
-        return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});">
+        return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
           <img src="${img}" alt="${escapeHtml(p.m)}" loading="lazy">
           <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
           <div class="fav-item-price">${priceText}</div>
@@ -2082,6 +2092,13 @@ function closeLightbox() {
 
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); closeFinderModal(); closeLegalModal(); closeFilterDrawer(); }
+  // Klavye erisilebilirligi: onclick ile tiklanabilir olup dogal olarak
+  // odaklanamayan kart/satir gibi elemanlar (role="button" + tabindex="0")
+  // Enter veya Bosluk tusuyla da tetiklenebilsin.
+  if ((e.key === "Enter" || e.key === " ") && e.target && e.target.matches && e.target.matches('[role="button"][tabindex]')) {
+    e.preventDefault();
+    e.target.click();
+  }
 });
 
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
