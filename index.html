@@ -6,27 +6,28 @@
 <meta name="theme-color" content="#070a12">
 <title>MİX GSM | Güvenilir Teknoloji, Doğru Cihaz</title>
 <meta name="description" content="MİX GSM — Gaziantep'te güncel telefon, tablet ve teknoloji ürünleri. 9+ yıllık tecrübe, güncel fiyatlar ve WhatsApp'tan hızlı destek.">
-<link rel="canonical" href="https://mixgsm.github.io/mixgsm/">
+<link rel="canonical" href="https://mixgsm.tr/">
+<meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="tr_TR">
 <meta property="og:site_name" content="MİX GSM">
 <meta property="og:title" content="MİX GSM | Güncel Cihaz Kataloğu">
 <meta property="og:description" content="MİX GSM • 9+ yıllık tecrübe • Güncel cihazlar • 81 ile güvenli kargo • WhatsApp iletişim desteği">
-<meta property="og:url" content="https://mixgsm.github.io/mixgsm/">
-<meta property="og:image" content="https://mixgsm.github.io/mixgsm/og-cover.jpg">
+<meta property="og:url" content="https://mixgsm.tr/">
+<meta property="og:image" content="https://mixgsm.tr/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="MİX GSM | Güncel Cihaz Kataloğu">
 <meta name="twitter:description" content="MİX GSM • 9+ yıllık tecrübe • Güncel cihazlar • 81 ile güvenli kargo • WhatsApp iletişim desteği">
-<meta name="twitter:image" content="https://mixgsm.github.io/mixgsm/og-cover.jpg">
+<meta name="twitter:image" content="https://mixgsm.tr/og-cover.jpg">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "MİX GSM",
-  "image": "https://mixgsm.github.io/mixgsm/og-cover.jpg",
-  "url": "https://mixgsm.github.io/mixgsm/",
+  "image": "https://mixgsm.tr/og-cover.jpg",
+  "url": "https://mixgsm.tr/",
   "telephone": "+905424818255",
   "address": {
     "@type": "PostalAddress",
@@ -43,6 +44,7 @@
   ]
 }
 </script>
+<script type="application/ld+json" id="ld-products"></script>
 <style>
 :root {
   --bg: #070a12;
@@ -727,6 +729,47 @@ function searchScore(p, query) {
   return score;
 }
 
+// Google arama sonuclarinda urunlerin zengin gorunum (fiyat/stok) alabilmesi
+// icin, Google Sheet'ten o an gelen GERCEK urun verisinden (uydurma hicbir
+// sey eklenmeden) schema.org Product/ItemList yapisal verisi uretir.
+function updateProductSchema() {
+  const el = document.getElementById('ld-products');
+  if (!el) return;
+  const items = products.filter(p => !isNonProductRow(p) && p.p !== null);
+  const listItems = items.slice(0, 80).map((p, i) => {
+    const availability = p.stock === 'IN' ? 'https://schema.org/InStock'
+      : p.stock === 'OUT' ? 'https://schema.org/OutOfStock'
+      : 'https://schema.org/LimitedAvailability';
+    // Sitede gosterilen gorselle ayni gercek gorseli kullan (sayfadaki
+    // eslestirme mantigiyla birebir tutarli olsun diye).
+    const productImage = imageCandidatesForProduct(p)[0];
+    return {
+      "@type": "ListItem",
+      "position": i + 1,
+      "item": {
+        "@type": "Product",
+        "name": `${p.b} ${p.m}`.trim(),
+        "image": productImage,
+        "brand": { "@type": "Brand", "name": p.b },
+        "url": `https://mixgsm.tr/#urun/${productSlug(p)}`,
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "TRY",
+          "price": p.p,
+          "availability": availability,
+          "url": `https://mixgsm.tr/#urun/${productSlug(p)}`
+        }
+      }
+    };
+  });
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": listItems
+  };
+  el.textContent = JSON.stringify(schema);
+}
+
 function isNonProductRow(p) {
   const brand = normalizeTR(p.b || '');
   const model = normalizeTR(p.m || '');
@@ -1097,6 +1140,7 @@ async function loadFromGoogleSheets() {
     await loadExtraPhotoFilesIfNeeded(products);
     renderRamFilterOptions();
     render();
+    updateProductSchema();
 
     // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx), katalog yuklendikten
     // sonra ilgili urunu otomatik ac.
