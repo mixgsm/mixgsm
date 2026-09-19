@@ -1343,6 +1343,22 @@ function imageFileScore(p, file) {
 
   return score;
 }
+// GUVENILIRLIK: tarayicinin fetch() fonksiyonu varsayilan olarak SURESIZ
+// bekleyebilir. Agin yavas/takildigi durumlarda (ozellikle yeni bir
+// telefonun ilk hucresel baglantisinda) istek hicbir zaman ne basarili
+// olup ne de hataya dusuyordu - bu yuzden kullanici "Katalog yukleniyor..."
+// ekraninda sonsuza kadar kalabiliyordu. Bu kucuk yardimci fonksiyon,
+// AbortController ile bir SURE SINIRI ekliyor: sure dolarsa istek iptal
+// edilip normal hata/fallback akisina (asagidaki catch blogu) duseriz.
+// Google Sheets veri kaynagini, kolon yapisini veya urun objesini
+// DEGISTIRMIYOR - sadece "sonsuza kadar bekleme" sorununu cozuyor.
+function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+    .finally(() => clearTimeout(timer));
+}
+
 async function loadExtraPhotoFilesIfNeeded(productList) {
   const hasUnmatched = productList.some(p => {
     if (normalizeGithubImageUrl(p.img)) return false;
@@ -1351,9 +1367,9 @@ async function loadExtraPhotoFilesIfNeeded(productList) {
   if (!hasUnmatched) return;
 
   try {
-    const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
+    const res = await fetchWithTimeout('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
       headers: { 'Accept': 'application/vnd.github+json' }
-    });
+    }, 6000);
     if (!res.ok) return;
     const data = await res.json();
     if (!Array.isArray(data)) return;
@@ -1451,7 +1467,19 @@ async function loadFromGoogleSheets() {
   try {
     grid.innerHTML = '<div class="empty">Katalog yükleniyor... ⏳</div>';
 
-    const res = await fetch(url + '&t=' + Date.now(), {cache: 'no-store'});
+    // GUVENILIRLIK: ilk deneme 9 saniye icinde cevap vermezse ya da aginda
+    // TEK seferlik gecici bir sorun olursa (ornegin mobil veride ilk
+    // baglanti), hemen pes edip kullaniciyi hataya dusurmek yerine 6 saniye
+    // sure siniriyla BIR kez daha deniyoruz. Ikisi de basarisiz/zaman
+    // asimina ugrarsa asagidaki catch blogu (mevcut cache -> hata mesaji
+    // sirasiyla) hic degismeden calisir - kullanici hicbir zaman sonsuza
+    // kadar "Katalog yukleniyor..." ekraninda kalmaz.
+    let res;
+    try {
+      res = await fetchWithTimeout(url + '&t=' + Date.now(), { cache: 'no-store' }, 9000);
+    } catch (firstAttemptErr) {
+      res = await fetchWithTimeout(url + '&t=' + Date.now(), { cache: 'no-store' }, 6000);
+    }
     if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
     const tsv = await res.text();
     
