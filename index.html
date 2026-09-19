@@ -1347,15 +1347,25 @@ function imageFileScore(p, file) {
 // bekleyebilir. Agin yavas/takildigi durumlarda (ozellikle yeni bir
 // telefonun ilk hucresel baglantisinda) istek hicbir zaman ne basarili
 // olup ne de hataya dusuyordu - bu yuzden kullanici "Katalog yukleniyor..."
-// ekraninda sonsuza kadar kalabiliyordu. Bu kucuk yardimci fonksiyon,
-// AbortController ile bir SURE SINIRI ekliyor: sure dolarsa istek iptal
-// edilip normal hata/fallback akisina (asagidaki catch blogu) duseriz.
+// ekraninda sonsuza kadar kalabiliyordu.
+//
+// ONEMLI DUZELTME: sadece fetch()'in kendisini degil, cevabin GOVDESINI
+// (ornegin buyuk/yavas akan bir TSV/JSON govdesi) okuma suresini deayni
+// zaman siniri icine alan bir yardimci. Onceki basit "fetch'i sarmala"
+// yaklasimi sadece HTTP basliklari gelene kadar korumaliydi; sunucu
+// basliklari hemen donup govdeyi yavas/damla damla gonderirse (once
+// hic gozlemlemedigimiz ama gercek cihazlarda karsilasilan bir durum)
+// istek yine sonsuza kadar takilabiliyordu. Bu fonksiyon, verilen islevi
+// (fetch + .text()/.json() gibi govde okumasi dahil) TEK bir AbortController
+// ile sarmalar; sure dolarsa hem baglanti hem de devam eden govde okumasi
+// iptal edilir ve normal hata/fallback akisina (catch bloklari) duseriz.
 // Google Sheets veri kaynagini, kolon yapisini veya urun objesini
 // DEGISTIRMIYOR - sadece "sonsuza kadar bekleme" sorununu cozuyor.
-function fetchWithTimeout(url, options, timeoutMs) {
+function withTimeout(taskFn, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+  return Promise.resolve()
+    .then(() => taskFn(controller.signal))
     .finally(() => clearTimeout(timer));
 }
 
@@ -1367,11 +1377,13 @@ async function loadExtraPhotoFilesIfNeeded(productList) {
   if (!hasUnmatched) return;
 
   try {
-    const res = await fetchWithTimeout('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
-      headers: { 'Accept': 'application/vnd.github+json' }
+    const data = await withTimeout(async (signal) => {
+      const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
+        headers: { 'Accept': 'application/vnd.github+json' }, signal
+      });
+      if (!res.ok) return null;
+      return res.json();
     }, 6000);
-    if (!res.ok) return;
-    const data = await res.json();
     if (!Array.isArray(data)) return;
 
     const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
@@ -1462,27 +1474,109 @@ function loadCatalogCache() {
   return null;
 }
 
+// GUVENILIRLIK (same-origin ONCELIKLI yol): musteri tarayicisi katalogu
+// ONCE, mixgsm.tr ile AYNI ADRESTEN (same-origin) sunulan "catalog.json"
+// dosyasindan yuklemeyi dener. Bu dosya, Google Sheets verisinden GitHub
+// Actions tarafindan periyodik olarak otomatik uretilir (bkz.
+// .github/workflows/update-catalog.yml + scripts/generate-catalog.js).
+// Same-origin bir statik dosya oldugu icin tarayicinin Google Sheets'e
+// dogrudan baglanmasini GEREKTIRMEZ - CORS, yonlendirme (redirect) veya
+// Google tarafinda yasanabilecek herhangi bir aksama bu yolu ETKILEMEZ.
+// Bu dosya henuz olusturulmamissa / bozuksa / bos donerse (ornegin Actions
+// ilk kez hic calismadiysa), asagida HIC DEGISTIRILMEDEN duran mevcut
+// "Google Sheets'ten dogrudan yukle" yontemine sessizce duser - musteri
+// bunu hicbir zaman fark etmez, urun veri yapisi/kolonlari DEGISMEZ.
+async function loadCatalogFromSameOrigin() {
+  return withTimeout(async (signal) => {
+    const res = await fetch('catalog.json?t=' + Date.now(), { cache: 'no-store', signal });
+    if (!res.ok) throw new Error('catalog.json yok/erişilemedi (HTTP ' + res.status + ')');
+    const data = await res.json();
+    if (!data || !Array.isArray(data.products) || !data.products.length) {
+      throw new Error('catalog.json boş/geçersiz');
+    }
+    return data.products;
+  }, 5000);
+}
+
+// Katalog yukleme AKISININ giris noktasi (eskiden DOMContentLoaded
+// dogrudan loadFromGoogleSheets() cagiriyordu). Sirasiyla: (1) same-origin
+// catalog.json -> basarisizsa (2) mevcut, hic degismemis Google Sheets
+// dogrudan yontemi (kendi 2-denemeli timeout + cache + hata-mesaji
+// mantigiyla birlikte, asagida oldugu gibi). Boylece Google Sheets veri
+// kaynagi/kolon yapisi/urun objesi TAMAMEN AYNI kalir; sadece "once nereden
+// denenecegi" degisir.
+async function loadCatalog() {
+  grid.innerHTML = '<div class="empty">Katalog yükleniyor... ⏳</div>';
+
+  // ONEMLI: try/catch SADECE catalog.json'u getirip dogrulama adimini
+  // sarmalar. Eger burasi (asagida) genis tutulup render() vb. adimlari da
+  // icine alsaydi, catalog.json BASARIYLA gelmis olsa bile render asamasinda
+  // olusabilecek ALAKASIZ bir hata yanlislikla "same-origin basarisiz oldu"
+  // sanilip GEREKSIZ YERE Google Sheets'e ikinci bir istek atardi. Simdi
+  // sadece gercek fetch/dogrulama hatasi fallback'i tetikliyor.
+  let sameOriginProducts;
+  try {
+    sameOriginProducts = await loadCatalogFromSameOrigin();
+  } catch (sameOriginErr) {
+    // catalog.json yoksa/basarisizsa, ASAGIDA HIC DEGISMEYEN mevcut Google
+    // Sheets dogrudan yontemine (kendi tum guvenlik aglariyla) sessizce dus.
+    await loadFromGoogleSheets();
+    return;
+  }
+
+  // catalog.json basariyla alindi. Asagidaki adimlar, mevcut
+  // loadFromGoogleSheets() basarili-yol adimlarinin AYNISIDIR (o fonksiyon
+  // KENDI Sheets akisi icin degistirilmeden korunuyor, burada bilerek kucuk
+  // bir kod tekrari tercih edildi).
+  products = sameOriginProducts;
+  saveCatalogCache(products);
+  const cacheNoticeEl = document.getElementById('cacheNotice');
+  if (cacheNoticeEl) cacheNoticeEl.style.display = 'none';
+  await loadExtraPhotoFilesIfNeeded(products);
+  renderRamFilterOptions();
+  render();
+  updateProductSchema();
+  renderHeroProduct();
+  renderFeatured();
+  computeBudgetThreshold();
+  const hashMatch = location.hash.match(/^#urun\/(.+)$/);
+  if (hashMatch) {
+    const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
+    if (idx > -1) renderProductModal(products[idx]);
+  }
+}
+
+// Google Sheets'ten TEK bir dogrudan deneme yapar: fetch + HTTP durum
+// kontrolu + govde (TSV metni) okuma - tumu ayni "timeoutMs" suresi
+// icinde. withTimeout() sayesinde sadece baglanti degil, govdenin
+// tamamen okunmasi da bu sure siniri icinde kalmak zorunda.
+async function fetchSheetsTsvOnce(url, timeoutMs) {
+  return withTimeout(async (signal) => {
+    const res = await fetch(url + '&t=' + Date.now(), { cache: 'no-store', signal });
+    if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
+    return res.text();
+  }, timeoutMs);
+}
+
 async function loadFromGoogleSheets() {
   const url = "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
   try {
     grid.innerHTML = '<div class="empty">Katalog yükleniyor... ⏳</div>';
 
-    // GUVENILIRLIK: ilk deneme 9 saniye icinde cevap vermezse ya da aginda
-    // TEK seferlik gecici bir sorun olursa (ornegin mobil veride ilk
-    // baglanti), hemen pes edip kullaniciyi hataya dusurmek yerine 6 saniye
-    // sure siniriyla BIR kez daha deniyoruz. Ikisi de basarisiz/zaman
-    // asimina ugrarsa asagidaki catch blogu (mevcut cache -> hata mesaji
-    // sirasiyla) hic degismeden calisir - kullanici hicbir zaman sonsuza
-    // kadar "Katalog yukleniyor..." ekraninda kalmaz.
-    let res;
+    // GUVENILIRLIK: ilk deneme 9 saniye icinde (baglanti + govde okuma dahil)
+    // tamamlanmazsa ya da aginda TEK seferlik gecici bir sorun olursa
+    // (ornegin mobil veride ilk baglanti), hemen pes edip kullaniciyi hataya
+    // dusurmek yerine 6 saniye sure siniriyla BIR kez daha deniyoruz. Ikisi
+    // de basarisiz/zaman asimina ugrarsa asagidaki catch blogu (mevcut
+    // cache -> hata mesaji sirasiyla) hic degismeden calisir - kullanici
+    // hicbir zaman sonsuza kadar "Katalog yukleniyor..." ekraninda kalmaz.
+    let tsv;
     try {
-      res = await fetchWithTimeout(url + '&t=' + Date.now(), { cache: 'no-store' }, 9000);
+      tsv = await fetchSheetsTsvOnce(url, 9000);
     } catch (firstAttemptErr) {
-      res = await fetchWithTimeout(url + '&t=' + Date.now(), { cache: 'no-store' }, 6000);
+      tsv = await fetchSheetsTsvOnce(url, 6000);
     }
-    if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
-    const tsv = await res.text();
-    
+
     const lines = tsv.split('\n');
     let newProducts = [];
     let startIndex = lines[0].includes('MARKA') ? 1 : 0;
@@ -2372,7 +2466,7 @@ window.addEventListener('popstate', () => {
   if (!anyModalOpen()) document.body.style.overflow = "";
 });
 
-window.addEventListener('DOMContentLoaded', () => { loadFromGoogleSheets(); updateFavs(); initReviewsSlider(); });
+window.addEventListener('DOMContentLoaded', () => { loadCatalog(); updateFavs(); initReviewsSlider(); });
 
 // Sade yorum slider'i: mevcut 4 gercek musteri yorumu icerigi degismedi,
 // sadece tek seferde bir tanesi gosteriliyor (noktalarla gezinme).
