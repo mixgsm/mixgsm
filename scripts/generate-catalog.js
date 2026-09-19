@@ -24,9 +24,9 @@ const OUTPUT_PATH = path.join(__dirname, "..", "catalog.json");
 function normalizeTR(v) {
   return (v || "")
     .toLocaleLowerCase("tr-TR")
-    .replace(/Ä±/g, "i").replace(/Ä°/g, "i").replace(/ÅŸ/g, "s").replace(/Å/g, "s")
-    .replace(/ÄŸ/g, "g").replace(/Ä/g, "g").replace(/Ã¼/g, "u").replace(/Ãœ/g, "u")
-    .replace(/Ã¶/g, "o").replace(/Ã–/g, "o").replace(/Ã§/g, "c").replace(/Ã‡/g, "c")
+    .replace(/\u0131/g, "i").replace(/\u0130/g, "i").replace(/\u015f/g, "s").replace(/\u015e/g, "s")
+    .replace(/\u011f/g, "g").replace(/\u011e/g, "g").replace(/\u00fc/g, "u").replace(/\u00dc/g, "u")
+    .replace(/\u00f6/g, "o").replace(/\u00d6/g, "o").replace(/\u00e7/g, "c").replace(/\u00c7/g, "c")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
@@ -93,7 +93,7 @@ function parseTsvToProducts(tsv) {
 
     let groupType = "PHONE";
     const katStr = (cols[5] || "").toLowerCase();
-    if (katStr.includes("bakÄ±m") || marka.includes("DYSON") || marka.includes("BRAUN") || marka.includes("PHILIPS")) {
+    if (katStr.includes("bak\u0131m") || marka.includes("DYSON") || marka.includes("BRAUN") || marka.includes("PHILIPS")) {
       groupType = "PERSONAL_CARE";
     }
 
@@ -102,13 +102,13 @@ function parseTsvToProducts(tsv) {
     let tagLabel = "";
     let tagClass = "";
     if (tagRaw.includes("mix") && tagRaw.includes("oneri")) {
-      tagLabel = "MÄ°X GSM Ã–neriyor";
+      tagLabel = "M\u0130X GSM \u00d6neriyor";
       tagClass = "tag-oneri";
     } else if (tagRaw.includes("firsat")) {
-      tagLabel = "FÄ±rsat";
+      tagLabel = "F\u0131rsat";
       tagClass = "tag-firsat";
     } else if (tagRaw.includes("populer")) {
-      tagLabel = "PopÃ¼ler";
+      tagLabel = "Pop\u00fcler";
       tagClass = "tag-populer";
     } else if (tagRaw.includes("yeni")) {
       tagLabel = "Yeni";
