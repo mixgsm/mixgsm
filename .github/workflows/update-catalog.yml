@@ -34,12 +34,12 @@ jobs:
 
       - name: Degisiklik varsa commit + push et
         run: |
-          if git diff --quiet -- catalog.json; then
+          git add catalog.json
+          if git diff --cached --quiet -- catalog.json; then
             echo "catalog.json degismedi, commit atilmiyor."
           else
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
-            git add catalog.json
             git commit -m "chore: catalog.json otomatik guncellendi"
             git push
           fi
