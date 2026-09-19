@@ -1,0 +1,45 @@
+name: Katalog Guncelle (Google Sheets -> catalog.json)
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/update-catalog.yml"
+      - "scripts/generate-catalog.js"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog-update
+  cancel-in-progress: false
+
+jobs:
+  update-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: catalog.json olustur (Google Sheets'ten)
+        run: node scripts/generate-catalog.js
+
+      - name: Degisiklik varsa commit + push et
+        run: |
+          if git diff --quiet -- catalog.json; then
+            echo "catalog.json degismedi, commit atilmiyor."
+          else
+            git config user.name "mixgsm-catalog-bot"
+            git config user.email "actions@github.com"
+            git add catalog.json
+            git commit -m "chore: catalog.json otomatik guncellendi"
+            git push
+          fi
