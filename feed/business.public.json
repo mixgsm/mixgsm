@@ -1,0 +1,102 @@
+{
+  "contract": "mixgsm.business.public",
+  "contract_version": "1.0.0",
+  "source_updated": "2026-09-20",
+  "note": "Otomatik üretilir; elle düzenlemeyin. Yalnızca herkese açık işletme bilgilerini içerir.",
+  "identity": {
+    "brand_name": "MİX GSM",
+    "store_display_name": "Mix GSM İsa ASLAN",
+    "sector_tr": "Telefon ve teknoloji mağazası",
+    "locale": "tr-TR",
+    "currency": "TRY",
+    "timezone": "Europe/Istanbul"
+  },
+  "location": {
+    "status": "confirmed",
+    "confirmed_by": "owner",
+    "confirmed_on": "2026-09-20",
+    "address": {
+      "neighborhood": "Karagöz Mahallesi",
+      "street": "Eski Postane Sokak",
+      "door_no": "26/D",
+      "district": "Şahinbey",
+      "city": "Gaziantep",
+      "country": "TR"
+    },
+    "display": {
+      "full": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep",
+      "street_line": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D"
+    },
+    "postal_code": {
+      "value": "27100",
+      "status": "unverified"
+    },
+    "map_links": [
+      {
+        "url": "https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6",
+        "status": "unverified"
+      },
+      {
+        "url": "https://maps.app.goo.gl/8QJAi2uxjrEA6FnJA",
+        "status": "unverified"
+      }
+    ]
+  },
+  "contact": {
+    "status": "confirmed",
+    "phones": [
+      {
+        "role": "order_whatsapp",
+        "display": "0542 481 82 55",
+        "e164": "+905424818255",
+        "whatsapp_url": "https://wa.me/905424818255",
+        "status": "confirmed"
+      }
+    ]
+  },
+  "channels": {
+    "website": "https://mixgsm.tr",
+    "instagram": "https://www.instagram.com/mixgsm/",
+    "facebook_group": "https://www.facebook.com/groups/xiaomiredmidestek/",
+    "telegram": "https://t.me/xiaomiredmidestek"
+  },
+  "policies": {
+    "returns": {
+      "status": "owner_approved_text",
+      "period_days": 7,
+      "text_tr": "Ürünü teslim aldıktan sonra 1 hafta boyunca koşulsuz ve şartsız iade hakkınız bulunmaktadır."
+    },
+    "warranty": {
+      "status": "owner_approved_text",
+      "software_months": 12,
+      "text_tr": "Cihazlar için 1 yıl ücretsiz yazılım garantisi verilmektedir."
+    },
+    "shipping": {
+      "coverage_tr": "81 ile kargo",
+      "carrier_tr": "anlaşmalı kargo",
+      "cost_bearer": "BUYER",
+      "typical_delivery_tr": "Genelde 2 iş günü içinde ulaşır, şehre göre değişebilir.",
+      "delivery_date_guaranteed": false,
+      "responsibility_until_delivery": "MIX_GSM"
+    },
+    "price_notice": {
+      "text_tr": "Fiyatlar dolar kuru ve stok durumuna göre değişebilir."
+    }
+  },
+  "payment": {
+    "methods": {
+      "accepted": [
+        "BANK_TRANSFER"
+      ],
+      "bank_transfer_labels_tr": [
+        "Havale",
+        "EFT"
+      ],
+      "cash_on_delivery": false,
+      "in_store_pos": false,
+      "card_via_external_pos": true,
+      "cash_or_transfer_price_advantage": true,
+      "iban_shared_by_bot": false
+    }
+  }
+}
