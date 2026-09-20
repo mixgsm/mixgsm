@@ -26,21 +26,7 @@
     "display": {
       "full": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep",
       "street_line": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D"
-    },
-    "postal_code": {
-      "value": "27100",
-      "status": "unverified"
-    },
-    "map_links": [
-      {
-        "url": "https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6",
-        "status": "unverified"
-      },
-      {
-        "url": "https://maps.app.goo.gl/8QJAi2uxjrEA6FnJA",
-        "status": "unverified"
-      }
-    ]
+    }
   },
   "contact": {
     "status": "confirmed",

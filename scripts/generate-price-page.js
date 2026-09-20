@@ -102,7 +102,7 @@ const STOCK_SCHEMA_ORG = {
   ASK: "https://schema.org/LimitedAvailability",
 };
 const REGISTRATION_SYNONYMS = { REGISTERED: ["kayitli"], UNREGISTERED: ["kayitsiz"], ASK: ["sorunuz", "soru", "sor"] };
-const REGISTRATION_LABEL_TR = { REGISTERED: "Kayıtlı", UNREGISTERED: "Kayıtsız", ASK: "Sorunuz", NOT_APPLICABLE: "—" };
+// (kayit durumu etiketleri KALDIRILDI: IMEI/kayit durumu fiyat sayfasinda gosterilmez; feed'de veri olarak durur)
 function registrationCode(raw) {
   const t = normalizeTR(raw);
   if (!t) return "NOT_APPLICABLE";
@@ -208,16 +208,17 @@ function renderPage(feed, business) {
     body += `<h2>${esc(GROUP_TITLE_TR[group] || group)}</h2>\n`;
     for (const [bkey, b] of brands) {
       const title = BRAND_TITLE_TR[b.name] || b.name;
-      const showReg = group === "PHONE";
+      // IMEI/kayit durumu musteriye acik fiyat sayfasinda GOSTERILMEZ (sahip karari 2026-09-20;
+      // Faz D'de ayri musteri iletisim kurali olarak ele alinacak).
       toc.push(`<li><a href="#marka-${esc(bkey)}">${esc(title)}</a></li>`);
-      body += `<section id="marka-${esc(bkey)}">\n<h3>${esc(title)}</h3>\n<div class="tablewrap"><table>\n<thead><tr><th scope="col">Model</th><th scope="col">RAM / Depolama</th><th scope="col">Fiyat</th><th scope="col">Stok</th>${showReg ? '<th scope="col">Kayıt</th>' : ""}<th scope="col"><span class="sr">WhatsApp</span></th></tr></thead>\n<tbody>\n`;
+      body += `<section id="marka-${esc(bkey)}">\n<h3>${esc(title)}</h3>\n<div class="tablewrap"><table>\n<thead><tr><th scope="col">Model</th><th scope="col">RAM / Depolama</th><th scope="col">Fiyat</th><th scope="col">Stok</th><th scope="col"><span class="sr">WhatsApp</span></th></tr></thead>\n<tbody>\n`;
       for (const pr of b.items) {
         const price = pr.price.amount === null ? "WhatsApp’tan sorun" : fmtPrice(pr.price.amount);
         const label = displayName(pr);
         const wa = waLink(biz.phone, `Merhaba MİX GSM, ${label} için stok ve fiyat bilgisi almak istiyorum.`);
         body += `<tr id="${esc(pr.product_id)}"><th scope="row">${esc(pr.model)}</th><td>${esc(pr.variant.label || "—")}</td>` +
           `<td class="price">${esc(price)}</td><td><span class="stock ${pr.stock.toLowerCase()}">${esc(STOCK_LABEL_TR[pr.stock])}</span></td>` +
-          (showReg ? `<td>${esc(REGISTRATION_LABEL_TR[pr.registration])}</td>` : "") +
+          "" +
           `<td><a href="${esc(wa)}" rel="noopener noreferrer" target="_blank">Sor</a></td></tr>\n`;
       }
       body += `</tbody>\n</table></div>\n</section>\n`;
@@ -335,9 +336,30 @@ function main() {
   console.log(`feed/products.json ve fiyat-listesi/index.html yazildi: ${feed.count} urun.`);
 }
 
+// --verify: catalog.json, feed/products.json ve fiyat-listesi/index.html AYNI veri anlik goruntusunden mi?
+// Workflow'da uretimden sonra calisir; tutarsizlik varsa is akisi HATA verir (sessiz eski sayfa birakilmaz).
+function verify() {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
+  const feed = JSON.parse(fs.readFileSync(FEED_PATH, "utf8"));
+  const html = fs.readFileSync(PAGE_PATH, "utf8");
+  const expected = catalog.products.filter((p) => !isNonProductRow(p));
+  const errors = [];
+  if (feed.generated_at !== catalog.generatedAt) errors.push(`feed generated_at (${feed.generated_at}) != catalog generatedAt (${catalog.generatedAt})`);
+  if (feed.count !== expected.length || feed.products.length !== expected.length) errors.push(`urun sayisi uyumsuz: feed=${feed.count}/${feed.products.length} catalog=${expected.length}`);
+  if (!html.includes(`datetime="${catalog.generatedAt}"`)) errors.push("fiyat-listesi/index.html baska bir zaman damgasi gosteriyor");
+  for (const p of expected) {
+    const id = legacyProductSlug(p);
+    if (!html.includes(`id="${id}"`)) errors.push(`sayfada urun yok: ${id}`);
+  }
+  if (/Kayıtlı|Kayıtsız|IMEI/.test(html)) errors.push("sayfada IMEI/kayit durumu bilgisi var (gosterilmemeli)");
+  if (errors.length) throw new Error("Tutarlilik hatasi:\n - " + errors.join("\n - "));
+  console.log(`Tutarlilik dogrulandi: catalog.json, feed/products.json ve fiyat-listesi/index.html ayni veri (${expected.length} urun, ${catalog.generatedAt}).`);
+}
+
 if (require.main === module) {
   try {
-    main();
+    if (process.argv.includes("--verify")) verify();
+    else main();
   } catch (err) {
     console.error("HATA:", err.message);
     process.exit(1);
