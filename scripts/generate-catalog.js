@@ -66,7 +66,10 @@ function parseTsvToProducts(tsv) {
     if (!marka && !model) continue;
 
     const stokWords = normalizeTR(cols[4] || "").split(/\s+/);
-    let stockStatus = "OUT";
+    // Stok cozumu = mixgsm-ops/contract/enums.json > stock_status ile AYNI kural:
+    // ASK sozcugu -> ASK | acik olumsuz sozcuk -> OUT | olumlu sozcuk -> IN | TANINMAYAN/BOS -> ASK.
+    // OUT yalnizca "kesin olarak stok yok" demektir; bilinmeyen urun yanlislikla OUT gosterilmez.
+    let stockStatus = "ASK";
     if (stokWords.some((w) => ["sor", "sorunuz", "soru"].includes(w))) {
       stockStatus = "ASK";
     } else if (
@@ -74,6 +77,8 @@ function parseTsvToProducts(tsv) {
       !stokWords.some((w) => ["yok", "tukendi", "0", "hayir", "false", "degil"].includes(w))
     ) {
       stockStatus = "IN";
+    } else if (stokWords.some((w) => ["yok", "tukendi", "0", "hayir", "false", "degil"].includes(w))) {
+      stockStatus = "OUT";
     }
 
     const rawPrice = cols[3] || "";

@@ -1590,12 +1590,16 @@ async function loadFromGoogleSheets() {
       if(!marka && !model) continue;
       
       let stokWords = normalizeTR(cols[4] || '').split(/\s+/);
-      let stockStatus = 'OUT';
+      // Stok cozumu = mixgsm-ops/contract/enums.json ile AYNI kural: ASK sozcugu -> ASK | acik olumsuz
+      // sozcuk -> OUT | olumlu sozcuk -> IN | TANINMAYAN/BOS -> ASK (bilinmeyen urun OUT gosterilmez).
+      let stockStatus = 'ASK';
       if (stokWords.some(w => ['sor', 'sorunuz', 'soru'].includes(w))) {
         stockStatus = 'ASK';
       } else if (stokWords.some(w => ['var', 'stokta', 'mevcut', 'evet'].includes(w)) &&
                  !stokWords.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w))) {
         stockStatus = 'IN';
+      } else if (stokWords.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w))) {
+        stockStatus = 'OUT';
       }
       
       // Fiyat: veri yok / hatali / sifir / metin (orn. "SORUNUZ") - tum bu
