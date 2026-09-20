@@ -34,13 +34,16 @@ jobs:
         run: node scripts/generate-catalog.js
 
       - name: Fiyat sayfasi ve ortak besleme olustur (catalog.json -> fiyat-listesi/, feed/products.json)
-        continue-on-error: true
+        # continue-on-error YOK: uretilemezse is akisi HATA verir; catalog.json ile fiyat sayfasi tutarsiz commit edilmez.
         run: node scripts/generate-price-page.js
+
+      - name: Katalog, besleme ve fiyat sayfasi tutarliligini dogrula
+        run: node scripts/generate-price-page.js --verify
 
       - name: Degisiklik varsa commit + push et
         run: |
           git add catalog.json
-          git add feed/products.json fiyat-listesi/index.html 2>/dev/null || true
+          git add feed/products.json fiyat-listesi/index.html
           if git diff --cached --quiet; then
             echo "Degisiklik yok, commit atilmiyor."
           else
