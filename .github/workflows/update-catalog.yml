@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/update-catalog.yml"
       - "scripts/generate-catalog.js"
+      - "scripts/generate-price-page.js"
 
 permissions:
   contents: write
@@ -32,11 +33,16 @@ jobs:
       - name: catalog.json olustur (Google Sheets'ten)
         run: node scripts/generate-catalog.js
 
+      - name: Fiyat sayfasi ve ortak besleme olustur (catalog.json -> fiyat-listesi/, feed/products.json)
+        continue-on-error: true
+        run: node scripts/generate-price-page.js
+
       - name: Degisiklik varsa commit + push et
         run: |
           git add catalog.json
-          if git diff --cached --quiet -- catalog.json; then
-            echo "catalog.json degismedi, commit atilmiyor."
+          git add feed/products.json fiyat-listesi/index.html 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Degisiklik yok, commit atilmiyor."
           else
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
