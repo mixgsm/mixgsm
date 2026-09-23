@@ -595,16 +595,27 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    icinde normal bir flex ogesi. Boylece "2. El" paneliyle ayni noktaya
    (top:10px;left:10px) bagimsiz olarak konumlanip ust uste binmesi
    yapisal olarak IMKANSIZ hale geldi (saga simetrik .laptop-card-tags
-   sarmalayicisiyla AYNI desen). Renk/yazi kurallari DEGISMEDI. */
-#laptop-section .laptop-card-badge { background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
-#laptop-section .laptop-card-badge.in { background: rgba(37,211,102,.18); color: var(--whatsapp); }
-#laptop-section .laptop-card-badge.ask { background: rgba(201,162,39,.2); color: var(--laptop-gold); }
-#laptop-section .laptop-card-badge.out { background: rgba(120,120,120,.25); color: var(--muted); }
+   sarmalayicisiyla AYNI desen). */
+/* OKUNABILIRLIK DUZELTMESI: "in"/"out" artik YARI SEFFAF DEGIL - SOLID
+   (dolu) koyu zemin + BEYAZ yazi. Onceki rgba(...,.18) + renkli yazi
+   kombinasyonu (ozellikle yesil) kontrasti cok dusuk oldugu icin zor
+   okunuyordu (WCAG AA kontrast orani ~2:1). #15803d (koyu yesil) ve
+   #b91c1c (koyu kirmizi) + beyaz yazi ile kontrast orani ~5:1 ve ~6.5:1 -
+   ikisi de okunabilir esigin (4.5:1) uzerinde. "ask" (Sorunuz) rozeti
+   kullanicinin bildirdigi soruna dahil degildi, DEGISTIRILMEDI.
+   border-radius 99px (tam pil) -> 6px ("hafif yuvarlatilmis"), boylece
+   ustundeki "2. El" pilinden gorsel olarak ayirt edilebiliyor. */
+#laptop-section .laptop-card-badge { background: rgba(0,0,0,.55); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 6px; white-space: nowrap; }
+#laptop-section .laptop-card-badge.in { background: #15803d; color: #fff; }
+#laptop-section .laptop-card-badge.ask { background: rgba(201,162,39,.2); color: var(--laptop-gold); border-radius: 99px; font-weight: normal; }
+#laptop-section .laptop-card-badge.out { background: #b91c1c; color: #fff; }
 /* GORSEL DUZELTME: sol ust - "2. El"/"Sıfır" (sarı panel, .laptop-card-tag
    ile AYNI gorsel dil) + stok etiketi. Dikey flex-column oldugu icin stok
    etiketi HER ZAMAN durum panelinin hemen altina duser, sabit piksel
-   offset'e gerek yok. Sagdaki .laptop-card-tags ile birebir simetrik. */
-#laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; z-index: 1; }
+   offset'e gerek yok. Sagdaki .laptop-card-tags ile birebir simetrik.
+   gap 6px->8px: rozetler artik solid renkli oldugu icin birbirine daha
+   yakin/kalabalik hissettirmemesi icin biraz daha nefes payi verildi. */
+#laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; z-index: 1; }
 /* FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen bağımsız rozetlerdir, ikisi birden
    olabilir - bu yüzden konumlandırma artık .laptop-card-tags sarmalayıcıda,
    .laptop-card-tag yalnızca görünümden sorumlu. */
@@ -3570,9 +3581,12 @@ function laptopCardMarkup(p) {
   const idx = LaptopStore.products.indexOf(p);
   const title = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
   const img = laptopProductImageOrFallback(p);
-  const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">🟢 Stokta</span>'
+  // OKUNABILIRLIK DUZELTMESI: emoji daireler (🟢/🔴) solid renkli zemin
+  // üzerinde gereksiz/karisik duruyordu - "●" isareti + BUYUK HARF metin
+  // (istenen mockup ile birebir) kullanildi.
+  const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">● STOKTA</span>'
     : p.stock === 'ASK' ? '<span class="laptop-card-badge ask">Sorunuz</span>'
-    : '<span class="laptop-card-badge out">🔴 Satıldı</span>';
+    : '<span class="laptop-card-badge out">● SATILDI</span>';
   // FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen birbirinden BAĞIMSIZ rozetlerdir -
   // bir üründe ikisi de true ise ikisi de aynı anda gösterilir (if/else-if
   // DEĞİL, iki ayrı bağımsız kontrol).
