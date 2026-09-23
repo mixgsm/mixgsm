@@ -1,4 +1,4 @@
-name: Katalog Guncelle (Google Sheets -> catalog.json)
+name: Katalog Guncelle (Google Sheets -> catalog.json + catalog-laptop.json)
 
 on:
   schedule:
@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/update-catalog.yml"
       - "scripts/generate-catalog.js"
+      - "scripts/generate-catalog-laptop.js"
       - "scripts/generate-price-page.js"
 
 permissions:
@@ -30,8 +31,18 @@ jobs:
         with:
           node-version: "20"
 
-      - name: catalog.json olustur (Google Sheets'ten)
+      - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js
+
+      # FAZ 3: Laptop uretimi TELEFON adimindan TAMAMEN BAGIMSIZ bir adim.
+      # generate-catalog-laptop.js kendi icinde hicbir zaman hata firlatip
+      # process'i basarisiz koda cikarmiyor (placeholder/hata durumunda
+      # bos-ama-gecerli dosya yaziyor), ama ekstra guvenlik katmani olarak
+      # continue-on-error: true de eklendi - bu adim ne olursa olsun
+      # asagidaki adimlari ve TELEFON'un catalog.json'i ASLA etkilenmez.
+      - name: catalog-laptop.json olustur (Public Laptop Sheet'ten - LAPTOP)
+        continue-on-error: true
+        run: node scripts/generate-catalog-laptop.js
 
       - name: Fiyat sayfasi ve ortak besleme olustur (catalog.json -> fiyat-listesi/, feed/products.json)
         # continue-on-error YOK: uretilemezse is akisi HATA verir; catalog.json ile fiyat sayfasi tutarsiz commit edilmez.
@@ -42,13 +53,12 @@ jobs:
 
       - name: Degisiklik varsa commit + push et
         run: |
-          git add catalog.json
-          git add feed/products.json fiyat-listesi/index.html
+          git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html
           if git diff --cached --quiet; then
             echo "Degisiklik yok, commit atilmiyor."
           else
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
-            git commit -m "chore: catalog.json otomatik guncellendi"
+            git commit -m "chore: catalog.json / catalog-laptop.json otomatik guncellendi"
             git push
           fi

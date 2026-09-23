@@ -455,6 +455,224 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .grid { grid-template-columns: 1fr; }
   .visual { height: 260px; }
 }
+
+/* ================================================================
+   FAZ 2 — STOREFRONT TOGGLE + LAPTOP & PC İSKELETİ
+   Bu blok baştan sona YENİ ve İZOLE'dir:
+   - .storefront-toggle / .storefront-toggle-btn: yeni, tekil bir kontrol.
+   - #laptop-section altındaki her seçici, sadece o kapsayıcının İÇİNDE
+     geçerlidir (#laptop-section ... şeklinde). .card, .btn-*, button,
+     h1/h2, input, section gibi GENEL/GLOBAL seçicilere dokunulmadı.
+   - Mevcut tema değişkenleri (--bg, --surface, --text, --muted, --line,
+     --text-invert) aynen kullanılıyor; laptop'a özel TEK yeni token
+     (--laptop-gold) sadece #laptop-section kapsamında tanımlı, ayrı bir
+     tema sistemi KURULMADI.
+   ================================================================ */
+.storefront-toggle { max-width: 440px; margin: 18px auto 0; padding: 4px; display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; }
+.storefront-toggle-btn { flex: 1; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; padding: 10px 14px; border-radius: 99px; cursor: pointer; transition: background .15s, color .15s; font-family: inherit; min-height: 40px; }
+.storefront-toggle-btn:hover { color: var(--text); }
+.storefront-toggle-btn.active { background: var(--text); color: var(--text-invert); }
+@media(max-width: 480px) {
+  .storefront-toggle { max-width: none; margin: 14px 16px 0; }
+  .storefront-toggle-btn { font-size: 11.5px; padding: 10px 6px; }
+}
+
+#laptop-section { --laptop-gold: #C9A227; }
+#laptop-section .laptop-hero { max-width: 720px; margin: 56px auto 40px; padding: 0 20px; text-align: center; }
+#laptop-section .laptop-hero-eyebrow { font-size: 12px; font-weight: 600; color: var(--laptop-gold); letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 14px; }
+#laptop-section .laptop-hero-title { font-size: clamp(26px, 5vw, 38px); font-weight: 600; margin: 0 0 14px; letter-spacing: -0.6px; line-height: 1.15; }
+#laptop-section .laptop-hero-sub { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0 auto 28px; max-width: 480px; }
+#laptop-section .laptop-hero-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+#laptop-section .laptop-btn-primary { background: var(--laptop-gold); color: #16130a; padding: 14px 22px; border-radius: 12px; font-weight: 600; font-size: 14px; border: 1px solid var(--laptop-gold); cursor: pointer; font-family: inherit; }
+#laptop-section .laptop-btn-outline { background: transparent; color: var(--text); padding: 14px 22px; border-radius: 12px; font-weight: 600; font-size: 14px; border: 1px solid var(--line); cursor: pointer; font-family: inherit; }
+#laptop-section button:disabled { opacity: .45; cursor: not-allowed; }
+#laptop-section .laptop-hero-note { margin-top: 18px; font-size: 12px; color: var(--muted); }
+#laptop-section .laptop-catalog-layout { max-width: 1240px; margin: 0 auto 60px; padding: 0 20px; }
+#laptop-section .laptop-filter-panel:empty { display: none; }
+#laptop-section .laptop-grid { min-height: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+/* ================================================================
+   FAZ 3 DÜZELTME — LAPTOP SKELETON LOADER
+   Sadece #laptop-section içinde geçerli; .card ve global grid/kart
+   sistemine dokunmaz. Mevcut tema değişkenleri (--surface, --surface-2,
+   --line, --muted) kullanılıyor, yeni hard-coded renk yok.
+   ================================================================ */
+#laptop-section .laptop-empty,
+#laptop-section .laptop-error,
+#laptop-section .laptop-placeholder-note { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13.5px; border: 1px dashed var(--line); border-radius: 16px; background: var(--surface); }
+
+#laptop-section .laptop-skeleton-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+#laptop-section .laptop-skeleton-image { aspect-ratio: 16 / 9; width: 100%; background: var(--surface); }
+#laptop-section .laptop-skeleton-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+#laptop-section .laptop-skeleton-line { height: 12px; border-radius: 6px; background: var(--surface); }
+#laptop-section .laptop-skeleton-line.w-40 { width: 40%; }
+#laptop-section .laptop-skeleton-line.w-60 { width: 60%; }
+#laptop-section .laptop-skeleton-line.w-90 { width: 90%; }
+#laptop-section .laptop-skeleton-price { height: 18px; width: 45%; border-radius: 6px; background: var(--surface); margin-top: 4px; }
+
+#laptop-section .laptop-skeleton-image,
+#laptop-section .laptop-skeleton-line,
+#laptop-section .laptop-skeleton-price { animation: laptopSkeletonPulse 1.4s ease-in-out infinite; }
+@keyframes laptopSkeletonPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  #laptop-section .laptop-skeleton-image,
+  #laptop-section .laptop-skeleton-line,
+  #laptop-section .laptop-skeleton-price { animation: none; opacity: 0.75; }
+}
+
+/* Desktop: 6 skeleton kart, mobil/tablet: 4 - CLS yaratmadan */
+#laptop-section .laptop-skeleton-card:nth-child(n+5) { display: none; }
+@media (min-width: 720px) {
+  #laptop-section .laptop-skeleton-card:nth-child(n+5) { display: flex; }
+}
+
+/* ================================================================
+   FAZ 4 — LAPTOP KATALOG UI (kart/grid, filtre paneli, mobil drawer,
+   modal, form). Tamamen #laptop-section altında scoped, tüm sınıflar
+   "laptop-" önekli - .card/.grid/.modal/.filter/.product-card gibi
+   telefon tarafının GLOBAL sınıflarına dokunulmuyor/karıştırılmıyor.
+   Mobile-first: önce mobil/tek-sütun, sonra 900px+ masaüstü genişletme
+   (telefon tarafındaki AYNI breakpoint - tutarlılık için). ================ */
+
+#laptop-section .laptop-catalog-layout { max-width: 1240px; margin: 0 auto 60px; padding: 0 20px; display: grid; grid-template-columns: 1fr; gap: 24px; }
+#laptop-section .laptop-wrap { min-width: 0; }
+
+/* --- Filtre paneli / mobil drawer --- */
+#laptop-section .laptop-filter-drawer-backdrop { display: none; }
+#laptop-section .laptop-filter-panel-head { display: none; }
+#laptop-section .laptop-filter-panel { display: flex; flex-direction: column; gap: 18px; }
+#laptop-section .laptop-filter-block { display: flex; flex-direction: column; gap: 8px; }
+#laptop-section .laptop-filter-label,
+#laptop-section .laptop-adv-row-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+#laptop-section .laptop-filter-group,
+#laptop-section .laptop-filter-group-adv { display: flex; flex-wrap: wrap; gap: 8px; }
+#laptop-section .laptop-filter-group button,
+#laptop-section .laptop-filter-group-adv button { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); padding: 8px 14px; border-radius: 99px; font-size: 12.5px; font-family: inherit; cursor: pointer; transition: background .15s, border-color .15s; }
+#laptop-section .laptop-filter-group button.active,
+#laptop-section .laptop-filter-group-adv button.active { background: var(--laptop-gold); border-color: var(--laptop-gold); color: #16130a; font-weight: 600; }
+#laptop-section .laptop-filter-empty-note { font-size: 12px; color: var(--muted); }
+#laptop-section .laptop-price-row { display: flex; align-items: center; gap: 8px; }
+#laptop-section .laptop-price-row input { width: 100%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 13px; }
+#laptop-section .laptop-price-row span { color: var(--muted); }
+#laptop-section .laptop-adv-filters summary { cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text); padding: 4px 0; }
+#laptop-section .laptop-adv-body { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+#laptop-section .laptop-adv-clear { width: 100%; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 10px; font-family: inherit; font-size: 12.5px; cursor: pointer; }
+#laptop-section .laptop-adv-clear:hover { color: var(--text); border-color: var(--text); }
+
+@media (max-width: 900px) {
+  #laptop-section .laptop-filter-drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
+  #laptop-section .laptop-filter-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  #laptop-section .laptop-filter-panel-head h3 { margin: 0; font-size: 16px; }
+  #laptop-section .laptop-filter-close { background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; }
+  #laptop-section .laptop-filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: 200; transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
+  #laptop-section .laptop-filter-panel.open { transform: translateY(0); }
+}
+@media (min-width: 900px) {
+  #laptop-section .laptop-catalog-layout { grid-template-columns: 240px 1fr; align-items: start; }
+  #laptop-section .laptop-filter-panel { position: sticky; top: calc(var(--nav-h, 64px) + 20px); }
+}
+
+/* --- Arama / sıralama toolbar --- */
+#laptop-section .laptop-catalog-toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+#laptop-section .laptop-search { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+#laptop-section .laptop-search .icon { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+#laptop-section .laptop-search input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 13.5px; min-width: 0; }
+#laptop-section .laptop-filter-toggle-btn { display: none; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); padding: 10px 16px; border-radius: 12px; font-family: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+#laptop-section .laptop-filter-toggle-btn .icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+@media (max-width: 900px) { #laptop-section .laptop-filter-toggle-btn { display: inline-flex; } }
+#laptop-section .laptop-topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+#laptop-section .laptop-count { font-size: 13px; color: var(--muted); }
+#laptop-section .laptop-sort { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 9px 12px; font-family: inherit; font-size: 12.5px; }
+
+/* --- Laptop kartı --- */
+#laptop-section .laptop-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color .2s, transform .2s; text-align: left; }
+#laptop-section .laptop-card:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); transform: translateY(-2px); }
+#laptop-section .laptop-card:focus-visible { outline: 2px solid var(--laptop-gold); outline-offset: 2px; }
+#laptop-section .laptop-card-visual { position: relative; aspect-ratio: 16 / 9; background: var(--surface); }
+#laptop-section .laptop-card-visual img { width: 100%; height: 100%; object-fit: contain; display: block; }
+#laptop-section .laptop-card-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 99px; }
+#laptop-section .laptop-card-badge.in { background: rgba(37,211,102,.18); color: var(--whatsapp); }
+#laptop-section .laptop-card-badge.ask { background: rgba(201,162,39,.2); color: var(--laptop-gold); }
+#laptop-section .laptop-card-badge.out { background: rgba(120,120,120,.25); color: var(--muted); }
+/* FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen bağımsız rozetlerdir, ikisi birden
+   olabilir - bu yüzden konumlandırma artık .laptop-card-tags sarmalayıcıda,
+   .laptop-card-tag yalnızca görünümden sorumlu. */
+#laptop-section .laptop-card-tags { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 1; }
+#laptop-section .laptop-card-tag { background: var(--laptop-gold); color: #16130a; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
+#laptop-section .laptop-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+#laptop-section .laptop-card-brand { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+#laptop-section .laptop-card-model { font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.3; }
+#laptop-section .laptop-card-specs { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 2px 0 6px; }
+#laptop-section .laptop-card-bottom { margin-top: auto; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+#laptop-section .laptop-card-price { font-size: 15px; font-weight: 700; color: var(--text); }
+#laptop-section .laptop-card-price.ask { font-size: 12.5px; color: var(--whatsapp); font-weight: 600; }
+#laptop-section .laptop-card-price em { font-style: normal; font-size: 11px; color: var(--muted); }
+
+/* --- Laptop modal (telefonun .modal'ından TAMAMEN AYRI sınıf) --- */
+#laptop-section .laptop-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .25s ease; }
+#laptop-section .laptop-modal.open { display: flex; opacity: 1; }
+#laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr 1fr; }
+#laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(1); }
+#laptop-section .laptop-modal-close { position: sticky; top: 14px; margin: 14px 14px 0 auto; float: right; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+#laptop-section .laptop-modal-close .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+#laptop-section .laptop-modalvisual { background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 240px; }
+#laptop-section .laptop-modalvisual img { max-width: 100%; max-height: 360px; object-fit: contain; }
+/* FAZ 5: Foto galerisi - Public Sheet bugün TEK "Fotoğraf" alanı sunuyor,
+   bu yüzden çoğu üründe galeri tek görselden oluşur ve küçük resim şeridi
+   otomatik gizlenir (bkz. renderLaptopGallery). Mimari, Sheet'e ileride
+   ek görsel alanları eklenirse (şema DEĞİŞMEDEN, mevcut JS güncellenerek)
+   birden çok görseli göstermeye hazırdır. */
+#laptop-section .laptop-gallery-main { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; touch-action: pan-y; }
+#laptop-section .laptop-gallery-thumbs { display: flex; gap: 8px; margin-top: 12px; max-width: 100%; overflow-x: auto; padding-bottom: 2px; }
+#laptop-section .laptop-gallery-thumb { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
+#laptop-section .laptop-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#laptop-section .laptop-gallery-thumb.active { border-color: var(--laptop-gold); }
+#laptop-section .laptop-modalinfo { padding: 24px 28px 28px; display: flex; flex-direction: column; }
+#laptop-section .laptop-modalbrand { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+#laptop-section .laptop-modalname { font-size: 21px; font-weight: 600; margin: 4px 0 8px; }
+/* FAZ 5: Modal rozetleri - kartın .laptop-card-tag ile AYNI renk dili
+   (yalnızca var(--laptop-gold)), aşırı renk/animasyon yok. */
+#laptop-section .laptop-modal-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+#laptop-section .laptop-modal-badge { display: inline-flex; align-items: center; background: var(--laptop-gold); color: #16130a; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 99px; }
+#laptop-section .laptop-modalprice { font-size: 22px; font-weight: 700; color: var(--laptop-gold); margin-bottom: 14px; }
+#laptop-section .laptop-modal-stock-warn { display: none; background: rgba(220,80,80,.12); color: #d85a5a; border: 1px solid rgba(220,80,80,.3); border-radius: 10px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 14px; }
+#laptop-section .laptop-spec-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+#laptop-section .laptop-spec-table td { padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+#laptop-section .laptop-spec-table td:first-child { color: var(--muted); font-weight: 400; width: 42%; }
+#laptop-section .laptop-spec-table td:last-child { color: var(--text); font-weight: 500; text-align: right; }
+#laptop-section .laptop-spec-table tr:last-child td { border-bottom: none; }
+#laptop-section .laptop-modal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 16px; }
+#laptop-section .laptop-modal-desc:empty { display: none; }
+#laptop-section .laptop-modalwa { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; background: var(--whatsapp); color: #06210f; border: none; border-radius: 12px; padding: 15px; font-weight: 600; font-size: 14.5px; font-family: inherit; cursor: pointer; width: 100%; }
+#laptop-section .laptop-modalwa .icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+@media (max-width: 720px) {
+  #laptop-section .laptop-modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; max-height: 92vh; width: 100%; margin: 0; }
+  #laptop-section .laptop-modal { padding: 0; align-items: flex-end; }
+}
+
+/* --- "Bana Laptop Bul" formu --- */
+#laptop-section .laptop-form-box { grid-template-columns: 1fr; max-width: 560px; padding: 28px; }
+#laptop-section .laptop-form-title { margin: 0 0 6px; font-size: 21px; }
+#laptop-section .laptop-form-sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+#laptop-section .laptop-form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+#laptop-section .laptop-form-row label { font-size: 12.5px; font-weight: 600; color: var(--text); }
+#laptop-section .laptop-form-row input,
+#laptop-section .laptop-form-row select,
+#laptop-section .laptop-form-row textarea { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 11px 13px; font-family: inherit; font-size: 13.5px; width: 100%; }
+#laptop-section .laptop-form-row textarea { resize: vertical; min-height: 60px; }
+#laptop-section .laptop-form-row input:focus-visible,
+#laptop-section .laptop-form-row select:focus-visible,
+#laptop-section .laptop-form-row textarea:focus-visible { outline: 2px solid var(--laptop-gold); outline-offset: 1px; }
+#laptop-section .laptop-form-row.invalid input,
+#laptop-section .laptop-form-row.invalid select { border-color: #d85a5a; }
+#laptop-section .laptop-form-error { display: none; font-size: 11.5px; color: #d85a5a; }
+#laptop-section .laptop-form-row.invalid .laptop-form-error { display: block; }
+#laptop-section .laptop-form-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+/* --- Boş sonuç / hata kutuları içinde WhatsApp CTA (empty state) --- */
+#laptop-section .laptop-empty .laptop-empty-wa,
+#laptop-section .laptop-error .laptop-empty-wa { margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -509,6 +727,17 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </nav>
 
+<!-- FAZ 2: Storefront toggle. Telefon/Kişisel Bakım <-> Laptop & PC gecisi.
+     Yeni, izole bir kontrol - mevcut nav/filter/buton sistemlerine dokunmaz. -->
+<div class="storefront-toggle" id="storefrontToggle" role="tablist" aria-label="Ürün kategorisi seçimi">
+  <button type="button" class="storefront-toggle-btn active" id="toggleBtnPhone" role="tab" aria-selected="true" aria-controls="phone-section" data-storefront="phone">📱 Telefon &amp; Kişisel Bakım</button>
+  <button type="button" class="storefront-toggle-btn" id="toggleBtnLaptop" role="tab" aria-selected="false" aria-controls="laptop-section" data-storefront="laptop">💻 Laptop &amp; PC</button>
+</div>
+
+<!-- FAZ 2: DOM izolasyonu - mevcut telefon/kişisel bakım storefront'u
+     (hero, trust-strip, öne çıkanlar, katalog) hiçbir yapısal değişiklik
+     yapılmadan #phone-section içine alındı. -->
+<div id="phone-section">
 <header class="hero">
   <div class="hero-copy">
     <p class="hero-eyebrow">MİX GSM</p>
@@ -645,6 +874,285 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <section class="grid" id="grid"></section>
   </main>
 </div>
+</div><!-- /#phone-section -->
+
+<!-- FAZ 2-4: Laptop & PC storefront. Varsayılan olarak hidden + aria-hidden +
+     inert (klavye/screen reader erişimi kapalı, telefon tarafı aktifken bu
+     bölüm hiçbir şekilde render/etkileşim almaz). Tüm state/DOM/event
+     mantığı telefon tarafından TAMAMEN İZOLE (bkz. aşağıdaki JS bloklarındaki
+     "KIRMIZI ÇİZGİ" notları). -->
+<div id="laptop-section" hidden aria-hidden="true" inert>
+  <section class="laptop-hero">
+    <p class="laptop-hero-eyebrow">MİX GSM · LAPTOP &amp; PC</p>
+    <h2 class="laptop-hero-title">💻 Aradığın Laptopu Birlikte Bulalım</h2>
+    <p class="laptop-hero-sub">Bütçenizi ve kullanım amacınızı bize söyleyin. İhtiyacınıza uygun modelleri sizin için araştıralım.</p>
+    <div class="laptop-hero-actions">
+      <button type="button" class="laptop-btn-primary" id="laptopFindBtn">🔎 Bana Laptop Bul</button>
+      <button type="button" class="laptop-btn-outline" id="laptopStockBtn">💻 Stoktaki Laptoplar</button>
+    </div>
+    <p class="laptop-hero-note">Laptop kataloğu yükleniyor…</p>
+  </section>
+
+  <div class="section-title" id="laptopCatalogTitle">
+    <h2>Laptop Kataloğu</h2>
+    <p>Arayın, filtreleyin, size uygun laptopu bulun.</p>
+  </div>
+
+  <div class="laptop-catalog-layout">
+    <div class="laptop-filter-drawer-backdrop" id="laptopFilterBackdrop"></div>
+    <aside class="laptop-filter-panel" id="laptopFilterPanel">
+      <div class="laptop-filter-panel-head">
+        <h3>Laptop Filtrele</h3>
+        <button type="button" class="laptop-filter-close" id="laptopFilterCloseBtn" aria-label="Filtreleri Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">Durum</div>
+        <div class="laptop-filter-group" id="laptopConditionGroup">
+          <button type="button" class="active" data-condition="ALL">Tümü</button>
+          <button type="button" data-condition="NEW">Sıfır</button>
+          <button type="button" data-condition="USED">2. El</button>
+        </div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">Marka</div>
+        <div class="laptop-filter-group" id="laptopBrandGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">Fiyat Aralığı (TL)</div>
+        <div class="laptop-price-row">
+          <input type="number" id="laptopPriceMinInput" placeholder="Min" min="0" aria-label="Minimum laptop fiyatı (TL)">
+          <span>—</span>
+          <input type="number" id="laptopPriceMaxInput" placeholder="Max" min="0" aria-label="Maksimum laptop fiyatı (TL)">
+        </div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">İşlemci Markası</div>
+        <div class="laptop-filter-group" id="laptopCpuBrandGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">RAM (GB)</div>
+        <div class="laptop-filter-group" id="laptopRamGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">SSD (GB)</div>
+        <div class="laptop-filter-group" id="laptopSsdGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">Ekran Kartı</div>
+        <div class="laptop-filter-group" id="laptopGpuGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <div class="laptop-filter-label">Kullanım Amacı</div>
+        <div class="laptop-filter-group" id="laptopUsageGroup"><span class="laptop-filter-empty-note">Katalog yükleniyor…</span></div>
+      </div>
+
+      <div class="laptop-filter-block">
+        <details class="laptop-adv-filters" id="laptopAdvFilters">
+          <summary>Gelişmiş Filtreler</summary>
+          <div class="laptop-adv-body">
+            <div>
+              <div class="laptop-adv-row-label">İşlemci Tipi</div>
+              <div class="laptop-filter-group-adv" id="laptopCpuTypeGroup"></div>
+            </div>
+            <div>
+              <div class="laptop-adv-row-label">İşlemci Nesli</div>
+              <div class="laptop-filter-group-adv" id="laptopCpuGenGroup"></div>
+            </div>
+            <div>
+              <div class="laptop-adv-row-label">GPU VRAM (GB)</div>
+              <div class="laptop-filter-group-adv" id="laptopGpuVramGroup"></div>
+            </div>
+            <div>
+              <div class="laptop-adv-row-label">GPU TGP (W)</div>
+              <div class="laptop-filter-group-adv" id="laptopGpuTgpGroup"></div>
+            </div>
+            <div>
+              <div class="laptop-adv-row-label">Ekran Yenileme Hızı (Hz)</div>
+              <div class="laptop-filter-group-adv" id="laptopHzGroup"></div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="laptop-filter-block">
+        <button type="button" class="laptop-adv-clear" id="laptopFilterClearBtn">Laptop filtrelerini temizle</button>
+      </div>
+    </aside>
+
+    <main class="laptop-wrap">
+      <div class="laptop-catalog-toolbar">
+        <div class="laptop-search">
+          <svg class="icon"><use href="#ic-search"></use></svg>
+          <input id="laptopQ" placeholder="Marka, model, işlemci veya ekran kartı ara..." aria-label="Laptop Ara">
+        </div>
+        <button type="button" class="laptop-filter-toggle-btn" id="laptopFilterToggleBtn"><svg class="icon"><use href="#ic-filter"></use></svg> Filtrele</button>
+      </div>
+      <div class="laptop-topline">
+        <div class="laptop-count-wrap">
+          <span class="laptop-count" id="laptopCount">Yükleniyor...</span>
+        </div>
+        <select class="laptop-sort" id="laptopSort" aria-label="Laptop Sıralama">
+          <option value="default">Sıralama: Önerilen</option>
+          <option value="low">Fiyat: Düşük → Yüksek</option>
+          <option value="high">Fiyat: Yüksek → Düşük</option>
+          <option value="new">Yeni Gelenler</option>
+          <option value="deal">Fırsatlar</option>
+        </select>
+      </div>
+      <section class="laptop-grid" id="laptopGrid" aria-busy="false"></section>
+    </main>
+  </div>
+
+  <!-- FAZ 4: Laptop ürün detay modalı - telefonun #modal'ından TAMAMEN AYRI
+       yapı/id/state. role=dialog + aria-modal + Focus Trap ile birlikte. -->
+  <div class="laptop-modal" id="laptopModal" role="dialog" aria-modal="true" aria-labelledby="lmn" tabindex="-1">
+    <div class="laptop-modalbox">
+      <button type="button" class="laptop-modal-close" id="laptopModalCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      <div class="laptop-modalvisual">
+        <div class="laptop-gallery-main" id="laptopGalleryMain">
+          <img id="lmi" src="" alt="Laptop Görseli" loading="lazy">
+        </div>
+        <div class="laptop-gallery-thumbs" id="laptopGalleryThumbs"></div>
+      </div>
+      <div class="laptop-modalinfo">
+        <div class="laptop-modalbrand" id="lmb"></div>
+        <div class="laptop-modalname" id="lmn"></div>
+        <div class="laptop-modal-badges" id="laptopModalBadges"></div>
+        <div class="laptop-modalprice" id="lmp"></div>
+
+        <div id="laptopOutOfStockWarn" class="laptop-modal-stock-warn">
+          Bu laptop şu an stoklarımızda bulunmamaktadır. Alternatif modeller için WhatsApp'tan bilgi alabilirsiniz.
+        </div>
+
+        <table class="laptop-spec-table">
+          <tr id="tr-lm-condition"><td>Durum</td><td id="lmfcondition"></td></tr>
+          <tr id="tr-lm-cpu"><td>İşlemci</td><td id="lmfcpu"></td></tr>
+          <tr id="tr-lm-cpugen"><td>İşlemci Nesli</td><td id="lmfcpugen"></td></tr>
+          <tr id="tr-lm-ram"><td>RAM</td><td id="lmfram"></td></tr>
+          <tr id="tr-lm-ramtype"><td>RAM Tipi</td><td id="lmframtype"></td></tr>
+          <tr id="tr-lm-ssd"><td>SSD</td><td id="lmfssd"></td></tr>
+          <tr id="tr-lm-gpu"><td>Ekran Kartı</td><td id="lmfgpu"></td></tr>
+          <tr id="tr-lm-vram"><td>GPU VRAM</td><td id="lmfvram"></td></tr>
+          <tr id="tr-lm-tgp"><td>GPU TGP</td><td id="lmftgp"></td></tr>
+          <tr id="tr-lm-screen"><td>Ekran</td><td id="lmfscreen"></td></tr>
+          <tr id="tr-lm-kb"><td>Klavye Aydınlatma</td><td id="lmfkb"></td></tr>
+          <tr id="tr-lm-cosmetic"><td>Kozmetik Durum</td><td id="lmfcosmetic"></td></tr>
+          <tr id="tr-lm-battery"><td>Pil Sağlığı</td><td id="lmfbattery"></td></tr>
+          <tr id="tr-lm-warranty"><td>Garanti</td><td id="lmfwarranty"></td></tr>
+          <tr id="tr-lm-box"><td>Kutu</td><td id="lmfbox"></td></tr>
+          <tr id="tr-lm-invoice"><td>Fatura</td><td id="lmfinvoice"></td></tr>
+          <tr id="tr-lm-adapter"><td>Adaptör</td><td id="lmfadapter"></td></tr>
+          <tr id="tr-lm-ramup"><td>RAM Yükseltme</td><td id="lmframup"></td></tr>
+          <tr id="tr-lm-m2"><td>M.2 Slot</td><td id="lmfm2"></td></tr>
+          <tr id="tr-lm-usage"><td>Kullanım Amacı</td><td id="lmfusage"></td></tr>
+        </table>
+
+        <p class="laptop-modal-desc" id="lmDescription"></p>
+
+        <button type="button" class="laptop-modalwa" id="laptopModalWaBtn"><svg class="icon"><use href="#ic-chat"></use></svg> Bu Laptobu Sor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAZ 4/6: "Bana Laptop Bul" formu - kendi state'i, sessionStorage
+       taslağı, 3sn buton cooldown'u ve dinamik WhatsApp mesajı ile. -->
+  <div class="laptop-modal laptop-form-modal" id="laptopFinderModal" role="dialog" aria-modal="true" aria-labelledby="lfTitle" tabindex="-1">
+    <div class="laptop-modalbox laptop-form-box">
+      <button type="button" class="laptop-modal-close" id="laptopFinderCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      <h2 id="lfTitle" class="laptop-form-title">🔎 Bana Laptop Bul</h2>
+      <p class="laptop-form-sub">Aşağıdaki bilgileri doldurun, size en uygun laptopu WhatsApp üzerinden birlikte bulalım.</p>
+
+      <form id="laptopFinderForm" novalidate>
+        <div class="laptop-form-row">
+          <label for="lfBudget">Yaklaşık Bütçeniz (TL) *</label>
+          <input type="number" id="lfBudget" name="budget" min="0" placeholder="Örn: 30000" required>
+          <span class="laptop-form-error" id="lfBudgetError"></span>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfUsage">Kullanım Amacı *</label>
+          <select id="lfUsage" name="usage" required>
+            <option value="">Seçiniz</option>
+            <option value="Oyun">Oyun</option>
+            <option value="Ofis / Günlük Kullanım">Ofis / Günlük Kullanım</option>
+            <option value="Tasarım / Video Kurgu">Tasarım / Video Kurgu</option>
+            <option value="Yazılım Geliştirme">Yazılım Geliştirme</option>
+            <option value="Öğrenci">Öğrenci</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+          <span class="laptop-form-error" id="lfUsageError"></span>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfCondition">Durum Tercihi *</label>
+          <select id="lfCondition" name="condition" required>
+            <option value="">Seçiniz</option>
+            <option value="Sıfır">Sıfır</option>
+            <option value="2. El">2. El</option>
+            <option value="Farketmez">Farketmez</option>
+          </select>
+          <span class="laptop-form-error" id="lfConditionError"></span>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfName">Ad Soyad *</label>
+          <input type="text" id="lfName" name="name" placeholder="Ad Soyad" required>
+          <span class="laptop-form-error" id="lfNameError"></span>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfPhone">WhatsApp Numaranız *</label>
+          <input type="tel" id="lfPhone" name="phone" placeholder="05xx xxx xx xx" required>
+          <span class="laptop-form-error" id="lfPhoneError"></span>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfScreen">Ekran Boyutu (opsiyonel)</label>
+          <select id="lfScreen" name="screen">
+            <option value="">Farketmez</option>
+            <option value="14 inç ve altı">14 inç ve altı</option>
+            <option value="15-16 inç">15-16 inç</option>
+            <option value="17 inç ve üzeri">17 inç ve üzeri</option>
+          </select>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfPriority">Önceliğiniz (opsiyonel)</label>
+          <select id="lfPriority" name="priority">
+            <option value="">Farketmez</option>
+            <option value="Performans">Performans</option>
+            <option value="Taşınabilirlik">Taşınabilirlik</option>
+            <option value="Pil Ömrü">Pil Ömrü</option>
+            <option value="Ekran Kalitesi">Ekran Kalitesi</option>
+            <option value="Fiyat">Fiyat</option>
+          </select>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfBrand">Marka Tercihi (opsiyonel)</label>
+          <select id="lfBrand" name="brand">
+            <option value="">Farketmez</option>
+          </select>
+        </div>
+
+        <div class="laptop-form-row">
+          <label for="lfNote">Not (opsiyonel)</label>
+          <textarea id="lfNote" name="note" rows="3" maxlength="400" placeholder="Eklemek istediğiniz bir şey var mı?"></textarea>
+        </div>
+
+        <button type="submit" class="laptop-btn-primary laptop-form-submit" id="laptopFinderSubmitBtn" style="width:100%;">WhatsApp'tan Gönder</button>
+      </form>
+    </div>
+  </div>
+</div><!-- /#laptop-section -->
 
 <div class="section-title">
   <h2>Nasıl Sipariş Verilir?</h2>
@@ -2608,6 +3116,1319 @@ if (window.matchMedia) {
 
   on('#themeToggleBtn', cycleThemePref);
   resolveAndApplyTheme();
+})();
+
+// ================================================================
+// FAZ 3 — LAPTOP VERİ KATMANI (LaptopStore)
+// Bu blok TAMAMEN İZOLE: products/cat/group/q/sort/ramFilter/favs/
+// compareList/catalogCacheKey gibi hiçbir mevcut TELEFON değişkenine veya
+// fonksiyonuna dokunmaz, hiçbirini okumaz/yazmaz. loadCatalog(),
+// loadFromGoogleSheets(), saveCatalogCache(), loadCatalogCache() — hepsi
+// telefon tarafında AYNEN duruyor. Burada sadece ortak, salt-yardımcı
+// withTimeout() fonksiyonu tekrar kullanılıyor (state değil, davranış
+// değiştirmiyor). Bu fazda henüz katalog UI'ı (kart/grid) YOK — sadece
+// veri çekilip LaptopStore.products'a yazılıyor; ekrana basma Faz 4'te.
+//
+// GÜVENLİK: Main Management Sheet URL'si burada YOK. LAPTOP_SHEET_CONFIG
+// bir PLACEHOLDER'dır - gerçek Public Laptop Sheet URL'si hazır olduğunda
+// SADECE bu satır güncellenecek.
+// ================================================================
+const LAPTOP_SHEET_CONFIG = {
+  url: 'https://docs.google.com/spreadsheets/d/1VImHmUN9eAA7x4y6tTrh5F0UA1sLsdcgCb3HjiVyXNg/export?format=tsv&gid=0'
+};
+
+function isLaptopSheetConfigured() {
+  return /^https:\/\/docs\.google\.com\/spreadsheets\//.test(LAPTOP_SHEET_CONFIG.url);
+}
+
+// GÜVENLİK: telefonun normalizeGithubImageUrl()'i ile AYNI kural, ama
+// SADECE /laptop-photos/ klasörüne izin verir - /photos/ ile karışmaz.
+function normalizeLaptopGithubImageUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  // Tam URL - düz dosya adı (eski/test formatı): laptop-photos/DOSYA.jpg
+  const directMatch = raw.match(
+    /^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/laptop-photos\/[A-Za-z0-9._%-]+$/i
+  );
+  if (directMatch) return raw;
+
+  // Tam URL - images/ alt klasörü (gerçek Sheet fotoğrafları burada barınıyor)
+  const directMatchImages = raw.match(
+    /^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/laptop-photos\/images\/[A-Za-z0-9._%-]+$/i
+  );
+  if (directMatchImages) return raw;
+
+  const blob = raw.match(
+    /^https:\/\/github\.com\/mixgsm\/mixgsm\/blob\/main\/laptop-photos\/([A-Za-z0-9._%-]+(?:\/[A-Za-z0-9._%-]+)?)$/i
+  );
+  if (blob) {
+    return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/${blob[1]}`;
+  }
+
+  // GERÇEK SHEET FORMATI: Sheet hücrelerinde tam URL değil, GÖRECELİ yol
+  // saklanıyor - örn. "images/PC-001-01.jpg". Yalnızca sabit "images/" alt
+  // klasörü + güvenli dosya adı karakterleri (harf/rakam/nokta/tire/alt
+  // çizgi/% kodlama, "/" YOK) kabul edilir - path traversal (../) veya
+  // başka bir klasöre çıkış KESİNLİKLE mümkün değildir.
+  const relativeMatch = raw.match(/^images\/([A-Za-z0-9._%-]+)$/);
+  if (relativeMatch) {
+    return `https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/${raw}`;
+  }
+
+  return '';
+}
+
+// FAZ 3 DÜZELTME: laptop görseli yoksa/kırıksa gösterilecek TEK, izole
+// fallback. Telefonun "photos/gorsel-yok.jpg" dosyasına KESİNLİKLE
+// dokunulmaz/karıştırılmaz - bu ayrı bir laptop-photos/ dosyasıdır.
+// Gerçek kart görseli render'ı Faz 4'te bu iki yardımcıyı kullanacak;
+// Faz 3'te henüz katalog kartı UI'ı yok (bkz. yukarıdaki not), bu yüzden
+// burada sadece altyapı hazırlanıyor ve doğrudan çağrılarak test edilebilir.
+const LAPTOP_FALLBACK_IMAGE = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/laptop-gorsel-yok.jpg';
+
+function laptopProductImageOrFallback(p) {
+  const img = p && p.img ? String(p.img).trim() : '';
+  return img || LAPTOP_FALLBACK_IMAGE;
+}
+
+// FAZ 5 DÜZELTME: inline onerror="" veya img.onerror = fn ATANMIYOR - kart,
+// modal ana görsel ve galeri thumbnail'lerindeki tüm görsel hataları TEK bir
+// delegated 'error' listener (bkz. bindLaptopStaticEventListeners, capture
+// fazında) üzerinden bu fonksiyona yönlendiriliyor. Bu yüzden bu fonksiyon
+// çağrılmadan önce src zaten fallback'ten FARKLI olduğu kontrol edilir
+// (delegation listener'da) - sonsuz döngü riski böyle önlenir.
+function laptopImageOnError(imgEl) {
+  if (!imgEl) return;
+  imgEl.src = LAPTOP_FALLBACK_IMAGE;
+}
+
+const laptopCatalogCacheKey = 'mixgsm-laptop-cache-v1';
+const LAPTOP_CACHE_TTL_MS = 60 * 60 * 1000; // 1 saat - isa ile netleşen karar
+
+function saveLaptopCatalogCache(list) {
+  try {
+    localStorage.setItem(laptopCatalogCacheKey, JSON.stringify({ ts: Date.now(), products: list }));
+  } catch (e) { /* kota/gizli mod - sessizce yoksay */ }
+}
+
+// { products, ageMs, isStale } döner; hiç cache yoksa null.
+function loadLaptopCatalogCache() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(laptopCatalogCacheKey) || 'null');
+    if (raw && Array.isArray(raw.products) && raw.products.length && typeof raw.ts === 'number') {
+      const ageMs = Date.now() - raw.ts;
+      return { products: raw.products, ageMs, isStale: ageMs > LAPTOP_CACHE_TTL_MS };
+    }
+  } catch (e) { /* bozuk cache - yoksay */ }
+  return null;
+}
+
+const LaptopStore = {
+  products: [],
+  loaded: false,
+  loading: false,
+  usingCache: false,
+  error: null
+};
+
+function setLaptopHeroNote(text) {
+  const el = document.querySelector('#laptop-section .laptop-hero-note');
+  if (el) el.textContent = text;
+}
+
+// ---- FAZ 3 DÜZELTME: #laptopGrid durum render yardımcıları ----
+// Bu yardımcılar SADECE #laptopGrid içeriğini yönetir; telefonun #grid'ine
+// veya render()'ına KESİNLİKLE dokunmaz. Gerçek ürün kartı tasarımı Faz
+// 4 kapsamıdır - burada sadece skeleton / boş / hata / "veri geldi ama
+// kart tasarımı henüz yok" durumları için minimal, tema tutarlı HTML var.
+function getLaptopGridEl() {
+  return document.getElementById('laptopGrid');
+}
+
+function setLaptopGridAriaBusy(isBusy) {
+  const el = getLaptopGridEl();
+  if (el) el.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+}
+
+function renderLaptopSkeleton() {
+  const el = getLaptopGridEl();
+  if (!el) return;
+  setLaptopGridAriaBusy(true);
+  // aria-hidden + odaklanabilir hiçbir eleman yok -> gereksiz tab/focus yok.
+  const cardHtml = '<div class="laptop-skeleton-card" aria-hidden="true">'
+    + '<div class="laptop-skeleton-image"></div>'
+    + '<div class="laptop-skeleton-body">'
+    + '<div class="laptop-skeleton-line w-90"></div>'
+    + '<div class="laptop-skeleton-line w-60"></div>'
+    + '<div class="laptop-skeleton-line w-40"></div>'
+    + '<div class="laptop-skeleton-price"></div>'
+    + '</div></div>';
+  // Her zaman 6 kart yazılıyor; CSS (:nth-child(n+5)) mobil/tablette 4'e
+  // düşürüyor - DOM sabit kalıyor, layout shift (CLS) olmuyor.
+  el.innerHTML = cardHtml.repeat(6);
+}
+
+function renderLaptopEmptyState(message) {
+  const el = getLaptopGridEl();
+  if (!el) return;
+  setLaptopGridAriaBusy(false);
+  el.innerHTML = '<div class="laptop-empty">' + escapeHtml(message) + '</div>';
+}
+
+function renderLaptopErrorState(message) {
+  const el = getLaptopGridEl();
+  if (!el) return;
+  setLaptopGridAriaBusy(false);
+  el.innerHTML = '<div class="laptop-error">' + escapeHtml(message)
+    + '<br><br><button type="button" class="laptop-modalwa laptop-empty-wa" style="display:inline-flex;width:auto;padding:12px 20px;" onclick="navigateToLaptopWhatsapp(\'Merhaba MİX GSM, laptop kataloğu hakkında bilgi almak istiyorum.\')"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp\'tan Laptop Sor</button></div>';
+}
+
+// FAZ 4: Veri (same-origin/Sheet/cache) başarıyla geldiğinde çağrılır.
+// Filtre panelini (mevcut GERÇEK veriden, hiçbir uydurma değer olmadan)
+// kurar, filtrelenmiş/aranmış/sıralanmış gerçek ürün kartlarını render
+// eder ve sayfa bir #laptop/slug derin linkiyle açıldıysa ilgili laptop
+// modalını burada açar (veri hazır olmadan modal açılamayacağı için).
+function onLaptopDataReady() {
+  renderLaptopFilterPanel();
+  renderLaptopCatalog();
+  maybeOpenLaptopFromHash();
+}
+
+// ================================================================
+// FAZ 4 — LAPTOP KATALOG UI: kart/grid, arama, sıralama, filtreler
+// (masaüstü panel + mobil drawer), ürün modalı, #laptop/slug derin
+// link, "Bana Laptop Bul" formu (sessionStorage taslak + 3sn cooldown +
+// dinamik WhatsApp mesajı).
+//
+// KIRMIZI ÇİZGİ: Bu blok, q/sort/cat/group/ramFilter/only5G/minBattery/
+// priceMin/priceMax/minCamera/minPerf/favs/compareList gibi HİÇBİR
+// telefon state değişkenine dokunmaz/okumaz/yazmaz. #modal/#filterPanel/
+// #grid/#q/#sort gibi telefon DOM elemanlarına da dokunmaz - kendi ayrı
+// id/class kümesini (laptop* / laptop-*) kullanır. Telefonun render()/
+// openProduct()/closeProduct()/loadCatalog() fonksiyonları AYNEN duruyor.
+// ================================================================
+
+// --- Laptop arama/sıralama/filtre state (telefonunkinden TAMAMEN AYRI) ---
+let laptopQ = '';
+let laptopSort = 'default';
+const LaptopFilters = {
+  condition: 'ALL', brand: 'ALL', priceMin: null, priceMax: null,
+  cpuBrand: 'ALL', cpuType: 'ALL', cpuGen: 'ALL',
+  ram: 'ALL', ssd: 'ALL',
+  gpu: 'ALL', gpuVram: 'ALL', gpuTgp: 'ALL',
+  hz: 'ALL', usage: 'ALL'
+};
+
+// --- Laptop slug / deep-link (#laptop/slug) - telefonun #urun/slug
+// sisteminden TAMAMEN AYRI fonksiyonlar. Public Sheet'teki gerçek ID
+// sütunu (p.id) benzersiz ek olarak kullanılıyor - uydurma bir varyant
+// numarası üretilmiyor. ---
+function laptopBaseSlug(p) {
+  return normalizeTR(`${p.brand} ${p.model}`).trim().replace(/\s+/g, '-');
+}
+function laptopSlugOf(p) {
+  const base = laptopBaseSlug(p);
+  const idPart = p.id ? normalizeTR(String(p.id)).replace(/\s+/g, '-') : '';
+  return idPart ? `${base}-${idPart}` : base;
+}
+function findLaptopBySlug(slug) {
+  if (!slug) return -1;
+  const exact = LaptopStore.products.findIndex(p => laptopSlugOf(p) === slug);
+  if (exact > -1) return exact;
+  return LaptopStore.products.findIndex(p => laptopBaseSlug(p) === slug);
+}
+
+// --- CPU marka/tip sınıflandırması: SADECE gerçek "cpu" metninden
+// TÜRETİLİR (yeni veri uydurulmaz) - marka Intel/AMD/Apple içeriyor mu
+// diye bakar, tip için bilinen i3/i5/.../Ryzen 3/.../M1-M4/Celeron/
+// Pentium kalıplarını arar. Eşleşme yoksa boş string döner (o ürün o
+// filtrede görünmez, yanlış sınıflandırılmaz). ---
+function laptopCpuBrandOf(p) {
+  const t = normalizeTR(p.cpu);
+  if (!t) return '';
+  if (t.includes('intel')) return 'Intel';
+  if (t.includes('amd') || t.includes('ryzen')) return 'AMD';
+  if (t.includes('apple') || /\bm[1-4]\b/.test(t)) return 'Apple';
+  return 'Diğer';
+}
+const LAPTOP_CPU_TYPE_PATTERNS = [
+  ['i3', /\bi3\b/], ['i5', /\bi5\b/], ['i7', /\bi7\b/], ['i9', /\bi9\b/],
+  ['Ryzen 3', /ryzen ?3\b/], ['Ryzen 5', /ryzen ?5\b/], ['Ryzen 7', /ryzen ?7\b/], ['Ryzen 9', /ryzen ?9\b/],
+  ['M1', /\bm1\b/], ['M2', /\bm2\b/], ['M3', /\bm3\b/], ['M4', /\bm4\b/],
+  ['Celeron', /celeron/], ['Pentium', /pentium/]
+];
+function laptopCpuTypeOf(p) {
+  const t = normalizeTR(p.cpu);
+  if (!t) return '';
+  for (let i = 0; i < LAPTOP_CPU_TYPE_PATTERNS.length; i++) {
+    if (LAPTOP_CPU_TYPE_PATTERNS[i][1].test(t)) return LAPTOP_CPU_TYPE_PATTERNS[i][0];
+  }
+  return '';
+}
+
+// Belirtilen alanda katalogda GERÇEKTEN var olan, tekrarsız değerleri
+// (sayısalsa küçükten büyüğe, değilse alfabetik) döner - sabit/uydurma
+// bir liste değil, her zaman o anki gerçek LaptopStore.products'tan.
+function laptopDistinctValues(getter) {
+  const set = new Set();
+  LaptopStore.products.forEach(p => {
+    const v = String(getter(p) || '').trim();
+    if (v) set.add(v);
+  });
+  return Array.from(set).sort((a, b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+    return a.localeCompare(b, 'tr');
+  });
+}
+
+function laptopSearchScore(p, query) {
+  if (!query) return 0;
+  const qn = normalizeTR(query);
+  const target = normalizeTR([p.brand, p.model, p.cpu, p.gpu, p.usage].filter(Boolean).join(' '));
+  let score = 0;
+  qn.split(/\s+/).filter(Boolean).forEach(t => { if (target.includes(t)) score += 1; });
+  return score;
+}
+
+function applyLaptopFilters(list) {
+  return list.filter(p => {
+    if (LaptopFilters.condition !== 'ALL' && p.condition !== LaptopFilters.condition) return false;
+    if (LaptopFilters.brand !== 'ALL' && p.brand !== LaptopFilters.brand) return false;
+    if (LaptopFilters.priceMin !== null && !(p.price !== null && p.price >= LaptopFilters.priceMin)) return false;
+    if (LaptopFilters.priceMax !== null && !(p.price !== null && p.price <= LaptopFilters.priceMax)) return false;
+    if (LaptopFilters.cpuBrand !== 'ALL' && laptopCpuBrandOf(p) !== LaptopFilters.cpuBrand) return false;
+    if (LaptopFilters.cpuType !== 'ALL' && laptopCpuTypeOf(p) !== LaptopFilters.cpuType) return false;
+    if (LaptopFilters.cpuGen !== 'ALL' && String(p.cpuGen || '').trim() !== LaptopFilters.cpuGen) return false;
+    if (LaptopFilters.ram !== 'ALL' && String(p.ramGB || '').trim() !== LaptopFilters.ram) return false;
+    if (LaptopFilters.ssd !== 'ALL' && String(p.ssdGB || '').trim() !== LaptopFilters.ssd) return false;
+    if (LaptopFilters.gpu !== 'ALL' && String(p.gpu || '').trim() !== LaptopFilters.gpu) return false;
+    if (LaptopFilters.gpuVram !== 'ALL' && String(p.gpuVramGB || '').trim() !== LaptopFilters.gpuVram) return false;
+    if (LaptopFilters.gpuTgp !== 'ALL' && String(p.gpuTgpW || '').trim() !== LaptopFilters.gpuTgp) return false;
+    if (LaptopFilters.hz !== 'ALL' && String(p.hz || '').trim() !== LaptopFilters.hz) return false;
+    if (LaptopFilters.usage !== 'ALL' && String(p.usage || '').trim() !== LaptopFilters.usage) return false;
+    return true;
+  });
+}
+
+// --- Filtre paneli: her grup, o anki GERÇEK katalogdan türetilen
+// değerlerle bir kere kurulur (telefondaki renderRamFilterOptions() ile
+// AYNI desen). ---
+function renderLaptopFilterButtonGroup(containerId, values, getCurrent, setValue) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  if (!values.length) { wrap.innerHTML = '<span class="laptop-filter-empty-note">Katalogda veri bulunamadı.</span>'; return; }
+  const current = getCurrent();
+  wrap.innerHTML = '<button type="button" data-val="ALL" class="' + (current === 'ALL' ? 'active' : '') + '">Tümü</button>'
+    + values.map(v => '<button type="button" data-val="' + escapeHtml(v) + '" class="' + (current === v ? 'active' : '') + '">' + escapeHtml(v) + '</button>').join('');
+  wrap.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      setValue(b.dataset.val);
+      wrap.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderLaptopCatalog();
+    });
+  });
+}
+
+let laptopBrandSelectBuilt = false;
+function renderLaptopFilterPanel() {
+  renderLaptopFilterButtonGroup('laptopBrandGroup', laptopDistinctValues(p => p.brand), () => LaptopFilters.brand, v => { LaptopFilters.brand = v; });
+  renderLaptopFilterButtonGroup('laptopCpuBrandGroup', laptopDistinctValues(p => laptopCpuBrandOf(p)), () => LaptopFilters.cpuBrand, v => { LaptopFilters.cpuBrand = v; });
+  renderLaptopFilterButtonGroup('laptopRamGroup', laptopDistinctValues(p => p.ramGB), () => LaptopFilters.ram, v => { LaptopFilters.ram = v; });
+  renderLaptopFilterButtonGroup('laptopSsdGroup', laptopDistinctValues(p => p.ssdGB), () => LaptopFilters.ssd, v => { LaptopFilters.ssd = v; });
+  renderLaptopFilterButtonGroup('laptopGpuGroup', laptopDistinctValues(p => p.gpu), () => LaptopFilters.gpu, v => { LaptopFilters.gpu = v; });
+  renderLaptopFilterButtonGroup('laptopUsageGroup', laptopDistinctValues(p => p.usage), () => LaptopFilters.usage, v => { LaptopFilters.usage = v; });
+  renderLaptopFilterButtonGroup('laptopCpuTypeGroup', laptopDistinctValues(p => laptopCpuTypeOf(p)), () => LaptopFilters.cpuType, v => { LaptopFilters.cpuType = v; });
+  renderLaptopFilterButtonGroup('laptopCpuGenGroup', laptopDistinctValues(p => p.cpuGen), () => LaptopFilters.cpuGen, v => { LaptopFilters.cpuGen = v; });
+  renderLaptopFilterButtonGroup('laptopGpuVramGroup', laptopDistinctValues(p => p.gpuVramGB), () => LaptopFilters.gpuVram, v => { LaptopFilters.gpuVram = v; });
+  renderLaptopFilterButtonGroup('laptopGpuTgpGroup', laptopDistinctValues(p => p.gpuTgpW), () => LaptopFilters.gpuTgp, v => { LaptopFilters.gpuTgp = v; });
+  renderLaptopFilterButtonGroup('laptopHzGroup', laptopDistinctValues(p => p.hz), () => LaptopFilters.hz, v => { LaptopFilters.hz = v; });
+
+  // "Bana Laptop Bul" formundaki Marka Tercihi de GERÇEK katalog
+  // markalarından dolduruluyor (uydurma marka listesi değil). Sadece bir
+  // kez kuruluyor ki kullanıcı formu doldururken seçimi sıfırlanmasın.
+  if (!laptopBrandSelectBuilt) {
+    const brandSelect = document.getElementById('lfBrand');
+    if (brandSelect) {
+      const brands = laptopDistinctValues(p => p.brand);
+      brandSelect.innerHTML = '<option value="">Farketmez</option>'
+        + brands.map(b => '<option value="' + escapeHtml(b) + '">' + escapeHtml(b) + '</option>').join('');
+      laptopBrandSelectBuilt = true;
+    }
+  }
+}
+
+function resetLaptopFilters() {
+  LaptopFilters.condition = 'ALL'; LaptopFilters.brand = 'ALL';
+  LaptopFilters.priceMin = null; LaptopFilters.priceMax = null;
+  LaptopFilters.cpuBrand = 'ALL'; LaptopFilters.cpuType = 'ALL'; LaptopFilters.cpuGen = 'ALL';
+  LaptopFilters.ram = 'ALL'; LaptopFilters.ssd = 'ALL';
+  LaptopFilters.gpu = 'ALL'; LaptopFilters.gpuVram = 'ALL'; LaptopFilters.gpuTgp = 'ALL';
+  LaptopFilters.hz = 'ALL'; LaptopFilters.usage = 'ALL';
+
+  const priceMinEl = document.getElementById('laptopPriceMinInput');
+  const priceMaxEl = document.getElementById('laptopPriceMaxInput');
+  if (priceMinEl) priceMinEl.value = '';
+  if (priceMaxEl) priceMaxEl.value = '';
+
+  document.querySelectorAll('#laptopConditionGroup button').forEach(x => x.classList.remove('active'));
+  const condAll = document.querySelector('#laptopConditionGroup button[data-condition="ALL"]');
+  if (condAll) condAll.classList.add('active');
+
+  ['laptopBrandGroup', 'laptopCpuBrandGroup', 'laptopCpuTypeGroup', 'laptopCpuGenGroup', 'laptopRamGroup',
+    'laptopSsdGroup', 'laptopGpuGroup', 'laptopGpuVramGroup', 'laptopGpuTgpGroup', 'laptopHzGroup', 'laptopUsageGroup'
+  ].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    wrap.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+    const allBtn = wrap.querySelector('button[data-val="ALL"]');
+    if (allBtn) allBtn.classList.add('active');
+  });
+
+  renderLaptopCatalog();
+}
+
+// Filtre sonucu boş olduğunda ("hazırlanıyor" DEĞİL, gerçek bir katalog
+// varken filtre/arama hiçbir şeyle eşleşmediğinde) skeleton GÖSTERİLMEZ -
+// doğrudan bu empty-state'e geçilir, kullanıcı filtreleri tek tıkla
+// temizleyebilir.
+function renderLaptopFilteredEmptyState() {
+  const el = getLaptopGridEl();
+  if (!el) return;
+  setLaptopGridAriaBusy(false);
+  el.innerHTML = '<div class="laptop-empty">Aradığınız kriterlere uygun laptop bulunamadı.'
+    + '<br><br><button type="button" class="laptop-adv-clear" onclick="resetLaptopFilters()" style="width:auto;display:inline-block;padding:10px 18px;">Filtreleri Temizle</button></div>';
+}
+
+function laptopCardMarkup(p) {
+  const idx = LaptopStore.products.indexOf(p);
+  const title = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
+  const img = laptopProductImageOrFallback(p);
+  const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">● Stokta</span>'
+    : p.stock === 'ASK' ? '<span class="laptop-card-badge ask">Sorunuz</span>'
+    : '<span class="laptop-card-badge out">Tükendi</span>';
+  // FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen birbirinden BAĞIMSIZ rozetlerdir -
+  // bir üründe ikisi de true ise ikisi de aynı anda gösterilir (if/else-if
+  // DEĞİL, iki ayrı bağımsız kontrol).
+  const tagSpans = [];
+  if (p.deal) tagSpans.push('<span class="laptop-card-tag">🔥 Fırsat</span>');
+  if (p.newArrival) tagSpans.push('<span class="laptop-card-tag">🆕 Yeni Gelen</span>');
+  const tag = tagSpans.length ? '<div class="laptop-card-tags">' + tagSpans.join('') + '</div>' : '';
+  const priceMarkup = p.price === null
+    ? '<span class="laptop-card-price ask">WhatsApp\'tan Sor</span>'
+    : '<span class="laptop-card-price">' + fmt(p.price) + ' <em>TL</em></span>';
+  const condText = p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '';
+  const memText = [p.ramGB && (p.ramGB + ' GB RAM'), p.ssdGB && (p.ssdGB + ' GB SSD')].filter(Boolean).join(' · ');
+  const screenText = [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · ');
+  const specsText = [condText, p.cpu, memText, p.gpu, screenText].filter(Boolean).slice(0, 4).join(' • ');
+
+  return '<article class="laptop-card" data-laptop-index="' + idx + '" role="button" tabindex="0" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">'
+    + '<div class="laptop-card-visual">' + tag + badge
+    + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
+    + '</div>'
+    + '<div class="laptop-card-body">'
+    + '<div class="laptop-card-brand">' + escapeHtml(p.brand || '') + '</div>'
+    + '<div class="laptop-card-model">' + escapeHtml(p.model || '') + '</div>'
+    + (specsText ? '<div class="laptop-card-specs">' + escapeHtml(specsText) + '</div>' : '')
+    + '<div class="laptop-card-bottom">' + priceMarkup + '</div>'
+    + '</div></article>';
+}
+
+function renderLaptopCatalog() {
+  const el = getLaptopGridEl();
+  if (!el) return;
+
+  if (!LaptopStore.products.length) {
+    setLaptopGridAriaBusy(false);
+    renderLaptopEmptyState('Laptop kataloğu hazırlanıyor, çok yakında burada olacak.');
+    const emptyCountEl = document.getElementById('laptopCount');
+    if (emptyCountEl) emptyCountEl.textContent = '0 laptop listeleniyor';
+    return;
+  }
+
+  let filtered = applyLaptopFilters(LaptopStore.products);
+
+  if (laptopQ) {
+    filtered.forEach(p => { p._score = laptopSearchScore(p, laptopQ); });
+    filtered = filtered.filter(p => p._score > 0).sort((a, b) => b._score - a._score);
+  }
+
+  if (laptopSort === 'low') filtered.sort((x, y) => (x.price === null ? Infinity : x.price) - (y.price === null ? Infinity : y.price));
+  else if (laptopSort === 'high') filtered.sort((x, y) => (y.price === null ? -Infinity : y.price) - (x.price === null ? -Infinity : x.price));
+  else if (laptopSort === 'new') filtered.sort((x, y) => Number(y.newArrival) - Number(x.newArrival));
+  else if (laptopSort === 'deal') filtered.sort((x, y) => Number(y.deal) - Number(x.deal));
+
+  const countEl = document.getElementById('laptopCount');
+  if (countEl) countEl.textContent = filtered.length + ' laptop listeleniyor';
+
+  setLaptopGridAriaBusy(false);
+
+  if (!filtered.length) {
+    renderLaptopFilteredEmptyState();
+    return;
+  }
+
+  el.innerHTML = filtered.map(laptopCardMarkup).join('');
+}
+
+// --- Laptop modalı: telefonun #modal / renderProductModal() /
+// openProduct() / closeProduct() sisteminden TAMAMEN AYRI. ---
+let currentLaptopModalProduct = null;
+let laptopLastFocusedTrigger = null;
+
+function setLaptopModalRow(key, val) {
+  const tr = document.getElementById('tr-lm-' + key);
+  const cell = document.getElementById('lmf' + key);
+  if (!tr || !cell) return;
+  if (val && String(val).trim()) { tr.style.display = ''; cell.textContent = val; }
+  else { tr.style.display = 'none'; }
+}
+
+function restoreLaptopFocus() {
+  if (laptopLastFocusedTrigger && typeof laptopLastFocusedTrigger.focus === 'function') {
+    try { laptopLastFocusedTrigger.focus(); } catch (e) {}
+  }
+  laptopLastFocusedTrigger = null;
+}
+
+function anyLaptopOverlayOpen() {
+  const ids = ['laptopModal', 'laptopFinderModal'];
+  if (ids.some(id => { const el = document.getElementById(id); return el && el.classList.contains('open'); })) return true;
+  const panel = document.getElementById('laptopFilterPanel');
+  return !!(panel && panel.classList.contains('open'));
+}
+
+// Çoklu görsel mimarisi. Gerçek Public Sheet ALTI ayrı "Fotoğraf 1"..
+// "Fotoğraf 6" sütunu içeriyor (img..img6) - ürüne göre 0-6 arası dolu
+// olabilir, boş olanlar atlanır. Görsel yoksa fallback'li tek elemanlı
+// bir dizi döner.
+function laptopImagesOf(p) {
+  const seen = Object.create(null);
+  const list = [];
+  function pushIfValid(u) {
+    const v = u && String(u).trim();
+    if (v && !seen[v]) { seen[v] = true; list.push(v); }
+  }
+  if (p) {
+    if (Array.isArray(p.images)) p.images.forEach(pushIfValid);
+    pushIfValid(p.img);
+    pushIfValid(p.img2);
+    pushIfValid(p.img3);
+    pushIfValid(p.img4);
+    pushIfValid(p.img5);
+    pushIfValid(p.img6);
+  }
+  if (!list.length) list.push(LAPTOP_FALLBACK_IMAGE);
+  return list;
+}
+
+let laptopGalleryImages = [];
+let laptopGalleryIndex = 0;
+
+// Ana görseli ve aktif küçük-resim vurgusunu günceller. Yeni DOM
+// oluşturmaz (thumbnail'ler zaten renderLaptopGallery() tarafından
+// yazılmıştır) - bu yüzden tıklama/swipe sonrası güvenle çağrılabilir.
+function setLaptopGalleryImage(idx) {
+  if (!laptopGalleryImages.length) return;
+  const n = laptopGalleryImages.length;
+  laptopGalleryIndex = ((idx % n) + n) % n;
+  // FAZ 5 DÜZELTME: img.onerror = fn ATANMIYOR - görsel hataları TEK,
+  // delegated 'error' listener (bindLaptopStaticEventListeners) üzerinden
+  // yönetiliyor.
+  const mainImg = document.getElementById('lmi');
+  if (mainImg) {
+    mainImg.src = laptopGalleryImages[laptopGalleryIndex] || LAPTOP_FALLBACK_IMAGE;
+  }
+  const thumbsWrap = document.getElementById('laptopGalleryThumbs');
+  if (thumbsWrap) {
+    Array.prototype.forEach.call(thumbsWrap.children, function (thumbEl, i) {
+      thumbEl.classList.toggle('active', i === laptopGalleryIndex);
+    });
+  }
+}
+
+// Modal açılırken galeriyi kurar: ana görsel + (varsa 2+) küçük resim
+// şeridi. Güvenli DOM API'leri (createElement/textContent/setAttribute)
+// kullanılır, kullanıcı/Sheet verisinden gelen içerik innerHTML ile
+// yazılmaz.
+function renderLaptopGallery(p) {
+  laptopGalleryImages = laptopImagesOf(p);
+  laptopGalleryIndex = 0;
+
+  const mainImg = document.getElementById('lmi');
+  if (mainImg) {
+    mainImg.src = laptopGalleryImages[0] || LAPTOP_FALLBACK_IMAGE;
+    mainImg.alt = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
+  }
+
+  const thumbsWrap = document.getElementById('laptopGalleryThumbs');
+  if (!thumbsWrap) return;
+  thumbsWrap.textContent = '';
+  if (laptopGalleryImages.length < 2) {
+    thumbsWrap.style.display = 'none';
+    return;
+  }
+  thumbsWrap.style.display = '';
+  laptopGalleryImages.forEach(function (url, i) {
+    const thumb = document.createElement('button');
+    thumb.type = 'button';
+    thumb.className = 'laptop-gallery-thumb' + (i === 0 ? ' active' : '');
+    thumb.setAttribute('data-laptop-gallery-idx', String(i));
+    thumb.setAttribute('aria-label', 'Görsel ' + (i + 1));
+    const thumbImg = document.createElement('img');
+    thumbImg.loading = 'lazy';
+    thumbImg.alt = '';
+    thumbImg.src = url;
+    thumb.appendChild(thumbImg);
+    thumbsWrap.appendChild(thumb);
+  });
+}
+
+// FAZ 5 DÜZELTME: Modal rozetleri - kartta (laptopCardMarkup) kullanılan
+// AYNI alanlar (deal/newArrival), AYNI BAĞIMSIZ mantık: ikisi de true ise
+// ikisi de aynı anda gösterilir (öncelik/if-else YOK). Sade emoji + kısa
+// metin, ekstra renk/animasyon yok, sadece var(--laptop-gold).
+function renderLaptopModalBadges(p) {
+  const wrap = document.getElementById('laptopModalBadges');
+  if (!wrap) return;
+  wrap.textContent = '';
+  if (!p) return;
+  if (p.deal) {
+    const badge = document.createElement('span');
+    badge.className = 'laptop-modal-badge';
+    badge.textContent = '🔥 Fırsat';
+    wrap.appendChild(badge);
+  }
+  if (p.newArrival) {
+    const badge = document.createElement('span');
+    badge.className = 'laptop-modal-badge';
+    badge.textContent = '🆕 Yeni Gelen';
+    wrap.appendChild(badge);
+  }
+}
+
+function renderLaptopModal(p) {
+  currentLaptopModalProduct = p;
+  renderLaptopGallery(p);
+  renderLaptopModalBadges(p);
+
+  const brandEl = document.getElementById('lmb');
+  const nameEl = document.getElementById('lmn');
+  if (brandEl) brandEl.textContent = p.brand || '';
+  if (nameEl) nameEl.textContent = p.model || '';
+
+  const priceEl = document.getElementById('lmp');
+  if (priceEl) priceEl.textContent = p.price === null ? "WhatsApp'tan Fiyat Sorunuz" : fmt(p.price) + ' TL';
+
+  const stockWarn = document.getElementById('laptopOutOfStockWarn');
+  if (stockWarn) stockWarn.style.display = p.stock === 'OUT' ? 'block' : 'none';
+
+  setLaptopModalRow('condition', p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '');
+  setLaptopModalRow('cpu', p.cpu);
+  setLaptopModalRow('cpugen', p.cpuGen);
+  setLaptopModalRow('ram', p.ramGB ? (p.ramGB + ' GB') : '');
+  setLaptopModalRow('ramtype', p.ramType);
+  setLaptopModalRow('ssd', p.ssdGB ? (p.ssdGB + ' GB') : '');
+  setLaptopModalRow('gpu', p.gpu);
+  setLaptopModalRow('vram', p.gpuVramGB ? (p.gpuVramGB + ' GB') : '');
+  setLaptopModalRow('tgp', p.gpuTgpW ? (p.gpuTgpW + ' W') : '');
+  setLaptopModalRow('screen', [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · '));
+  setLaptopModalRow('kb', p.kbLight);
+  setLaptopModalRow('cosmetic', p.cosmetic);
+  setLaptopModalRow('battery', p.batteryHealth);
+  setLaptopModalRow('warranty', p.warranty);
+  setLaptopModalRow('box', p.box);
+  setLaptopModalRow('invoice', p.invoice);
+  setLaptopModalRow('adapter', p.adapter);
+  setLaptopModalRow('ramup', p.ramUpgrade);
+  setLaptopModalRow('m2', p.m2Slot);
+  setLaptopModalRow('usage', p.usage);
+
+  const descEl = document.getElementById('lmDescription');
+  if (descEl) descEl.textContent = p.description || '';
+
+  const modal = document.getElementById('laptopModal');
+  if (!modal) return;
+  laptopLastFocusedTrigger = document.activeElement;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const closeBtn = document.getElementById('laptopModalCloseBtn');
+  if (closeBtn) closeBtn.focus();
+}
+
+function openLaptopProduct(i) {
+  const p = LaptopStore.products[i];
+  if (!p) return;
+  renderLaptopModal(p);
+  try {
+    const newUrl = location.pathname + location.search + '#laptop/' + laptopSlugOf(p);
+    history.pushState({ laptopSlug: laptopSlugOf(p) }, '', newUrl);
+  } catch (e) {}
+}
+
+// GÜVENLİK/TEKNİK DÜZELTME: kart HTML'inde artık inline onclick YOK -
+// data-laptop-index sadece GÜVENLİ bir sayısal index taşır (kullanıcı
+// verisi değil, LaptopStore.products.indexOf() sonucu). Gerçek açma
+// işlemi her zaman openLaptopProduct(i) üzerinden, index doğrulanarak
+// yapılır.
+function openLaptopProductFromCard(cardEl) {
+  if (!cardEl) return;
+  const idx = parseInt(cardEl.dataset.laptopIndex, 10);
+  if (Number.isFinite(idx)) openLaptopProduct(idx);
+}
+
+function closeLaptopProduct() {
+  const modal = document.getElementById('laptopModal');
+  if (modal) modal.classList.remove('open');
+  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  try {
+    if (location.hash.startsWith('#laptop/')) {
+      history.pushState({}, '', location.pathname + location.search);
+    }
+  } catch (e) {}
+  restoreLaptopFocus();
+}
+
+function maybeOpenLaptopFromHash() {
+  const hashMatch = location.hash.match(/^#laptop\/(.+)$/);
+  if (!hashMatch) return;
+  const idx = findLaptopBySlug(decodeURIComponent(hashMatch[1]));
+  if (idx > -1) renderLaptopModal(LaptopStore.products[idx]);
+}
+
+window.addEventListener('popstate', () => {
+  const hashMatch = location.hash.match(/^#laptop\/(.+)$/);
+  if (hashMatch && LaptopStore.products.length) {
+    const idx = findLaptopBySlug(decodeURIComponent(hashMatch[1]));
+    if (idx > -1) { renderLaptopModal(LaptopStore.products[idx]); return; }
+  }
+  const modal = document.getElementById('laptopModal');
+  if (modal) modal.classList.remove('open');
+  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+});
+
+// --- Mobil filtre drawer ---
+function openLaptopFilterDrawer() {
+  laptopLastFocusedTrigger = document.activeElement;
+  const panel = document.getElementById('laptopFilterPanel');
+  const backdrop = document.getElementById('laptopFilterBackdrop');
+  if (panel) panel.classList.add('open');
+  if (backdrop) backdrop.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const closeBtn = document.getElementById('laptopFilterCloseBtn');
+  if (closeBtn) closeBtn.focus();
+}
+function closeLaptopFilterDrawer() {
+  const panel = document.getElementById('laptopFilterPanel');
+  const backdrop = document.getElementById('laptopFilterBackdrop');
+  if (panel) panel.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  restoreLaptopFocus();
+}
+
+// --- WhatsApp: dinamik mesaj, mobil wa.me / masaüstü web.whatsapp.com,
+// window.open KULLANILMAZ (Faz 4/6 kuralı). ---
+function buildLaptopWaMessage(p) {
+  const parts = [p.brand, p.model].filter(Boolean).join(' ');
+  return 'Merhaba MİX GSM, katalogdan ' + parts + ' laptobu hakkında stok ve fiyat bilgisi almak istiyorum.';
+}
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+}
+function navigateToLaptopWhatsapp(message) {
+  const text = encodeURIComponent(message);
+  const url = isMobileDevice()
+    ? 'https://wa.me/905424818255?text=' + text
+    : 'https://web.whatsapp.com/send?phone=905424818255&text=' + text;
+  window.location.href = url;
+}
+
+// --- Focus Trap: laptop modalı, "Bana Laptop Bul" formu ve mobil filtre
+// drawer'ı için TEK, ortak bir Tab/Shift+Tab hapsi + Escape kapatma
+// mantığı. Telefonun kendi document keydown dinleyicisine (Escape ile
+// kendi modallerini kapatan) HİÇ DOKUNMUYOR - bu tamamen AYRI, yeni bir
+// keydown dinleyicisi. ---
+function getOpenLaptopFocusContainer() {
+  const modal = document.getElementById('laptopModal');
+  if (modal && modal.classList.contains('open')) return modal;
+  const finder = document.getElementById('laptopFinderModal');
+  if (finder && finder.classList.contains('open')) return finder;
+  const panel = document.getElementById('laptopFilterPanel');
+  if (panel && panel.classList.contains('open') && window.matchMedia('(max-width: 900px)').matches) return panel;
+  return null;
+}
+function laptopFocusableEls(container) {
+  return Array.from(container.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(el => el.offsetParent !== null || el === document.activeElement);
+}
+document.addEventListener('keydown', function (e) {
+  const container = getOpenLaptopFocusContainer();
+  if (!container) return;
+
+  if (e.key === 'Escape') {
+    if (container.id === 'laptopModal') closeLaptopProduct();
+    else if (container.id === 'laptopFinderModal') closeLaptopFinder();
+    else if (container.id === 'laptopFilterPanel') closeLaptopFilterDrawer();
+    return;
+  }
+
+  if (e.key !== 'Tab') return;
+  const focusables = laptopFocusableEls(container);
+  if (!focusables.length) { e.preventDefault(); return; }
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault(); last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus();
+  } else if (!container.contains(document.activeElement)) {
+    e.preventDefault(); first.focus();
+  }
+});
+
+// --- "Bana Laptop Bul" formu: sessionStorage taslağı (versioned key),
+// validasyon, 3sn buton cooldown (WhatsApp yönlendirmesini GECİKTİRMEZ),
+// dinamik WhatsApp mesajı. ---
+const LAPTOP_FORM_DRAFT_KEY = 'mixgsm-laptop-form-draft-v1';
+const LAPTOP_FORM_FIELD_IDS = ['lfBudget', 'lfUsage', 'lfCondition', 'lfName', 'lfPhone', 'lfScreen', 'lfPriority', 'lfBrand', 'lfNote'];
+
+function saveLaptopFormDraft() {
+  try {
+    const draft = {};
+    LAPTOP_FORM_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) draft[id] = el.value;
+    });
+    sessionStorage.setItem(LAPTOP_FORM_DRAFT_KEY, JSON.stringify(draft));
+  } catch (e) { /* sessionStorage yok/dolu/gizli mod - sessizce yoksay */ }
+}
+function restoreLaptopFormDraft() {
+  try {
+    const raw = sessionStorage.getItem(LAPTOP_FORM_DRAFT_KEY);
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    LAPTOP_FORM_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && typeof draft[id] === 'string') el.value = draft[id];
+    });
+  } catch (e) { /* bozuk taslak - yoksay */ }
+}
+function clearLaptopFormDraft() {
+  try { sessionStorage.removeItem(LAPTOP_FORM_DRAFT_KEY); } catch (e) {}
+}
+
+function openLaptopFinder() {
+  laptopLastFocusedTrigger = document.activeElement;
+  restoreLaptopFormDraft();
+  const modal = document.getElementById('laptopFinderModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const firstField = document.getElementById('lfBudget');
+  if (firstField) firstField.focus();
+}
+function closeLaptopFinder() {
+  const modal = document.getElementById('laptopFinderModal');
+  if (modal) modal.classList.remove('open');
+  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  restoreLaptopFocus();
+}
+
+function validateLaptopFinderForm() {
+  let valid = true;
+  const checks = [
+    ['lfBudget', v => v.trim() !== '' && Number(v) > 0, 'lfBudgetError', 'Lütfen geçerli bir bütçe girin.'],
+    ['lfUsage', v => v.trim() !== '', 'lfUsageError', 'Lütfen kullanım amacını seçin.'],
+    ['lfCondition', v => v.trim() !== '', 'lfConditionError', 'Lütfen durum tercihini seçin.'],
+    ['lfName', v => v.trim().length >= 2, 'lfNameError', 'Lütfen adınızı ve soyadınızı girin.'],
+    ['lfPhone', v => /^[0-9+\s()-]{10,}$/.test(v.trim()), 'lfPhoneError', 'Lütfen geçerli bir WhatsApp numarası girin.']
+  ];
+  checks.forEach(check => {
+    const id = check[0], test = check[1], errId = check[2], msg = check[3];
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(errId);
+    const row = el ? el.closest('.laptop-form-row') : null;
+    const ok = el ? test(el.value) : false;
+    if (!ok) {
+      valid = false;
+      if (row) row.classList.add('invalid');
+      if (errEl) errEl.textContent = msg;
+    } else {
+      if (row) row.classList.remove('invalid');
+      if (errEl) errEl.textContent = '';
+    }
+  });
+  return valid;
+}
+
+function buildLaptopFinderWaMessage(data) {
+  const lines = [
+    'Merhaba MİX GSM, "Bana Laptop Bul" formunu doldurdum:',
+    'Bütçe: ' + data.budget + ' TL',
+    'Kullanım Amacı: ' + data.usage,
+    'Durum Tercihi: ' + data.condition,
+    'Ad Soyad: ' + data.name,
+    'WhatsApp: ' + data.phone
+  ];
+  if (data.screen) lines.push('Ekran Boyutu: ' + data.screen);
+  if (data.priority) lines.push('Öncelik: ' + data.priority);
+  if (data.brand) lines.push('Marka Tercihi: ' + data.brand);
+  if (data.note) lines.push('Not: ' + data.note);
+  return lines.join('\n');
+}
+
+const LAPTOP_FORM_COOLDOWN_MS = 3000;
+
+function handleLaptopFinderSubmit(e) {
+  e.preventDefault();
+  if (!validateLaptopFinderForm()) return;
+
+  const data = {
+    budget: document.getElementById('lfBudget').value.trim(),
+    usage: document.getElementById('lfUsage').value,
+    condition: document.getElementById('lfCondition').value,
+    name: document.getElementById('lfName').value.trim(),
+    phone: document.getElementById('lfPhone').value.trim(),
+    screen: document.getElementById('lfScreen').value,
+    priority: document.getElementById('lfPriority').value,
+    brand: document.getElementById('lfBrand').value,
+    note: document.getElementById('lfNote').value.trim()
+  };
+
+  // KURAL: cooldown SADECE gönder butonunu geçici olarak devre dışı
+  // bırakır (çift gönderimi önlemek için) - WhatsApp yönlendirmesini
+  // ASLA geciktirmez; navigasyon hemen aşağıda, senkron olarak yapılıyor.
+  const submitBtn = document.getElementById('laptopFinderSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Gönderiliyor...';
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }, LAPTOP_FORM_COOLDOWN_MS);
+  }
+
+  clearLaptopFormDraft();
+  navigateToLaptopWhatsapp(buildLaptopFinderWaMessage(data));
+}
+
+// --- Statik laptop UI elemanlarına event bağlama (telefonun
+// bindStaticEventListeners() IIFE'sine PARALEL ama TAMAMEN AYRI bir
+// blok - o fonksiyona hiçbir satır eklenmedi/değiştirilmedi). ---
+(function bindLaptopStaticEventListeners() {
+  // TEKNİK DÜZELTME: laptop kartları artık inline onclick/onkeydown
+  // İÇERMİYOR. #laptopGrid HİÇBİR ZAMAN yeniden oluşturulmuyor (sadece
+  // .innerHTML'i renderLaptopCatalog() her çağrıldığında değişiyor) -
+  // bu yüzden delegation listener'ları burada, script bir kez
+  // çalıştığında, TEK SEFER bağlanıyor. renderLaptopCatalog() ne kadar
+  // çok çağrılırsa çağrılsın yeni bir listener EKLENMİYOR/register
+  // edilmiyor - kartların üstündeki tek, sabit #laptopGrid dinliyor.
+  const laptopGridEl = document.getElementById('laptopGrid');
+  if (laptopGridEl) {
+    laptopGridEl.addEventListener('click', e => {
+      const card = e.target.closest('.laptop-card');
+      if (card && laptopGridEl.contains(card)) openLaptopProductFromCard(card);
+    });
+    laptopGridEl.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      const card = e.target.closest('.laptop-card');
+      if (!card || !laptopGridEl.contains(card)) return;
+      e.preventDefault();
+      openLaptopProductFromCard(card);
+    });
+  }
+
+  // FAZ 5 DÜZELTME: Laptop görsellerinde (kart, modal ana görsel, galeri
+  // thumbnail'leri) HİÇBİR inline onerror="" veya img.onerror = fn ataması
+  // YOK. 'error' event'i bubble ETMEZ, bu yüzden document üzerinde CAPTURE
+  // fazında (üçüncü parametre true), TEK SEFER bağlanan tek bir delegated
+  // listener kullanılıyor - render sayısından bağımsız, yeni görsel DOM'a
+  // her eklendiğinde otomatik çalışır, ekstra listener gerekmez. src zaten
+  // fallback görseline eşitse tekrar işlenmez (sonsuz döngü koruması).
+  document.addEventListener('error', function (e) {
+    const t = e.target;
+    if (!t || t.tagName !== 'IMG') return;
+    if (t.src === LAPTOP_FALLBACK_IMAGE) return;
+    const inLaptopCard = t.closest && t.closest('#laptopGrid .laptop-card');
+    const isModalMainImg = t.id === 'lmi';
+    const inGalleryThumbs = t.closest && t.closest('#laptopGalleryThumbs');
+    if (inLaptopCard || isModalMainImg || inGalleryThumbs) laptopImageOnError(t);
+  }, true);
+
+  const laptopQInput = document.getElementById('laptopQ');
+  if (laptopQInput) {
+    let laptopSearchDebounce = null;
+    laptopQInput.addEventListener('input', e => {
+      laptopQ = e.target.value.trim();
+      clearTimeout(laptopSearchDebounce);
+      laptopSearchDebounce = setTimeout(renderLaptopCatalog, 300);
+    });
+  }
+
+  const laptopSortSelect = document.getElementById('laptopSort');
+  if (laptopSortSelect) laptopSortSelect.addEventListener('change', e => { laptopSort = e.target.value; renderLaptopCatalog(); });
+
+  document.querySelectorAll('#laptopConditionGroup button').forEach(b => {
+    b.addEventListener('click', () => {
+      LaptopFilters.condition = b.dataset.condition;
+      document.querySelectorAll('#laptopConditionGroup button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderLaptopCatalog();
+    });
+  });
+
+  const priceMinInput = document.getElementById('laptopPriceMinInput');
+  if (priceMinInput) priceMinInput.addEventListener('input', e => {
+    const v = e.target.value.trim();
+    LaptopFilters.priceMin = v === '' ? null : Math.max(0, parseInt(v, 10) || 0);
+    renderLaptopCatalog();
+  });
+  const priceMaxInput = document.getElementById('laptopPriceMaxInput');
+  if (priceMaxInput) priceMaxInput.addEventListener('input', e => {
+    const v = e.target.value.trim();
+    LaptopFilters.priceMax = v === '' ? null : Math.max(0, parseInt(v, 10) || 0);
+    renderLaptopCatalog();
+  });
+
+  const clearBtn = document.getElementById('laptopFilterClearBtn');
+  if (clearBtn) clearBtn.addEventListener('click', resetLaptopFilters);
+
+  const filterToggleBtn = document.getElementById('laptopFilterToggleBtn');
+  if (filterToggleBtn) filterToggleBtn.addEventListener('click', openLaptopFilterDrawer);
+  const filterCloseBtn = document.getElementById('laptopFilterCloseBtn');
+  if (filterCloseBtn) filterCloseBtn.addEventListener('click', closeLaptopFilterDrawer);
+  const filterBackdrop = document.getElementById('laptopFilterBackdrop');
+  if (filterBackdrop) filterBackdrop.addEventListener('click', closeLaptopFilterDrawer);
+
+  const modalCloseBtn = document.getElementById('laptopModalCloseBtn');
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeLaptopProduct);
+  const laptopModalEl = document.getElementById('laptopModal');
+  if (laptopModalEl) laptopModalEl.addEventListener('click', e => { if (e.target.id === 'laptopModal') closeLaptopProduct(); });
+  const modalWaBtn = document.getElementById('laptopModalWaBtn');
+  if (modalWaBtn) modalWaBtn.addEventListener('click', () => {
+    if (currentLaptopModalProduct) navigateToLaptopWhatsapp(buildLaptopWaMessage(currentLaptopModalProduct));
+  });
+
+  const findBtn = document.getElementById('laptopFindBtn');
+  if (findBtn) findBtn.addEventListener('click', openLaptopFinder);
+  const stockBtn = document.getElementById('laptopStockBtn');
+  if (stockBtn) stockBtn.addEventListener('click', () => {
+    const target = document.getElementById('laptopCatalogTitle');
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+  const finderCloseBtn = document.getElementById('laptopFinderCloseBtn');
+  if (finderCloseBtn) finderCloseBtn.addEventListener('click', closeLaptopFinder);
+  const finderModalEl = document.getElementById('laptopFinderModal');
+  if (finderModalEl) finderModalEl.addEventListener('click', e => { if (e.target.id === 'laptopFinderModal') closeLaptopFinder(); });
+
+  const finderForm = document.getElementById('laptopFinderForm');
+  if (finderForm) {
+    finderForm.addEventListener('submit', handleLaptopFinderSubmit);
+    LAPTOP_FORM_FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', saveLaptopFormDraft);
+    });
+    document.querySelectorAll('#laptopFinderForm select').forEach(el => el.addEventListener('change', saveLaptopFormDraft));
+  }
+
+  // FAZ 5: Galeri küçük resimleri - #laptopGalleryThumbs SABİT bir
+  // konteyner; renderLaptopGallery() her modal açılışında yalnızca
+  // İÇERİĞİNİ (thumbnail düğmelerini) yeniden yazıyor, konteynerin
+  // kendisi asla yeniden oluşturulmuyor. Bu yüzden tıklama delegation'ı
+  // burada, script bir kez çalıştığında, TEK SEFER bağlanıyor - yeni
+  // thumbnail'ler eklendiğinde ekstra listener gerekmez.
+  const galleryThumbsEl = document.getElementById('laptopGalleryThumbs');
+  if (galleryThumbsEl) {
+    galleryThumbsEl.addEventListener('click', e => {
+      const thumb = e.target.closest('.laptop-gallery-thumb');
+      if (!thumb || !galleryThumbsEl.contains(thumb)) return;
+      const idx = parseInt(thumb.getAttribute('data-laptop-gallery-idx'), 10);
+      if (!isNaN(idx)) setLaptopGalleryImage(idx);
+    });
+  }
+
+  // FAZ 5: Mobil kaydırma (swipe) - .laptop-gallery-main de SABİT bir
+  // element (modal HTML'i statik), touch listener'ları TEK SEFER
+  // bağlanıyor. Basit yatay swipe: sola kaydır -> sonraki, sağa kaydır
+  // -> önceki, döngüsel (wraparound). Tek görselli ürünlerde (bugünkü
+  // Sheet durumu) laptopGalleryImages.length < 2 olduğu için hiçbir şey
+  // yapmaz.
+  const galleryMainEl = document.getElementById('laptopGalleryMain');
+  if (galleryMainEl) {
+    let laptopTouchStartX = null;
+    let laptopTouchStartY = null;
+    galleryMainEl.addEventListener('touchstart', e => {
+      if (!e.touches || e.touches.length !== 1) return;
+      laptopTouchStartX = e.touches[0].clientX;
+      laptopTouchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    galleryMainEl.addEventListener('touchend', e => {
+      if (laptopTouchStartX === null || !e.changedTouches || e.changedTouches.length !== 1) return;
+      const dx = e.changedTouches[0].clientX - laptopTouchStartX;
+      const dy = e.changedTouches[0].clientY - laptopTouchStartY;
+      laptopTouchStartX = null;
+      laptopTouchStartY = null;
+      if (laptopGalleryImages.length < 2) return;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      setLaptopGalleryImage(laptopGalleryIndex + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+  }
+})();
+
+// (1) same-origin catalog-laptop.json dener.
+async function loadLaptopCatalogFromSameOrigin() {
+  return withTimeout(async (signal) => {
+    const res = await fetch('catalog-laptop.json?t=' + Date.now(), { cache: 'no-store', signal });
+    if (!res.ok) throw new Error('catalog-laptop.json yok/erişilemedi (HTTP ' + res.status + ')');
+    return res.json();
+  }, 5000);
+}
+
+// (2) same-origin başarısızsa ve gerçek bir Public Sheet bağlıysa, dogrudan
+// Sheet TSV'sini dener (telefonun 9sn+6sn iki-deneme desenini tekrarlar).
+async function fetchLaptopTsvOnce(timeoutMs) {
+  return withTimeout(async (signal) => {
+    const res = await fetch(LAPTOP_SHEET_CONFIG.url + '&t=' + Date.now(), { cache: 'no-store', signal });
+    if (!res.ok) throw new Error('Laptop Sheet\'e ulaşılamadı.');
+    return res.text();
+  }, timeoutMs);
+}
+
+function parseLaptopTsvToProducts(tsv) {
+  // scripts/generate-catalog-laptop.js içindeki parseTsvToLaptopProducts()
+  // ile BİREBİR AYNI sütun sırası/kurallar (bkz. o dosyadaki yorum).
+  const lines = tsv.split('\n');
+  const products = [];
+  const startIndex = lines[0] && normalizeTR(lines[0]).includes('id') ? 1 : 0;
+
+  const parseCondition = (raw) => {
+    const n = normalizeTR(raw);
+    if (!n) return null;
+    if (n.includes('sifir')) return 'NEW';
+    if (n.includes('2 el') || n.includes('ikinci el') || n.includes('ikincisi')) return 'USED';
+    return null;
+  };
+  const parseLaptopStock = (raw) => {
+    const words = normalizeTR(raw).split(/\s+/);
+    if (words.some(w => ['sor', 'sorunuz', 'soru'].includes(w))) return 'ASK';
+    if (words.some(w => ['var', 'stokta', 'mevcut', 'evet'].includes(w)) &&
+        !words.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w))) return 'IN';
+    return 'OUT';
+  };
+  const parseBoolFlag = (raw) => {
+    const n = normalizeTR(raw);
+    return n.includes('evet') || n.includes('var') || n === 'true';
+  };
+  const parseLaptopPrice = (raw) => {
+    const rawPrice = String(raw || '');
+    const isNegative = /^\s*-/.test(rawPrice);
+    const cleaned = rawPrice.replace(/[,.]\d{1,2}(?!\d)/g, '').replace(/[^0-9]/g, '');
+    const parsed = cleaned ? parseInt(cleaned, 10) : NaN;
+    return (!isNegative && Number.isFinite(parsed) && parsed >= 1000 && parsed <= 500000) ? parsed : null;
+  };
+
+  for (let i = startIndex; i < lines.length; i++) {
+    if (!lines[i] || !lines[i].trim()) continue;
+    const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
+    const brand = (cols[2] || '').toUpperCase();
+    const model = (cols[3] || '').toUpperCase();
+    if (!brand && !model) continue;
+
+    products.push({
+      id: cols[0] || '', condition: parseCondition(cols[1]),
+      brand, model,
+      cpu: cols[4] || '', cpuGen: cols[5] || '',
+      ramGB: cols[6] || '', ramType: cols[7] || '',
+      ssdGB: cols[8] || '',
+      gpu: cols[9] || '', gpuVramGB: cols[10] || '', gpuTgpW: cols[11] || '',
+      screen: cols[12] || '', hz: cols[13] || '',
+      kbLight: cols[14] || '', cosmetic: cols[15] || '', batteryHealth: cols[16] || '',
+      warranty: cols[17] || '', box: cols[18] || '', invoice: cols[19] || '', adapter: cols[20] || '',
+      ramUpgrade: cols[21] || '', m2Slot: cols[22] || '',
+      usage: cols[23] || '',
+      price: parseLaptopPrice(cols[24]),
+      deal: parseBoolFlag(cols[25]), newArrival: parseBoolFlag(cols[26]),
+      stock: parseLaptopStock(cols[27]),
+      saleDate: cols[28] || '', description: cols[29] || '',
+      // Sheet'te ALTI ayrı "Fotoğraf 1".."Fotoğraf 6" sütunu var (30-35),
+      // TEK sütun değil. Her biri bağımsız normalize edilir; boş/eksik
+      // olanlar normalizeLaptopGithubImageUrl() tarafından '' döner ve
+      // laptopImagesOf() bunları otomatik atlar.
+      img: normalizeLaptopGithubImageUrl(cols[30] || ''),
+      img2: normalizeLaptopGithubImageUrl(cols[31] || ''),
+      img3: normalizeLaptopGithubImageUrl(cols[32] || ''),
+      img4: normalizeLaptopGithubImageUrl(cols[33] || ''),
+      img5: normalizeLaptopGithubImageUrl(cols[34] || ''),
+      img6: normalizeLaptopGithubImageUrl(cols[35] || '')
+    });
+  }
+  return products;
+}
+
+// Ana giriş noktası: same-origin -> (same-origin boş VE Sheet bağlıysa
+// KESİNLİKLE) Sheet TSV -> cache (TTL'ye göre mesaj farklılaşır) ->
+// "hazırlanıyor"/hata bilgi notu.
+//
+// FAZ 3 DÜZELTME (KRİTİK BUG FIX): Bu fonksiyonun önceki sürümünde,
+// same-origin catalog-laptop.json BAŞARIYLA okunup 0 ürün döndürdüğünde,
+// Public Laptop Sheet gerçek bir URL ile yapılandırılmış olsa BİLE
+// fonksiyon hemen "hazırlanıyor" notuyla return ediyordu - yani Sheet
+// fallback'i hiç denenmiyordu. Artık davranış şu: same-origin boş
+// geldiğinde ÖNCE isLaptopSheetConfigured() kontrol edilir. Sheet
+// yapılandırılmışsa KESİNLİKLE return edilmez, doğrudan aşağıdaki Sheet
+// TSV fallback'ine geçilir. "Hazırlanıyor" notu SADECE Sheet gerçekten
+// henüz yapılandırılmamışsa (placeholder URL) gösterilir.
+async function loadLaptopCatalog() {
+  if (LaptopStore.loading) return;
+  LaptopStore.loading = true;
+  LaptopStore.error = null;
+  setLaptopHeroNote('Laptop kataloğu yükleniyor…');
+  renderLaptopSkeleton();
+
+  function finishLaptopLoad() {
+    LaptopStore.loading = false;
+    setLaptopGridAriaBusy(false);
+  }
+
+  // (1) same-origin catalog-laptop.json dener.
+  try {
+    const sameOrigin = await loadLaptopCatalogFromSameOrigin();
+    if (Array.isArray(sameOrigin.products) && sameOrigin.products.length) {
+      LaptopStore.products = sameOrigin.products;
+      LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
+      saveLaptopCatalogCache(LaptopStore.products);
+      setLaptopHeroNote(LaptopStore.products.length + ' laptop bulundu.');
+      onLaptopDataReady();
+      finishLaptopLoad();
+      return;
+    }
+    // Same-origin BAŞARILI ama BOŞ geldi.
+    if (!isLaptopSheetConfigured()) {
+      // Sheet gerçekten henüz bağlanmadı -> bu gerçek bir "hazırlanıyor"
+      // durumu, hata değil. Burada sakin şekilde bitirilir.
+      LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
+      setLaptopHeroNote('Laptop kataloğu hazırlanıyor, çok yakında burada olacak.');
+      renderLaptopEmptyState('Laptop kataloğu hazırlanıyor, çok yakında burada olacak.');
+      finishLaptopLoad();
+      return;
+    }
+    // Sheet yapılandırılmış -> KESİNLİKLE return etme, aşağıdaki Sheet TSV
+    // fallback'ine düş (kod akışı doğal olarak devam eder).
+  } catch (sameOriginErr) {
+    // same-origin dosyaya hiç ulaşılamadı (yok/bozuk) - asıl fallback zincirine geç.
+  }
+
+  // (2) same-origin boş (Sheet yapılandırılmışken) VEYA same-origin'e hiç
+  // ulaşılamadı -> Public Laptop Sheet TSV fallback'i (9sn + 6sn iki deneme,
+  // telefon tarafındaki desenin aynısı).
+  if (isLaptopSheetConfigured()) {
+    try {
+      let tsv;
+      try {
+        tsv = await fetchLaptopTsvOnce(9000);
+      } catch (firstErr) {
+        tsv = await fetchLaptopTsvOnce(6000);
+      }
+      LaptopStore.products = parseLaptopTsvToProducts(tsv);
+      LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
+      saveLaptopCatalogCache(LaptopStore.products);
+      if (LaptopStore.products.length) {
+        setLaptopHeroNote(LaptopStore.products.length + ' laptop bulundu.');
+      } else {
+        setLaptopHeroNote('Laptop kataloğu hazırlanıyor, çok yakında burada olacak.');
+      }
+      onLaptopDataReady();
+      finishLaptopLoad();
+      return;
+    } catch (sheetErr) {
+      LaptopStore.error = sheetErr;
+      // aşağıdaki cache fallback'ine düş
+    }
+  }
+
+  // (3) localStorage cache (TTL'ye göre mesaj farklılaşır).
+  const cached = loadLaptopCatalogCache();
+  if (cached) {
+    LaptopStore.products = cached.products;
+    LaptopStore.loaded = true; LaptopStore.usingCache = true;
+    const cacheMsg = cached.isStale
+      ? 'Bağlantı sorunu - önbellekteki laptop verisi (1 saatten eski) gösteriliyor, WhatsApp\'tan teyit alabilirsiniz.'
+      : 'Bağlantı sorunu - son başarılı laptop verisi gösteriliyor.';
+    setLaptopHeroNote(cacheMsg);
+    onLaptopDataReady();
+    finishLaptopLoad();
+    return;
+  }
+
+  // (4) hiçbir kaynak yok (same-origin de, Sheet de, cache de başarısız) ->
+  // final hata durumu. Skeleton burada da kaldırılır, sonsuza dek kalmaz.
+  LaptopStore.loaded = false;
+  setLaptopHeroNote('Laptop kataloğu şu anda güncellenemiyor. Güncel bilgi için WhatsApp\'tan bize ulaşabilirsiniz.');
+  renderLaptopErrorState('Laptop kataloğu şu anda yüklenemedi. Güncel bilgi için WhatsApp\'tan bize ulaşabilirsiniz.');
+  finishLaptopLoad();
+}
+// ================================================================
+// FAZ 2 — STOREFRONT TOGGLE (Telefon & Kişisel Bakım <-> Laptop & PC)
+// Bu blok TAMAMEN İZOLE: products/cat/group/q/sort/ramFilter/favs/
+// compareList gibi hiçbir mevcut telefon state değişkenine dokunmaz,
+// hiçbirini okumaz/yazmaz. Sadece iki DOM bölümünün görünürlüğünü ve
+// erişilebilirlik (hidden/aria-hidden/inert) durumunu yönetir. Laptop
+// tarafının kendi state'i (arama/filtre/sıralama/katalog) Faz 4-6'da
+// bu bloktan bağımsız olarak eklenecek.
+// ================================================================
+(function initStorefrontToggle() {
+  const phoneSection = document.getElementById('phone-section');
+  const laptopSection = document.getElementById('laptop-section');
+  const btnPhone = document.getElementById('toggleBtnPhone');
+  const btnLaptop = document.getElementById('toggleBtnLaptop');
+  if (!phoneSection || !laptopSection || !btnPhone || !btnLaptop) return;
+
+  let laptopLoadStarted = false;
+
+  function setSectionVisibility(el, visible) {
+    if (visible) {
+      el.hidden = false;
+      el.removeAttribute('aria-hidden');
+      el.removeAttribute('inert');
+    } else {
+      el.hidden = true;
+      el.setAttribute('aria-hidden', 'true');
+      el.setAttribute('inert', '');
+    }
+  }
+
+  function activateStorefront(name) {
+    const showLaptop = name === 'laptop';
+    setSectionVisibility(phoneSection, !showLaptop);
+    setSectionVisibility(laptopSection, showLaptop);
+    btnPhone.classList.toggle('active', !showLaptop);
+    btnLaptop.classList.toggle('active', showLaptop);
+    btnPhone.setAttribute('aria-selected', String(!showLaptop));
+    btnLaptop.setAttribute('aria-selected', String(showLaptop));
+
+    // FAZ 3: laptop verisini İLK kez laptop'a geçildiğinde, tembel (lazy)
+    // olarak yükle - telefon ziyaretçileri için gereksiz ağ isteği yok.
+    if (showLaptop && !laptopLoadStarted) {
+      laptopLoadStarted = true;
+      loadLaptopCatalog();
+    }
+  }
+
+  btnPhone.addEventListener('click', () => activateStorefront('phone'));
+  btnLaptop.addEventListener('click', () => activateStorefront('laptop'));
+
+  // FAZ 4: sayfa doğrudan bir #laptop/slug derin linkiyle açıldıysa,
+  // kullanıcı toggle'a tıklamadan laptop storefront'unu otomatik aktif et
+  // (aksi halde laptop-section hidden+inert kalır ve link hiçbir şey
+  // açmaz). Telefon tarafının #urun/slug davranışına dokunmuyor.
+  if (location.hash.indexOf('#laptop/') === 0) {
+    activateStorefront('laptop');
+  }
 })();
 </script>
 </body>
