@@ -647,8 +647,37 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-modalwa .icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; }
 
 @media (max-width: 720px) {
-  #laptop-section .laptop-modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; max-height: 92vh; width: 100%; margin: 0; }
+  /* NOT: "bottom: 0" BILEREK KALDIRILDI. top+bottom birlikte position:fixed
+     bir kutuya KESIN (definite) bir yukseklik dayatiyordu (100vh - 8vh);
+     bu durumda, kutunun ic grid satirlarinin toplam dogal yuksekligi bu
+     kesin yukseklikten fazla oldugunda (urun gorseli + galeri + spec
+     tablosu ile neredeyse her zaman fazla oluyor), tarayici gorsel
+     satirini kendi min-height degerine (240px) kadar SIKISTIRIYOR - bu da
+     gorselin/thumbnail'lerin alttaki bilgi paneliyle ust uste binmesine
+     (Ekran görüntüsünde dogrulandi) sebep oluyordu. top + max-height
+     (bottom OLMADAN) kutuya "icerige gore buyu, en fazla 92vh'ye kadar"
+     davranisi kazandiriyor - gercek urun verisiyle (~20 spec satiri)
+     icerik zaten 92vh'yi asiyor, o yuzden gorsel sonuc (ekranin altina
+     kadar uzanan sheet) AYNI kaliyor, ama ic satirlar artik dogru
+     olculuyor. */
+  #laptop-section .laptop-modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; top: 8vh; max-height: 92vh; width: 100%; margin: 0; }
   #laptop-section .laptop-modal { padding: 0; align-items: flex-end; }
+  /* MOBIL DUZELTME: grid/flex ogeleri varsayilan olarak min-width:auto
+     kullanir, yani icerik (buyuk urun gorseli / genis tablo) konteyneri
+     ekran genisliginden daha genis olmaya zorlayabilir - max-width:100%
+     zaten var olan kurallar bunu ENGELLEYEMEZ cunku konteynerin kendisi
+     onceden gereginden genis hesaplanir. min-width:0 bu zorlamayi
+     kaldirir, boylece mevcut max-width/object-fit kurallari gercekten
+     ekran genisligine gore calisir. Sadece mobil breakpoint icinde -
+     desktop'taki 2 sutunlu grid duzeni etkilenmez. */
+  #laptop-section .laptop-modalvisual,
+  #laptop-section .laptop-modalinfo,
+  #laptop-section .laptop-gallery-main { min-width: 0; }
+  /* Tablo genislik hesaplamasi (table-layout: auto) varsayilan olarak
+     uzun/kirilmasiz metne gore genisler; fixed + break-word bunu
+     ekran genisligiyle sinirlar ve gerektiginde satir ici kirar. */
+  #laptop-section .laptop-spec-table { table-layout: fixed; }
+  #laptop-section .laptop-spec-table td { word-break: break-word; overflow-wrap: anywhere; }
 }
 
 /* --- "Bana Laptop Bul" formu --- */
@@ -4216,8 +4245,8 @@ function parseLaptopTsvToProducts(tsv) {
   const parseLaptopStock = (raw) => {
     const words = normalizeTR(raw).split(/\s+/);
     if (words.some(w => ['sor', 'sorunuz', 'soru'].includes(w))) return 'ASK';
-    if (words.some(w => ['var', 'stokta', 'mevcut', 'evet'].includes(w)) &&
-        !words.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil'].includes(w))) return 'IN';
+    if (words.some(w => ['var', 'stokta', 'mevcut', 'evet', 'aktif'].includes(w)) &&
+        !words.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil', 'satildi'].includes(w))) return 'IN';
     return 'OUT';
   };
   const parseBoolFlag = (raw) => {

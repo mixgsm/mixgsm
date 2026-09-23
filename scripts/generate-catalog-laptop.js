@@ -103,8 +103,8 @@ function parseStock(raw) {
   const words = normalizeTR(raw).split(/\s+/);
   if (words.some((w) => ["sor", "sorunuz", "soru"].includes(w))) return "ASK";
   if (
-    words.some((w) => ["var", "stokta", "mevcut", "evet"].includes(w)) &&
-    !words.some((w) => ["yok", "tukendi", "0", "hayir", "false", "degil"].includes(w))
+    words.some((w) => ["var", "stokta", "mevcut", "evet", "aktif"].includes(w)) &&
+    !words.some((w) => ["yok", "tukendi", "0", "hayir", "false", "degil", "satildi"].includes(w))
   ) {
     return "IN";
   }
