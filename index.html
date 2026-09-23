@@ -92,6 +92,23 @@
   --text-invert: #0a0a0a;
   --nav-h: 60px;
   --bottomnav-h: 60px;
+  /* Z-INDEX KATMANLARI: mevcut sayisal degerler AYNEN korunarak
+     adlandirildi (gorsel/stacking davranisinda hicbir degisiklik yok,
+     sadece bakim kolayligi icin isimlendirme). Kucukten buyuge: */
+  --z-inline: 1;
+  --z-badge: 2;
+  --z-modal-control: 4;
+  --z-navbar: 100;
+  --z-comparebar: 120;
+  --z-comparetray: 121;
+  --z-bottom-nav: 140;
+  --z-wa-float: 150;
+  --z-drawer-backdrop: 199;
+  --z-drawer-panel: 200;
+  --z-modal: 300;
+  --z-compare-modal: 310;
+  --z-lightbox: 400;
+  --z-toast: 500;
 }
 /* TEMA: Light Mode - mevcut Dark Mode'un aydınlık versiyonu. Layout,
    spacing, radius, typography vb. HİÇBİR ŞEY değişmiyor; sadece bu
@@ -118,7 +135,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 }
 
 /* Navbar */
-.navbar { position: sticky; top: 0; z-index: 100; height: var(--nav-h); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+.navbar { position: sticky; top: 0; z-index: var(--z-navbar); height: var(--nav-h); background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
 .nav-brand { font-weight: 600; font-size: 16px; color: var(--text); letter-spacing: -0.2px; display: flex; align-items: center; gap: 8px; }
 .nav-brand img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 .nav-links { display: flex; gap: 24px; font-size: 13px; font-weight: 500; color: var(--muted); }
@@ -157,7 +174,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 :root[data-theme="light"] .btn-whatsapp { color: #0C7A40; }
 .hero-visual { position: relative; aspect-ratio: 1 / 1; max-height: 420px; display: flex; align-items: center; justify-content: center; border-radius: 24px; background: radial-gradient(circle at 50% 40%, var(--surface) 0%, var(--bg) 72%); overflow: hidden; }
 .hero-visual::after { content: ""; position: absolute; left: 50%; bottom: 6%; width: 55%; height: 14%; background: rgba(230,57,70,0.16); filter: blur(38px); border-radius: 50%; }
-.hero-visual img { position: relative; z-index: 1; max-width: 78%; max-height: 88%; object-fit: contain; filter: drop-shadow(0 24px 30px rgba(0,0,0,0.55)); }
+.hero-visual img { position: relative; z-index: var(--z-inline); max-width: 78%; max-height: 88%; object-fit: contain; filter: drop-shadow(0 24px 30px rgba(0,0,0,0.55)); }
 .hero-visual .hero-visual-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
 @media(min-width: 900px) {
   .hero { grid-template-columns: 1.05fr 1fr; grid-template-areas: "copy visual" "actions visual"; gap: 20px 48px; padding: 64px 40px 80px; }
@@ -231,10 +248,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .adv-select { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; color: var(--text); padding: 9px 10px; font-size: 13px; }
 .adv-clear { align-self: flex-start; background: transparent; border: 0; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 0; }
 
-.filter-drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 199; display: none; }
+.filter-drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: var(--z-drawer-backdrop); display: none; }
 .filter-drawer-backdrop.open { display: block; }
 @media(max-width: 900px) {
-  .filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: 200; transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
+  .filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
   .filter-panel.open { transform: translateY(0); }
   .filter-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .filter-panel-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
@@ -260,12 +277,12 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .visual { height: 260px; position: relative; background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 22px; }
 .visual img { max-width: 100%; max-height: 210px; object-fit: contain; transition: transform .25s; }
 .card:hover .visual img { transform: scale(1.03); }
-.stock { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); font-size: 10.5px; font-weight: 500; padding: 5px 9px; border-radius: 7px; z-index: 2; white-space: nowrap; }
+.stock { position: absolute; right: 12px; top: 12px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); font-size: 10.5px; font-weight: 500; padding: 5px 9px; border-radius: 7px; z-index: var(--z-badge); white-space: nowrap; }
 .stock.no { background: rgba(230,57,70,0.12); color: var(--accent); }
 .stock.ask { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); }
-.tagbadge { position: absolute; left: 12px; bottom: 12px; font-size: 10.5px; font-weight: 500; padding: 5px 9px; border-radius: 7px; z-index: 2; background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; gap: 4px; }
+.tagbadge { position: absolute; left: 12px; bottom: 12px; font-size: 10.5px; font-weight: 500; padding: 5px 9px; border-radius: 7px; z-index: var(--z-badge); background: color-mix(in srgb, var(--text) 9%, transparent); color: var(--text); max-width: calc(100% - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; gap: 4px; }
 .tagbadge svg.icon { font-size: 11px; }
-.fav { position: absolute; left: 12px; top: 12px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter: blur(6px); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.fav { position: absolute; left: 12px; top: 12px; z-index: var(--z-badge); width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter: blur(6px); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .fav svg.icon { font-size: 16px; }
 .fav.active { color: var(--accent); border-color: rgba(230,57,70,0.4); }
 .fav.active svg.icon { fill: currentColor; }
@@ -286,13 +303,13 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .compare-toggle.active { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); border-color: color-mix(in srgb, var(--text) 25%, transparent); }
 
 /* Modal */
-.modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease; }
+.modal { position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease; }
 .modal.open { display: flex; opacity: 1; }
 .modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(0.97); transition: transform 0.25s ease; display: grid; grid-template-columns: 1fr 1fr; }
 .modal.open .modalbox { transform: scale(1); }
-.close { position: absolute; right: 14px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
+.close { position: absolute; right: 14px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: var(--z-modal-control); display: flex; align-items: center; justify-content: center; }
 .close svg.icon { font-size: 16px; }
-.share-btn { position: absolute; right: 56px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: 4; display: flex; align-items: center; justify-content: center; }
+.share-btn { position: absolute; right: 56px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: var(--z-modal-control); display: flex; align-items: center; justify-content: center; }
 .share-btn svg.icon { font-size: 15px; }
 .share-btn:hover, .close:hover { border-color: color-mix(in srgb, var(--text) 24%, transparent); }
 .modalvisual { background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 40px; min-width: 0; min-height: 300px; }
@@ -329,7 +346,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 }
 
 /* Fav bar / Compare tray */
-.comparebar { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(120px); z-index: 120; background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 10px 18px; display: flex; align-items: center; gap: 14px; transition: .3s; opacity: 0; box-shadow: 0 12px 28px rgba(0,0,0,0.5); }
+.comparebar { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(120px); z-index: var(--z-comparebar); background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 10px 18px; display: flex; align-items: center; gap: 14px; transition: .3s; opacity: 0; box-shadow: 0 12px 28px rgba(0,0,0,0.5); }
 .comparebar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .comparebar span { font-size: 12.5px; font-weight: 500; color: var(--text); }
 .comparebar button { border: 0; background: transparent; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 4px; }
@@ -349,7 +366,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .finder-opt { text-align: left; background: var(--surface); border: 1px solid var(--line); color: var(--text); padding: 14px 16px; border-radius: 12px; font-weight: 500; font-size: 14px; cursor: pointer; transition: .15s; font-family: inherit; min-height: 44px; }
 .finder-opt:hover { border-color: color-mix(in srgb, var(--text) 22%, transparent); background: var(--surface-2); }
 
-.comparetraybar { position: fixed; left: 20px; bottom: 20px; z-index: 121; background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 10px 18px; display: flex; align-items: center; gap: 14px; transition: .3s; opacity: 0; transform: translateY(120px); box-shadow: 0 12px 28px rgba(0,0,0,0.5); }
+.comparetraybar { position: fixed; left: 20px; bottom: 20px; z-index: var(--z-comparetray); background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 10px 18px; display: flex; align-items: center; gap: 14px; transition: .3s; opacity: 0; transform: translateY(120px); box-shadow: 0 12px 28px rgba(0,0,0,0.5); }
 .comparetraybar.show { opacity: 1; transform: translateY(0); }
 .comparetraybar span { font-size: 12.5px; font-weight: 500; color: var(--text); }
 .comparetraybar button { border: 0; cursor: pointer; font-weight: 600; font-size: 12px; border-radius: 99px; padding: 8px 14px; }
@@ -360,7 +377,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .comparebar { bottom: calc(var(--bottomnav-h) + 12px + env(safe-area-inset-bottom)); }
 }
 
-.comparemodal { position: fixed; inset: 0; z-index: 310; background: rgba(0,0,0,0.88); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; }
+.comparemodal { position: fixed; inset: 0; z-index: var(--z-compare-modal); background: rgba(0,0,0,0.88); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; }
 .comparemodal.open { display: flex; }
 .comparebox { background: var(--surface-2); border: 1px solid var(--line); border-radius: 20px; max-width: 1000px; width: 100%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; position: relative; padding: 28px; }
 .comparetable { width: 100%; border-collapse: collapse; }
@@ -387,7 +404,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .btn-rate:hover { background: var(--surface-2); }
 
 /* Lightbox */
-.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 400; display: none; align-items: center; justify-content: center; }
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: var(--z-lightbox); display: none; align-items: center; justify-content: center; }
 .lightbox.active { display: flex; }
 .lightbox img { max-width: 90%; max-height: 90vh; border-radius: 10px; }
 .lightbox-close { position: absolute; top: 20px; right: 20px; color: var(--text); cursor: pointer; background: rgba(255,255,255,0.08); border: 1px solid var(--line); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -423,18 +440,18 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 @media(min-width: 721px) { .site-footer { padding-bottom: 40px; } }
 
 /* Toast */
-.toast { position: fixed; left: 50%; top: 20px; transform: translate(-50%, -20px); z-index: 500; background: var(--text); color: var(--text-invert); padding: 12px 22px; border-radius: 99px; font-weight: 600; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; box-shadow: 0 12px 28px rgba(0,0,0,0.35); }
+.toast { position: fixed; left: 50%; top: 20px; transform: translate(-50%, -20px); z-index: var(--z-toast); background: var(--text); color: var(--text-invert); padding: 12px 22px; border-radius: 99px; font-weight: 600; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s; box-shadow: 0 12px 28px rgba(0,0,0,0.35); }
 .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 /* WhatsApp float (desktop only - mobile uses bottom nav) */
-.wa-float { position: fixed; right: 20px; bottom: 20px; width: 54px; height: 54px; border-radius: 50%; background: var(--whatsapp); display: flex; align-items: center; justify-content: center; z-index: 150; box-shadow: 0 8px 22px rgba(37,211,102,0.4); text-decoration: none; color: #06210f; }
+.wa-float { position: fixed; right: 20px; bottom: 20px; width: 54px; height: 54px; border-radius: 50%; background: var(--whatsapp); display: flex; align-items: center; justify-content: center; z-index: var(--z-wa-float); box-shadow: 0 8px 22px rgba(37,211,102,0.4); text-decoration: none; color: #06210f; }
 .wa-float svg.icon { font-size: 24px; }
 @media(max-width: 720px) { .wa-float { display: none; } }
 
 /* Mobile bottom navigation */
 .bottom-nav { display: none; }
 @media(max-width: 720px) {
-  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: var(--bottomnav-h); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: 140; }
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: var(--bottomnav-h); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: var(--z-bottom-nav); }
   .bottom-nav button, .bottom-nav a { background: transparent; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 500; cursor: pointer; font-family: inherit; position: relative; }
   .bottom-nav svg.icon { font-size: 20px; }
   .bottom-nav .active { color: var(--text); }
@@ -560,11 +577,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-adv-clear:hover { color: var(--text); border-color: var(--text); }
 
 @media (max-width: 900px) {
-  #laptop-section .laptop-filter-drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
+  #laptop-section .laptop-filter-drawer-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: var(--z-drawer-backdrop); }
   #laptop-section .laptop-filter-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
   #laptop-section .laptop-filter-panel-head h3 { margin: 0; font-size: 16px; }
   #laptop-section .laptop-filter-close { background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; }
-  #laptop-section .laptop-filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: 200; transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
+  #laptop-section .laptop-filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
   #laptop-section .laptop-filter-panel.open { transform: translateY(0); }
 }
 @media (min-width: 900px) {
@@ -615,11 +632,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    offset'e gerek yok. Sagdaki .laptop-card-tags ile birebir simetrik.
    gap 6px->8px: rozetler artik solid renkli oldugu icin birbirine daha
    yakin/kalabalik hissettirmemesi icin biraz daha nefes payi verildi. */
-#laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; z-index: 1; }
+#laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; z-index: var(--z-inline); }
 /* FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen bağımsız rozetlerdir, ikisi birden
    olabilir - bu yüzden konumlandırma artık .laptop-card-tags sarmalayıcıda,
    .laptop-card-tag yalnızca görünümden sorumlu. */
-#laptop-section .laptop-card-tags { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: 1; }
+#laptop-section .laptop-card-tags { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: var(--z-inline); }
 #laptop-section .laptop-card-tag { background: var(--laptop-gold); color: #16130a; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
 #laptop-section .laptop-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 #laptop-section .laptop-card-brand { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
@@ -631,7 +648,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-card-price em { font-style: normal; font-size: 11px; color: var(--muted); }
 
 /* --- Laptop modal (telefonun .modal'ından TAMAMEN AYRI sınıf) --- */
-#laptop-section .laptop-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .25s ease; }
+#laptop-section .laptop-modal { position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .25s ease; }
 #laptop-section .laptop-modal.open { display: flex; opacity: 1; }
 /* GORSEL DUZELTME: modal artik desktop'ta da TEK SUTUN (1fr) - onceki
    "grid-template-columns: 1fr 1fr" duzeni gorseli dar bir yan sutuna
@@ -639,7 +656,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    altinda akar - mobil ile ayni akis, farkli boyutlandirma. */
 #laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr; }
 #laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(1); }
-#laptop-section .laptop-modal-close { position: sticky; top: 14px; margin: 14px 14px 0 auto; float: right; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+#laptop-section .laptop-modal-close { position: sticky; top: 14px; margin: 14px 14px 0 auto; float: right; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: var(--z-badge); }
 #laptop-section .laptop-modal-close .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 #laptop-section .laptop-modalvisual { background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 240px; }
 /* GORSEL DUZELTME: max-height 360px -> min(50vh, 480px). Tek sutunlu
@@ -663,7 +680,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    fonksiyonuna dokunmadan, sadece thumbnail/swipe ile AYNI fonksiyonu
    cagiran iki yeni buton. 2'den az gorselde (thumbnail'lerle ayni kosul)
    gizlenir. */
-#laptop-section .laptop-gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.5); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; padding: 0; }
+#laptop-section .laptop-gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.5); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: var(--z-badge); padding: 0; }
 #laptop-section .laptop-gallery-arrow:hover { background: rgba(0,0,0,.72); }
 #laptop-section .laptop-gallery-arrow.prev { left: 4px; }
 #laptop-section .laptop-gallery-arrow.next { right: 4px; }
@@ -818,7 +835,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <p class="hero-slogan">Güncel telefon kataloğu</p>
   </div>
   <div class="hero-visual">
-    <img id="heroProductImg" src="" alt="" style="display:none;">
+    <img id="heroProductImg" src="" alt="" style="display:none;" fetchpriority="high" decoding="async">
     <div class="hero-visual-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
   </div>
   <div class="hero-actions">
@@ -1092,7 +1109,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <div class="laptop-modalvisual">
         <div class="laptop-gallery-main" id="laptopGalleryMain">
           <button type="button" class="laptop-gallery-arrow prev" id="laptopGalleryPrevBtn" aria-label="Önceki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
-          <img id="lmi" src="" alt="Laptop Görseli" loading="lazy">
+          <img id="lmi" src="" alt="Laptop Görseli" loading="lazy" decoding="async">
           <button type="button" class="laptop-gallery-arrow next" id="laptopGalleryNextBtn" aria-label="Sonraki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
         </div>
         <div class="laptop-gallery-thumbs" id="laptopGalleryThumbs"></div>
@@ -1258,9 +1275,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </div>
 <section class="store-grid">
   <div class="store-gallery">
-    <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy">
-    <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy">
-    <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy">
+    <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async">
+    <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async">
+    <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async">
   </div>
   <div class="store-info">
     <h3>Mix GSM İsa ASLAN</h3>
@@ -1422,7 +1439,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <div style="clear:both;"></div>
     <h2 style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
     <div style="color:var(--muted);font-size:14px;line-height:1.8;">
-      <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan herhangi bir form bulunmamaktadır.</p>
+      <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitedeki ürün kataloğunu görüntülemek için herhangi bir kayıt veya kişisel bilgi girmeniz gerekmez. Laptop kataloğundaki isteğe bağlı "Bana Laptop Bul" formu dışında, sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan başka bir form bulunmamaktadır.</p>
+      <p><strong>"Bana Laptop Bul" formu:</strong> Bu formu doldurduğunuzda girdiğiniz bilgiler (bütçe, kullanım amacı, durum tercihi, ad-soyad, WhatsApp numaranız ve varsa ekran boyutu, öncelik, marka tercihi, notunuz) yalnızca formu gönderene kadar, sadece kullandığınız cihazın tarayıcı oturumunda (sessionStorage) geçici olarak tutulur; bu bilgiler MİX GSM sunucusuna veya üçüncü bir tarafa otomatik olarak gönderilmez. "Gönder" butonuna bastığınızda girdiğiniz bilgiler hazır bir WhatsApp mesajına dönüştürülür ve WhatsApp uygulamasına yönlendirilirsiniz; mesajı fiilen göndermek size kalır ve bu aşamadan sonra bilgileriniz WhatsApp/Meta'nın kendi gizlilik politikasına tabi olur. Formu gönderdiğinizde tarayıcınızdaki geçici kayıt otomatik olarak silinir; sekmeyi gönderim yapmadan kapatmanız halinde de bu geçici kayıt kendiliğinden kaybolur.</p>
       <p><strong>Favoriler ve karşılaştırma listesi:</strong> Favori ürünleriniz ve karşılaştırma listeniz yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
       <p><strong>Çerez ve takip:</strong> Site herhangi bir çerez (cookie) veya ziyaretçi takip/analiz yazılımı (ör. Google Analytics, Facebook Pixel) kullanmamaktadır.</p>
       <p><strong>WhatsApp, telefon ve Google Maps yönlendirmeleri:</strong> Sitedeki "WhatsApp'tan Yaz", "Aramak İçin Tıkla" ve "Google Maps" gibi butonlar sizi ilgili üçüncü taraf uygulama/servise yönlendirir. Bu servisler üzerinden bizimle paylaştığınız bilgiler (isim, telefon numarası, mesaj içeriği vb.), yalnızca sizinle iletişime geçip talebinizi karşılamak amacıyla kullanılır ve söz konusu platformların (WhatsApp/Meta, Google) kendi gizlilik politikalarına tabidir.</p>
@@ -1450,6 +1468,44 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </div>
 
 <script>
+// Ortak body-scroll-kilidi (telefon VE laptop tum modal/cekmece acilis-kapanis
+// noktalari tarafindan kullanilir). Duz "overflow:hidden" iOS Safari'de arka
+// plan icerigin hala kaydirilabilir kalmasina yol acabiliyordu; bu yuzden
+// position:fixed + scroll-offset restorasyonu tekniğine geçildi. Idempotent:
+// zaten kilitliyken tekrar cagrilirsa (ic ice acilan modal) mevcut scroll
+// offset'inin ustune yazmaz.
+let bodyScrollLockY = 0;
+function lockBodyScroll() {
+  if (document.body.style.position === 'fixed') return;
+  bodyScrollLockY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.position = 'fixed';
+  document.body.style.top = '-' + bodyScrollLockY + 'px';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+}
+function unlockBodyScroll() {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  // ONEMLI (2 ayri incelikle test edilerek bulundu):
+  // 1) Site genelinde "html { scroll-behavior: smooth }" tanimli oldugu icin
+  //    duz window.scrollTo(0, y) burada da animasyonlu/yavas calisiyor ve
+  //    modal kapanisinda gozle gorulur, istenmeyen bir "kayma" efekti
+  //    yaratiyor -> behavior:'instant' ile bu bypass ediliyor.
+  // 2) position:fixed kaldirildiginda tarayici sayfa yuksekligini (ve dolayisiyla
+  //    max scroll degerini) SENKRON olarak yeniden hesaplamiyor; bir sonraki
+  //    satirda hemen scrollTo cagirilirsa bazen eski/kismi (kucuk) bir
+  //    scrollHeight'a gore kirpilmis, YANLIS bir konuma atlayabiliyor. Asagidaki
+  //    offsetHeight okumasi senkron bir reflow'u zorlayarak bunu engelliyor.
+  void document.body.offsetHeight;
+  window.scrollTo({ top: bodyScrollLockY, left: 0, behavior: 'instant' });
+}
+
 let products = [];
 let cat = "ALL", group = "ALL", q = "", sort = "default";
 // Gelismis filtreler (Faz 11)
@@ -1592,16 +1648,27 @@ function findProductBySlug(slug) {
   return products.findIndex(p => productBaseSlug(p) === slug);
 }
 
-function searchScore(p, query) {
-  if(!query) return 0;
+// Telefon ve laptop arama kutularinin ALGORITMASI (sorguyu normalize edip
+// token'lara bolme, her token icin hedef metinde substring arama, eslesen
+// token sayisini skor olarak dondurme) birebir ayniydi; yalnizca hangi
+// alanlarin arama hedefine dahil edildigi (sema) farkliydi. Bu yuzden
+// SADECE ortak skor hesaplama mantigi tek fonksiyona cikarildi; her taraf
+// kendi hedef metnini (kendi sema/alanlariyla) eskisi gibi kendisi kurar -
+// davranista hicbir fark yaratmaz (bkz. denetim raporu, once/sonra testiyle
+// dogrulandi).
+function computeSearchScore(query, targetText) {
+  if (!query) return 0;
   const qn = normalizeTR(query);
-  const target = normalizeTR(p.b + " " + p.m + " " + p.s);
+  const target = normalizeTR(targetText);
   let score = 0;
-  const tokens = qn.split(/\s+/).filter(Boolean);
-  tokens.forEach(t => {
-    if(target.includes(t)) score += 1;
+  qn.split(/\s+/).filter(Boolean).forEach(t => {
+    if (target.includes(t)) score += 1;
   });
   return score;
+}
+
+function searchScore(p, query) {
+  return computeSearchScore(query, p.b + " " + p.m + " " + p.s);
 }
 
 // Google arama sonuclarinda urunlerin zengin gorunum (fiyat/stok) alabilmesi
@@ -1689,7 +1756,7 @@ function renderFeatured() {
     <article class="card" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
       <div class="visual">
         <span class="stock">● Stokta</span>
-        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy" decoding="async">
       </div>
       <div class="info">
         <div class="brand">${escapeHtml(p.b)}</div>
@@ -2024,7 +2091,7 @@ function autoImageMarkup(p) {
   const sources = imageCandidatesForProduct(p);
 
   if(!sources.length) {
-    return `<img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg" alt="${escapeHtml(p.m)}" loading="lazy">`;
+    return `<img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">`;
   }
 
   const encoded = JSON.stringify(sources).replace(/'/g,'&#39;');
@@ -2033,7 +2100,7 @@ function autoImageMarkup(p) {
     data-image-sources='${encoded}'
     data-image-index="0"
     alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}"
-    loading="lazy"
+    loading="lazy" decoding="async"
     onerror="tryNextProductImage(this)">`;
 }
 
@@ -2445,7 +2512,10 @@ let budgetThreshold = null;
 function computeBudgetThreshold() {
   const prices = products.filter(p => !isNonProductRow(p) && p.group === 'PHONE' && p.p !== null).map(p => p.p).sort((a, b) => a - b);
   if (!prices.length) { budgetThreshold = null; return; }
-  budgetThreshold = prices[Math.floor(prices.length / 2)]; // medyan
+  const mid = Math.floor(prices.length / 2);
+  // medyan: tek sayida eleman -> ortadaki deger, cift sayida eleman ->
+  // ortadaki iki degerin ortalamasi (matematiksel olarak dogru medyan tanimi)
+  budgetThreshold = prices.length % 2 === 0 ? (prices[mid - 1] + prices[mid]) / 2 : prices[mid];
 }
 
 document.querySelectorAll('#quickusePills button').forEach(btn => {
@@ -2485,7 +2555,7 @@ function anyModalOpen() {
 function openFilterDrawer() {
   document.getElementById('filterPanel').classList.add('open');
   document.getElementById('filterBackdrop').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   // ERISILEBILIRLIK: klavye/ekran okuyucu kullanan kullanicilar acilan
   // cekmeceye odaklansin (mevcut urun modalindaki ayni davranis).
   const closeBtn = document.querySelector('#filterPanel .close');
@@ -2494,7 +2564,7 @@ function openFilterDrawer() {
 function closeFilterDrawer() {
   document.getElementById('filterPanel').classList.remove('open');
   document.getElementById('filterBackdrop').classList.remove('open');
-  if (!anyModalOpen()) document.body.style.overflow = '';
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 // Tükenen bir ürün için katalogdaki STOKTA OLAN diger urunler arasindan
@@ -2535,7 +2605,7 @@ function renderSimilarProducts(p) {
     const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
     return `<div class="similar-item" onclick="openProduct(${spIndex})" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
-      <img src="${escapeHtml(spImg)}" alt="${escapeHtml(sp.m)}" loading="lazy">
+      <img src="${escapeHtml(spImg)}" alt="${escapeHtml(sp.m)}" loading="lazy" decoding="async">
       <div class="similar-name">${escapeHtml(sp.m)}</div>
       <div class="similar-price">${spPrice}</div>
     </div>`;
@@ -2601,7 +2671,7 @@ function renderProductModal(p) {
   }
   
   modal.classList.add("open");
-  document.body.style.overflow = "hidden";
+  lockBodyScroll();
   modal.querySelector('.close').focus();
 }
 
@@ -2619,7 +2689,7 @@ function openProduct(i) {
 
 function closeProduct() {
   document.getElementById("modal").classList.remove("open");
-  if (!anyModalOpen()) document.body.style.overflow = "";
+  if (!anyModalOpen()) unlockBodyScroll();
 
   // Urun kapatilinca linki temiz ana sayfa adresine geri al.
   try {
@@ -2734,14 +2804,14 @@ function openCompareModal() {
   if (compareList.length < 2) { showToast('Karşılaştırmak için en az 2 ürün seçin.'); return; }
   renderCompareTable();
   document.getElementById('comparemodal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.querySelector('#comparemodal .close');
   if (closeBtn) closeBtn.focus();
 }
 
 function closeCompareModal() {
   document.getElementById('comparemodal').classList.remove('open');
-  if (!anyModalOpen()) document.body.style.overflow = '';
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 function renderCompareTable() {
@@ -2767,7 +2837,7 @@ function renderCompareTable() {
     const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const pk = `${p.b}|${p.m}|${p.s}`;
     html += `<th>
-      <img class="compare-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
+      <img class="compare-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
       <div>${escapeHtml(p.b)}</div>
       <div>${escapeHtml(p.m)}</div>
       <button class="compare-remove" onclick="removeFromCompare('${jsAttr(pk)}')">Kaldır ✕</button>
@@ -2828,28 +2898,28 @@ function removeFav(pk) {
 
 function openLegalModal() {
   document.getElementById('legalmodal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.querySelector('#legalmodal .close');
   if (closeBtn) closeBtn.focus();
 }
 
 function closeLegalModal() {
   document.getElementById('legalmodal').classList.remove('open');
-  if (!anyModalOpen()) document.body.style.overflow = '';
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 function openFavModal() {
   if (!favs.length) { showToast('Henüz favori ürününüz yok.'); return; }
   renderFavList();
   document.getElementById('favmodal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.querySelector('#favmodal .close');
   if (closeBtn) closeBtn.focus();
 }
 
 function closeFavModal() {
   document.getElementById('favmodal').classList.remove('open');
-  if (!anyModalOpen()) document.body.style.overflow = '';
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 function renderFavList() {
@@ -2870,7 +2940,7 @@ function renderFavList() {
     const pIndex = products.indexOf(p);
     return `<div class="fav-item">
       <div onclick="closeFavModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
         <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
         <div class="fav-item-price">${priceText}</div>
       </div>
@@ -2917,14 +2987,14 @@ function openFinderModal() {
   finderState.budget = null; finderState.priority = null; finderState.brand = null;
   renderFinderStep(1);
   document.getElementById('findermodal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.querySelector('#findermodal .close');
   if (closeBtn) closeBtn.focus();
 }
 
 function closeFinderModal() {
   document.getElementById('findermodal').classList.remove('open');
-  if (!anyModalOpen()) document.body.style.overflow = '';
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 function restartFinder() { renderFinderStep(1); }
@@ -3006,7 +3076,7 @@ function showFinderResults() {
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
         return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy">
+          <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
           <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
           <div class="fav-item-price">${priceText}</div>
         </div>`;
@@ -3050,7 +3120,7 @@ window.addEventListener('popstate', () => {
     if (idx > -1) { renderProductModal(products[idx]); return; }
   }
   document.getElementById("modal").classList.remove("open");
-  if (!anyModalOpen()) document.body.style.overflow = "";
+  if (!anyModalOpen()) unlockBodyScroll();
 });
 
 window.addEventListener('DOMContentLoaded', () => { loadCatalog(); updateFavs(); initReviewsSlider(); });
@@ -3459,12 +3529,7 @@ function laptopDistinctValues(getter) {
 }
 
 function laptopSearchScore(p, query) {
-  if (!query) return 0;
-  const qn = normalizeTR(query);
-  const target = normalizeTR([p.brand, p.model, p.cpu, p.gpu, p.usage].filter(Boolean).join(' '));
-  let score = 0;
-  qn.split(/\s+/).filter(Boolean).forEach(t => { if (target.includes(t)) score += 1; });
-  return score;
+  return computeSearchScore(query, [p.brand, p.model, p.cpu, p.gpu, p.usage].filter(Boolean).join(' '));
 }
 
 function applyLaptopFilters(list) {
@@ -3610,7 +3675,7 @@ function laptopCardMarkup(p) {
 
   return '<article class="laptop-card" data-laptop-index="' + idx + '" role="button" tabindex="0" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">'
     + '<div class="laptop-card-visual">' + tag + leftBadges
-    + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
+    + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy" decoding="async">'
     + '</div>'
     + '<div class="laptop-card-body">'
     + '<div class="laptop-card-brand">' + escapeHtml(p.brand || '') + '</div>'
@@ -3845,7 +3910,7 @@ function renderLaptopModal(p) {
   if (!modal) return;
   laptopLastFocusedTrigger = document.activeElement;
   modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.getElementById('laptopModalCloseBtn');
   if (closeBtn) closeBtn.focus();
 }
@@ -3874,7 +3939,7 @@ function openLaptopProductFromCard(cardEl) {
 function closeLaptopProduct() {
   const modal = document.getElementById('laptopModal');
   if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
   try {
     if (location.hash.startsWith('#laptop/')) {
       history.pushState({}, '', location.pathname + location.search);
@@ -3898,7 +3963,7 @@ window.addEventListener('popstate', () => {
   }
   const modal = document.getElementById('laptopModal');
   if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
 });
 
 // --- Mobil filtre drawer ---
@@ -3908,7 +3973,7 @@ function openLaptopFilterDrawer() {
   const backdrop = document.getElementById('laptopFilterBackdrop');
   if (panel) panel.classList.add('open');
   if (backdrop) backdrop.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const closeBtn = document.getElementById('laptopFilterCloseBtn');
   if (closeBtn) closeBtn.focus();
 }
@@ -3917,7 +3982,7 @@ function closeLaptopFilterDrawer() {
   const backdrop = document.getElementById('laptopFilterBackdrop');
   if (panel) panel.classList.remove('open');
   if (backdrop) backdrop.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
   restoreLaptopFocus();
 }
 
@@ -4019,14 +4084,14 @@ function openLaptopFinder() {
   const modal = document.getElementById('laptopFinderModal');
   if (!modal) return;
   modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const firstField = document.getElementById('lfBudget');
   if (firstField) firstField.focus();
 }
 function closeLaptopFinder() {
   const modal = document.getElementById('laptopFinderModal');
   if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) document.body.style.overflow = '';
+  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
   restoreLaptopFocus();
 }
 
@@ -4318,11 +4383,15 @@ function parseLaptopTsvToProducts(tsv) {
     return null;
   };
   const parseLaptopStock = (raw) => {
+    // Stok cozumu = telefon tarafiyla (generate-catalog.js) AYNI kural:
+    // OUT yalnizca "kesin olarak stok yok" demektir; bilinmeyen/eslesmeyen
+    // bir deger yanlislikla OUT gosterilmez, guvenli varsayilan olan ASK'e duser.
     const words = normalizeTR(raw).split(/\s+/);
     if (words.some(w => ['sor', 'sorunuz', 'soru'].includes(w))) return 'ASK';
     if (words.some(w => ['var', 'stokta', 'mevcut', 'evet', 'aktif'].includes(w)) &&
         !words.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil', 'satildi'].includes(w))) return 'IN';
-    return 'OUT';
+    if (words.some(w => ['yok', 'tukendi', '0', 'hayir', 'false', 'degil', 'satildi'].includes(w))) return 'OUT';
+    return 'ASK';
   };
   const parseBoolFlag = (raw) => {
     const n = normalizeTR(raw);

@@ -100,6 +100,9 @@ function parseCondition(raw) {
 }
 
 function parseStock(raw) {
+  // Stok cozumu = telefon tarafiyla (generate-catalog.js) AYNI kural:
+  // OUT yalnizca "kesin olarak stok yok" demektir; bilinmeyen/eslesmeyen
+  // bir deger yanlislikla OUT gosterilmez, guvenli varsayilan olan ASK'e duser.
   const words = normalizeTR(raw).split(/\s+/);
   if (words.some((w) => ["sor", "sorunuz", "soru"].includes(w))) return "ASK";
   if (
@@ -108,7 +111,10 @@ function parseStock(raw) {
   ) {
     return "IN";
   }
-  return "OUT";
+  if (words.some((w) => ["yok", "tukendi", "0", "hayir", "false", "degil", "satildi"].includes(w))) {
+    return "OUT";
+  }
+  return "ASK";
 }
 
 function parseBoolFlag(raw) {
