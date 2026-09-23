@@ -590,10 +590,21 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-card:focus-visible { outline: 2px solid var(--laptop-gold); outline-offset: 2px; }
 #laptop-section .laptop-card-visual { position: relative; aspect-ratio: 16 / 9; background: var(--surface); }
 #laptop-section .laptop-card-visual img { width: 100%; height: 100%; object-fit: contain; display: block; }
-#laptop-section .laptop-card-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 99px; }
+/* GORSEL DUZELTME: .laptop-card-badge (stok etiketi) artik KENDİ BAŞINA
+   position:absolute DEGIL - .laptop-card-left-badges sarmalayicisinin
+   icinde normal bir flex ogesi. Boylece "2. El" paneliyle ayni noktaya
+   (top:10px;left:10px) bagimsiz olarak konumlanip ust uste binmesi
+   yapisal olarak IMKANSIZ hale geldi (saga simetrik .laptop-card-tags
+   sarmalayicisiyla AYNI desen). Renk/yazi kurallari DEGISMEDI. */
+#laptop-section .laptop-card-badge { background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
 #laptop-section .laptop-card-badge.in { background: rgba(37,211,102,.18); color: var(--whatsapp); }
 #laptop-section .laptop-card-badge.ask { background: rgba(201,162,39,.2); color: var(--laptop-gold); }
 #laptop-section .laptop-card-badge.out { background: rgba(120,120,120,.25); color: var(--muted); }
+/* GORSEL DUZELTME: sol ust - "2. El"/"Sıfır" (sarı panel, .laptop-card-tag
+   ile AYNI gorsel dil) + stok etiketi. Dikey flex-column oldugu icin stok
+   etiketi HER ZAMAN durum panelinin hemen altina duser, sabit piksel
+   offset'e gerek yok. Sagdaki .laptop-card-tags ile birebir simetrik. */
+#laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; z-index: 1; }
 /* FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen bağımsız rozetlerdir, ikisi birden
    olabilir - bu yüzden konumlandırma artık .laptop-card-tags sarmalayıcıda,
    .laptop-card-tag yalnızca görünümden sorumlu. */
@@ -611,12 +622,21 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* --- Laptop modal (telefonun .modal'ından TAMAMEN AYRI sınıf) --- */
 #laptop-section .laptop-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity .25s ease; }
 #laptop-section .laptop-modal.open { display: flex; opacity: 1; }
-#laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr 1fr; }
+/* GORSEL DUZELTME: modal artik desktop'ta da TEK SUTUN (1fr) - onceki
+   "grid-template-columns: 1fr 1fr" duzeni gorseli dar bir yan sutuna
+   sikistiriyordu. Tek sutunda gorsel ustte BUYUK ve ORTALANMIS, bilgiler
+   altinda akar - mobil ile ayni akis, farkli boyutlandirma. */
+#laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr; }
 #laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(1); }
 #laptop-section .laptop-modal-close { position: sticky; top: 14px; margin: 14px 14px 0 auto; float: right; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
 #laptop-section .laptop-modal-close .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 #laptop-section .laptop-modalvisual { background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 240px; }
-#laptop-section .laptop-modalvisual img { max-width: 100%; max-height: 360px; object-fit: contain; }
+/* GORSEL DUZELTME: max-height 360px -> min(50vh, 480px). Tek sutunlu
+   duzende gorsel artik modalbox'un tam genisligini kullanabiliyor
+   (onceden 440px'lik yarim sutuna sikisiyordu); yukseklik de vh-tabanli
+   oldugu icin kisa ekranlarda tasma yapmadan otomatik kuculuyor. object-fit:
+   contain AYNI KALDI - oran bozulmaz, kirpma olmaz. */
+#laptop-section .laptop-modalvisual img { max-width: 100%; max-height: min(50vh, 480px); object-fit: contain; }
 /* FAZ 5: Foto galerisi - Public Sheet bugün TEK "Fotoğraf" alanı sunuyor,
    bu yüzden çoğu üründe galeri tek görselden oluşur ve küçük resim şeridi
    otomatik gizlenir (bkz. renderLaptopGallery). Mimari, Sheet'e ileride
@@ -627,6 +647,18 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-gallery-thumb { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
 #laptop-section .laptop-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #laptop-section .laptop-gallery-thumb.active { border-color: var(--laptop-gold); }
+/* GORSEL DUZELTME: sol/sag onceki-sonraki oklari. Mevcut galeri STATE'ine
+   (laptopGalleryImages/laptopGalleryIndex) ve mevcut setLaptopGalleryImage()
+   fonksiyonuna dokunmadan, sadece thumbnail/swipe ile AYNI fonksiyonu
+   cagiran iki yeni buton. 2'den az gorselde (thumbnail'lerle ayni kosul)
+   gizlenir. */
+#laptop-section .laptop-gallery-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.5); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; padding: 0; }
+#laptop-section .laptop-gallery-arrow:hover { background: rgba(0,0,0,.72); }
+#laptop-section .laptop-gallery-arrow.prev { left: 4px; }
+#laptop-section .laptop-gallery-arrow.next { right: 4px; }
+#laptop-section .laptop-gallery-arrow .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+#laptop-section .laptop-gallery-arrow.next .icon { transform: scaleX(-1); }
+#laptop-section .laptop-gallery-arrow[hidden] { display: none; }
 #laptop-section .laptop-modalinfo { padding: 24px 28px 28px; display: flex; flex-direction: column; }
 #laptop-section .laptop-modalbrand { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
 #laptop-section .laptop-modalname { font-size: 21px; font-weight: 600; margin: 4px 0 8px; }
@@ -716,6 +748,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <symbol id="ic-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></symbol>
   <symbol id="ic-compare" viewBox="0 0 24 24"><path d="M7 4v13"></path><path d="M3 13l4 4 4-4"></path><path d="M17 20V7"></path><path d="M21 11l-4-4-4 4"></path></symbol>
   <symbol id="ic-close" viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24"><polyline points="15 4 7 12 15 20"></polyline></symbol>
   <symbol id="ic-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><line x1="8.2" y1="10.8" x2="15.8" y2="6.2"></line><line x1="8.2" y1="13.2" x2="15.8" y2="17.8"></line></symbol>
   <symbol id="ic-star" viewBox="0 0 24 24"><polygon points="12 2.5 15.1 8.8 22 9.8 17 14.7 18.2 21.6 12 18.3 5.8 21.6 7 14.7 2 9.8 8.9 8.8 12 2.5"></polygon></symbol>
   <symbol id="ic-pin" viewBox="0 0 24 24"><path d="M12 22s7-7.2 7-12.5A7 7 0 0 0 5 9.5C5 14.8 12 22 12 22z"></path><circle cx="12" cy="9.5" r="2.4"></circle></symbol>
@@ -1047,7 +1080,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <button type="button" class="laptop-modal-close" id="laptopModalCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
       <div class="laptop-modalvisual">
         <div class="laptop-gallery-main" id="laptopGalleryMain">
+          <button type="button" class="laptop-gallery-arrow prev" id="laptopGalleryPrevBtn" aria-label="Önceki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
           <img id="lmi" src="" alt="Laptop Görseli" loading="lazy">
+          <button type="button" class="laptop-gallery-arrow next" id="laptopGalleryNextBtn" aria-label="Sonraki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
         </div>
         <div class="laptop-gallery-thumbs" id="laptopGalleryThumbs"></div>
       </div>
@@ -3535,9 +3570,9 @@ function laptopCardMarkup(p) {
   const idx = LaptopStore.products.indexOf(p);
   const title = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
   const img = laptopProductImageOrFallback(p);
-  const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">● Stokta</span>'
+  const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">🟢 Stokta</span>'
     : p.stock === 'ASK' ? '<span class="laptop-card-badge ask">Sorunuz</span>'
-    : '<span class="laptop-card-badge out">Tükendi</span>';
+    : '<span class="laptop-card-badge out">🔴 Satıldı</span>';
   // FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen birbirinden BAĞIMSIZ rozetlerdir -
   // bir üründe ikisi de true ise ikisi de aynı anda gösterilir (if/else-if
   // DEĞİL, iki ayrı bağımsız kontrol).
@@ -3549,12 +3584,18 @@ function laptopCardMarkup(p) {
     ? '<span class="laptop-card-price ask">WhatsApp\'tan Sor</span>'
     : '<span class="laptop-card-price">' + fmt(p.price) + ' <em>TL</em></span>';
   const condText = p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '';
+  // GORSEL DUZELTME: "2. El"/"Sıfır" artık kart görselinin SOL ÜSTÜNDE,
+  // stok etiketinin AYNI dikey sarmalayıcı (.laptop-card-left-badges)
+  // içindeki İLK öğesi olarak gösteriliyor - stok etiketi bu yüzden HER
+  // ZAMAN hemen altında, üst üste binme yapısal olarak mümkün değil.
+  const condBadge = condText ? '<span class="laptop-card-tag">' + escapeHtml(condText) + '</span>' : '';
+  const leftBadges = '<div class="laptop-card-left-badges">' + condBadge + badge + '</div>';
   const memText = [p.ramGB && (p.ramGB + ' GB RAM'), p.ssdGB && (p.ssdGB + ' GB SSD')].filter(Boolean).join(' · ');
   const screenText = [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · ');
   const specsText = [condText, p.cpu, memText, p.gpu, screenText].filter(Boolean).slice(0, 4).join(' • ');
 
   return '<article class="laptop-card" data-laptop-index="' + idx + '" role="button" tabindex="0" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">'
-    + '<div class="laptop-card-visual">' + tag + badge
+    + '<div class="laptop-card-visual">' + tag + leftBadges
     + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
     + '</div>'
     + '<div class="laptop-card-body">'
@@ -3691,6 +3732,14 @@ function renderLaptopGallery(p) {
     mainImg.src = laptopGalleryImages[0] || LAPTOP_FALLBACK_IMAGE;
     mainImg.alt = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
   }
+
+  // GORSEL DUZELTME: sol/sag oklar - tıpkı thumbnail seridi gibi, 2'den az
+  // görselde tamamen gizlenir (hidden attribute), aksi halde görünür.
+  const prevBtn = document.getElementById('laptopGalleryPrevBtn');
+  const nextBtn = document.getElementById('laptopGalleryNextBtn');
+  const showArrows = laptopGalleryImages.length >= 2;
+  if (prevBtn) prevBtn.hidden = !showArrows;
+  if (nextBtn) nextBtn.hidden = !showArrows;
 
   const thumbsWrap = document.getElementById('laptopGalleryThumbs');
   if (!thumbsWrap) return;
@@ -4179,6 +4228,18 @@ function handleLaptopFinderSubmit(e) {
       const idx = parseInt(thumb.getAttribute('data-laptop-gallery-idx'), 10);
       if (!isNaN(idx)) setLaptopGalleryImage(idx);
     });
+  }
+
+  // GORSEL DUZELTME: sol/sag oklar - thumbnail/swipe ile AYNI, tek state
+  // kaynagi olan setLaptopGalleryImage() fonksiyonunu cagirir; yeni bir
+  // galeri mantigi/state EKLENMEDI.
+  const galleryPrevBtn = document.getElementById('laptopGalleryPrevBtn');
+  if (galleryPrevBtn) {
+    galleryPrevBtn.addEventListener('click', () => setLaptopGalleryImage(laptopGalleryIndex - 1));
+  }
+  const galleryNextBtn = document.getElementById('laptopGalleryNextBtn');
+  if (galleryNextBtn) {
+    galleryNextBtn.addEventListener('click', () => setLaptopGalleryImage(laptopGalleryIndex + 1));
   }
 
   // FAZ 5: Mobil kaydırma (swipe) - .laptop-gallery-main de SABİT bir
