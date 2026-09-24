@@ -35,6 +35,10 @@
      ağ bağlantılarını ve form/nesne tabanlı saldırı yüzeylerini kapatıyor. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <link rel="icon" href="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg">
+<!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
+     ağırlık 400-800, ~26 KB). CSP font-src 'self' olduğu için harici font
+     servisi kullanılamaz; dosya sitenin kendi /fonts/ klasöründen gelir. -->
+<link rel="preload" href="fonts/inter-var-tr.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -80,6 +84,25 @@
 </script>
 <script type="application/ld+json" id="ld-products"></script>
 <style>
+/* REDESIGN ADIM 1 — YAZI TİPİ
+   Inter değişken font (fonts/inter-var-tr.woff2, OFL lisansı: fonts/OFL.txt).
+   "Inter Fallback": font yüklenene kadar kullanılan Arial'ın ölçüleri Inter'e
+   yaklaştırılır; font geldiğinde metin kaymaz/sıçramaz (CLS önlemi). */
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-var-tr.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("ArialMT"), local("Helvetica"), local("Roboto");
+  ascent-override: 90.49%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+  size-adjust: 107.06%;
+}
 :root {
   --bg: #080808;
   --surface: #111111;
@@ -109,6 +132,18 @@
   --z-compare-modal: 310;
   --z-lightbox: 400;
   --z-toast: 500;
+  /* REDESIGN ADIM 1 — YENİ TASARIM DEĞİŞKENLERİ (yalnızca ekleme; mevcut
+     değişkenlerin hiçbirinin değeri değişmedi). Yeni bölümler bunları
+     kullanacak. */
+  --font-sans: "Inter", "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --navy-900: #05070D;
+  --navy-800: #0B1020;
+  --navy-700: #121A2E;
+  --neutral-dark: #0B0B0C;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+  --fs-min: 13px;
 }
 /* TEMA: Light Mode - mevcut Dark Mode'un aydınlık versiyonu. Layout,
    spacing, radius, typography vb. HİÇBİR ŞEY değişmiyor; sadece bu
@@ -123,10 +158,36 @@
   --line: rgba(0,0,0,0.1);
   --text-invert: #FFFFFF;
 }
+/* REDESIGN ADIM 1 — BÖLGE (ZONE) SİSTEMİ
+   .zone-light : temayı takip eder (açık temada açık, koyu temada koyu).
+   .zone-dark  : HER İKİ TEMADA da lacivert-siyah kalır. İçindeki tüm
+                 mevcut bileşenler (kart, buton, metin) aynı değişkenleri
+                 kullandığı için otomatik olarak koyu paletle çizilir.
+   Koyu temada iki bölge parlaklıkla değil TONLA ayrılır: .zone-light nötr
+   koyu (#0B0B0C), .zone-dark lacivert-siyah (#05070D) + ince ayırıcı çizgi.
+   Bu adımda henüz hiçbir elemana uygulanmadı (görünüm değişmez). */
+.zone-light { background-color: var(--bg); color: var(--text); }
+:root[data-theme="dark"] .zone-light { --bg: var(--neutral-dark); }
+.zone-dark {
+  --bg: var(--navy-900);
+  --surface: var(--navy-800);
+  --surface-2: var(--navy-700);
+  --text: #F5F5F7;
+  --muted: #A3ACBD;
+  --line: rgba(255,255,255,0.09);
+  --text-invert: #0A0A0A;
+  background-color: var(--bg);
+  color: var(--text);
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .zone-dark { box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(255,255,255,0.06); }
+/* Açık temaya özel sabit renk kuralı (.btn-whatsapp koyu yeşil yazı) koyu
+   bölgede okunmaz; bölge içinde standart WhatsApp yeşiline döndürülür. */
+:root[data-theme] .zone-dark .btn-whatsapp { color: var(--whatsapp); }
 * { box-sizing: border-box; }
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background-color: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; padding-bottom: 32px; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background-color: var(--bg); color: var(--text); font-family: var(--font-sans); padding-bottom: 32px; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; }
 a { text-decoration: none; color: inherit; }
 svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.15em; flex-shrink: 0; }
@@ -762,6 +823,13 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* --- Boş sonuç / hata kutuları içinde WhatsApp CTA (empty state) --- */
 #laptop-section .laptop-empty .laptop-empty-wa,
 #laptop-section .laptop-error .laptop-empty-wa { margin-top: 14px; }
+
+/* REDESIGN ADIM 1 — Inter'e geçişle ortaya çıkan taşma düzeltmesi.
+   360px'te laptop arama kutusu içeriğine göre genişleyip "Filtrele"
+   butonunu ekranın 40px dışına itiyordu. min-width:0 ile kutunun
+   daralabilmesine izin veriliyor (telefon arama kutusunda sorun yok). */
+#laptop-section .laptop-search { min-width: 0; }
+#laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
 </style>
 </head>
 <body>
