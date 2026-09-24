@@ -233,6 +233,59 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 @media (min-width: 721px) and (max-width: 900px) { .nav-links { gap: 16px; } }
 /* Header bağlantılarıyla gidilen bölüm başlıkları sabit header'ın altında kalmasın. */
 #catalog, #laptopCatalogTitle, #store, #referanslar, #sss { scroll-margin-top: calc(var(--nav-h) + 16px); }
+
+/* REDESIGN ADIM 3 — HERO + GÜVEN BANDI (#home-vitrin)
+   Hero her iki temada koyu (.zone-dark + lacivert→siyah ışık). Ürün görseli
+   mevcut renderHeroProduct() ile gelir; ürün fotoğrafları açık gri zeminli
+   olduğu için geçici olarak AÇIK bir vitrin kartında gösterilir (koyu zeminde
+   "gri kutu" görünmesin diye). Görsel doğal boyutundan BÜYÜTÜLMEZ (width/height
+   auto + max sınırı). Kartın oranı sabit (aspect-ratio) -> görsel geç gelse
+   de sayfa kaymaz. Dekupe hero görseli gelince kart kaldırılabilir. */
+#storefrontToggle { scroll-margin-top: calc(var(--nav-h) + 16px); }
+.home-hero { position: relative; overflow: hidden; isolation: isolate; background: radial-gradient(120% 90% at 80% 25%, #17223F 0%, var(--navy-800) 38%, var(--navy-900) 70%, #020306 100%); }
+.home-hero-inner { max-width: 1200px; margin: 0 auto; padding: 40px 20px 44px; display: grid; gap: 32px; align-items: center; }
+.home-hero-copy { min-width: 0; }
+.home-hero-eyebrow { margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8C9BBC; }
+.home-hero-title { margin: 0 0 16px; font-size: clamp(31px, 9.2vw, 64px); line-height: 1.05; font-weight: 800; letter-spacing: -0.035em; color: #F5F5F7; }
+.home-hero-l1, .home-hero-l2 { display: block; }
+.home-hero-l2 { background: linear-gradient(180deg, #E8ECF5 0%, #98A6C3 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.home-hero-sub { margin: 0 0 28px; max-width: 36ch; font-size: clamp(15px, 4vw, 18px); line-height: 1.55; color: #A3ACBD; }
+.home-hero-actions { display: flex; flex-direction: column; gap: 10px; }
+.home-hero-cta, .home-hero-wa { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 22px; border-radius: 14px; font-size: 13.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; transition: transform .2s var(--ease-out), background-color .2s var(--ease-out), border-color .2s var(--ease-out); }
+.home-hero-cta { background: #F5F5F7; color: #0A0A0A; }
+.home-hero-cta svg.icon { transform: rotate(180deg); font-size: 15px; }
+.home-hero-cta:hover { background: #FFFFFF; transform: translateY(-1px); }
+.home-hero-wa { background: rgba(37,211,102,0.08); color: var(--whatsapp); border: 1px solid rgba(37,211,102,0.35); }
+.home-hero-wa:hover { background: rgba(37,211,102,0.14); }
+.home-hero-cta:focus-visible, .home-hero-wa:focus-visible { outline: 2px solid #F5F5F7; outline-offset: 3px; }
+.home-hero-stage { position: relative; width: 100%; max-width: 340px; margin: 0 auto; aspect-ratio: 4 / 5; border-radius: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 42%, #F5F5F7 0%, #F5F5F7 52%, #E7E9EE 100%); box-shadow: 0 40px 70px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06); }
+.home-hero-stage::after { content: ""; position: absolute; left: 50%; bottom: 7%; width: 56%; height: 5%; transform: translateX(-50%); border-radius: 50%; background: rgba(15,20,35,0.16); filter: blur(10px); }
+.home-hero-stage img { position: relative; z-index: 1; width: auto; height: auto; max-width: 72%; max-height: 80%; object-fit: contain; }
+.home-hero-empty { position: relative; z-index: 1; padding: 20px; text-align: center; font-size: 13px; color: #5B5F66; }
+@media (min-width: 481px) { .home-hero-actions { flex-direction: row; flex-wrap: wrap; } }
+/* REDESIGN ADIM 3 (düzeltme) — Mobilde (<=767px) görsel kartı kompakt: kare
+   oran ve daha dar genişlik; güven bandı ilk ekranın hemen devamında kalır.
+   768px ve üzeri DEĞİŞMEZ. Görsel yine doğal boyutundan büyütülmez. */
+@media (max-width: 767px) {
+  .home-hero-inner { gap: 20px; padding: 28px 20px 28px; }
+  .home-hero-stage { max-width: 208px; aspect-ratio: 1 / 1; border-radius: 22px; }
+  .home-hero-stage img { max-width: 70%; max-height: 84%; }
+  .home-hero-stage::after { bottom: 6%; }
+  .home-hero-sub { margin-bottom: 22px; }
+}
+@media (min-width: 900px) {
+  .home-hero-inner { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 56px; padding: 72px 40px 80px; min-height: 520px; }
+  .home-hero-stage { max-width: 380px; }
+}
+.home-trust-wrap { border-bottom: 1px solid var(--line); }
+.home-trust { list-style: none; max-width: 1200px; margin: 0 auto; padding: 16px 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.home-trust li { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text); }
+.home-trust-ic { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--line); color: var(--text); }
+.home-trust-ic svg.icon { font-size: 15px; }
+@media (min-width: 721px) {
+  .home-trust { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 18px 40px; gap: 16px; }
+}
+@media (min-width: 1100px) { .home-trust { justify-items: center; } }
 /* Mobil (<=720px): header bağlantıları gizli; aynı "Telefonlar / Laptoplar"
    geçişi alt menüde. Alt menü 4 yerine 5 sütun (Katalog -> Telefonlar + Laptoplar). */
 @media (max-width: 720px) {
@@ -922,6 +975,38 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </nav>
 
+<!-- REDESIGN ADIM 3: Ortak vitrin alanı (#home-vitrin). Telefon ve laptop
+     bölümlerinin DIŞINDA; iki modda da görünür. Veri akışına dokunmaz.
+     Hero görselini mevcut renderHeroProduct() gerçek katalogdan doldurur
+     (sabit/uydurma ürün yok). Sonraki adımlarda vitrin bölümleri buraya eklenir. -->
+<div id="home-vitrin">
+<header class="home-hero zone-dark" aria-labelledby="homeHeroTitle">
+  <div class="home-hero-inner">
+    <div class="home-hero-copy">
+      <p class="home-hero-eyebrow">MİX GSM</p>
+      <h1 class="home-hero-title" id="homeHeroTitle"><span class="home-hero-l1">Günün Teknolojisi,</span> <span class="home-hero-l2">Bugünün Fiyatı.</span></h1>
+      <p class="home-hero-sub">Yeni nesil akıllı cihazlar ve bilgisayarlar, her an güncellenen fiyatlarla MİX GSM'de</p>
+      <div class="home-hero-actions">
+        <a href="#storefrontToggle" class="home-hero-cta">Cihazları Keşfet <svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></a>
+        <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="home-hero-wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
+      </div>
+    </div>
+    <div class="home-hero-stage">
+      <img id="heroProductImg" src="" alt="" style="display:none;" fetchpriority="high" decoding="async">
+      <div class="home-hero-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
+    </div>
+  </div>
+</header>
+<div class="home-trust-wrap zone-light">
+  <ul class="home-trust" aria-label="Güven unsurları">
+    <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-shield"></use></svg></span>9+ Yıllık Tecrübe</li>
+    <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-truck"></use></svg></span>Türkiye'nin 81 İline Kargo</li>
+    <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-store"></use></svg></span>Gaziantep'te Fiziksel Mağaza</li>
+    <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg></span>WhatsApp'tan Hızlı Destek</li>
+  </ul>
+</div>
+</div><!-- /#home-vitrin -->
+
 <!-- FAZ 2: Storefront toggle. Telefon/Kişisel Bakım <-> Laptop & PC gecisi.
      Yeni, izole bir kontrol - mevcut nav/filter/buton sistemlerine dokunmaz. -->
 <div class="storefront-toggle" id="storefrontToggle" role="tablist" aria-label="Ürün kategorisi seçimi">
@@ -933,28 +1018,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
      (hero, trust-strip, öne çıkanlar, katalog) hiçbir yapısal değişiklik
      yapılmadan #phone-section içine alındı. -->
 <div id="phone-section">
-<header class="hero">
-  <div class="hero-copy">
-    <p class="hero-eyebrow">MİX GSM</p>
-    <h1>Doğru cihaz.<br>Doğru fiyat.</h1>
-    <p class="hero-slogan">Güncel telefon kataloğu</p>
-  </div>
-  <div class="hero-visual">
-    <img id="heroProductImg" src="" alt="" style="display:none;" fetchpriority="high" decoding="async">
-    <div class="hero-visual-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
-  </div>
-  <div class="hero-actions">
-    <a href="#catalog" class="btn-primary"><svg class="icon"><use href="#ic-grid"></use></svg> Telefonları Keşfet</a>
-    <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="btn-whatsapp"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
-  </div>
-</header>
-
-<nav class="trust-strip" aria-label="Güven unsurları">
-  <div class="trust-item"><svg class="icon"><use href="#ic-store"></use></svg> Gaziantep'te fiziksel mağaza</div>
-  <div class="trust-item"><svg class="icon"><use href="#ic-shield"></use></svg> 9+ yıllık tecrübe</div>
-  <div class="trust-item"><svg class="icon"><use href="#ic-truck"></use></svg> 81 ile güvenli kargo</div>
-  <div class="trust-item"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp'tan hızlı destek</div>
-</nav>
+<!-- REDESIGN ADIM 3: Eski hero ve eski güven bandı buradan kaldırıldı; yeni
+     sürümleri #home-vitrin içinde (mağaza geçişinin üstünde, her iki modda
+     görünür). #heroProductImg / #heroVisualEmpty ID'leri oraya taşındı,
+     renderHeroProduct() değişmeden onları doldurmaya devam ediyor. -->
 
 <div class="section-title" id="featuredTitle" style="display:none;">
   <h2>Bugün MİX GSM'de</h2>
