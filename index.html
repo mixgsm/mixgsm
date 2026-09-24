@@ -213,6 +213,37 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .theme-toggle-btn[data-theme-pref="system"] .theme-icon-system { display: block; }
 @media(max-width: 720px) { .nav-links { display: none; } }
 
+/* REDESIGN ADIM 2 — HEADER
+   Sayfa en üstteyken header düz zeminlidir (blur YOK, işlemciye yük yok).
+   24px kaydırınca (IntersectionObserver ile, scroll dinleyicisi YOK)
+   .is-scrolled alır: hafif cam efekti + ince çizgi + yumuşak gölge, logo
+   hafifçe küçülür. Yükseklik (--nav-h) DEĞİŞMEZ; küçülme sadece
+   transform ile yapılır, bu yüzden sayfa içeriği kaymaz (CLS yok). */
+.nav-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 24px; pointer-events: none; visibility: hidden; }
+.navbar { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; transition: background-color .25s var(--ease-out), border-color .25s var(--ease-out), box-shadow .25s var(--ease-out); }
+.navbar.is-scrolled { background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom-color: var(--line); box-shadow: 0 8px 24px -20px rgba(0,0,0,0.5); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .navbar.is-scrolled { background: var(--bg); } }
+.nav-brand { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; transform-origin: left center; transition: transform .25s var(--ease-out); }
+.nav-brand img { width: 28px; height: 28px; }
+.navbar.is-scrolled .nav-brand { transform: scale(.92); }
+.nav-links { align-items: center; }
+.nav-links a { position: relative; padding: 6px 0; white-space: nowrap; }
+.nav-links a[aria-current="true"] { color: var(--text); }
+.nav-links a[aria-current="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; border-radius: 2px; background: currentColor; opacity: .75; }
+@media (min-width: 721px) and (max-width: 900px) { .nav-links { gap: 16px; } }
+/* Header bağlantılarıyla gidilen bölüm başlıkları sabit header'ın altında kalmasın. */
+#catalog, #laptopCatalogTitle, #store, #referanslar, #sss { scroll-margin-top: calc(var(--nav-h) + 16px); }
+/* Mobil (<=720px): header bağlantıları gizli; aynı "Telefonlar / Laptoplar"
+   geçişi alt menüde. Alt menü 4 yerine 5 sütun (Katalog -> Telefonlar + Laptoplar). */
+@media (max-width: 720px) {
+  /* "nav." öneki: aynı genişlikteki mevcut .bottom-nav kuralı dosyada daha
+     aşağıda olduğu için, özgüllük artırılarak geçerli olması sağlanır. */
+  nav.bottom-nav { grid-template-columns: repeat(5, 1fr); }
+  nav.bottom-nav a, nav.bottom-nav button { position: relative; white-space: nowrap; }
+  nav.bottom-nav a[aria-current="true"] { color: var(--text); }
+  nav.bottom-nav a[aria-current="true"]::before { content: ""; position: absolute; top: 0; left: 50%; width: 18px; height: 2px; margin-left: -9px; border-radius: 0 0 2px 2px; background: currentColor; }
+}
+
 /* Hero */
 .hero { max-width: 1200px; margin: 0 auto; padding: 40px 20px 36px; display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; }
 .hero-copy { }
@@ -862,15 +893,21 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"></circle><line x1="12" y1="2" x2="12" y2="4.5"></line><line x1="12" y1="19.5" x2="12" y2="22"></line><line x1="2" y1="12" x2="4.5" y2="12"></line><line x1="19.5" y1="12" x2="22" y2="12"></line><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"></line><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"></line><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"></line><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"></line></symbol>
   <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M20.5 14.8A9 9 0 1 1 9.2 3.5a7 7 0 0 0 11.3 11.3z"></path></symbol>
   <symbol id="ic-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"></path></symbol>
+  <symbol id="ic-smartphone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect><line x1="10.5" y1="18" x2="13.5" y2="18"></line></symbol>
+  <symbol id="ic-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="10.5" rx="1.5"></rect><path d="M2 19h20"></path></symbol>
 </svg>
 
-<nav class="navbar">
+<!-- REDESIGN ADIM 2: header'ın "kaydırıldı" durumunu tetikleyen görünmez
+     işaretçi (IntersectionObserver ile izlenir). -->
+<span class="nav-sentinel" id="navSentinel" aria-hidden="true"></span>
+<nav class="navbar" id="siteNavbar" aria-label="Ana menü">
   <div class="nav-brand">
-    <img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg" alt="MİX GSM Logosu">
+    <img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg" alt="MİX GSM Logosu" width="28" height="28">
     MİX GSM
   </div>
   <div class="nav-links">
-    <a href="#catalog">Ürünler</a>
+    <a href="#catalog" data-nav-store="phone">Telefonlar</a>
+    <a href="#laptopCatalogTitle" data-nav-store="laptop">Laptoplar</a>
     <a href="#store">Mağazamız</a>
     <a href="#referanslar">Yorumlar</a>
     <a href="#sss">SSS</a>
@@ -1525,7 +1562,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 <nav class="bottom-nav" aria-label="Alt gezinme">
   <a href="#"><svg class="icon"><use href="#ic-home"></use></svg>Ana Sayfa</a>
-  <a href="#catalog"><svg class="icon"><use href="#ic-grid"></use></svg>Katalog</a>
+  <!-- REDESIGN ADIM 2: "Katalog" yerine mağaza bağlantıları. Masaüstündeki
+       header bağlantılarının mobil karşılığı; aynı JS (initRedesignHeader) yönetir. -->
+  <a href="#catalog" data-nav-store="phone"><svg class="icon"><use href="#ic-smartphone"></use></svg>Telefonlar</a>
+  <a href="#laptopCatalogTitle" data-nav-store="laptop"><svg class="icon"><use href="#ic-laptop"></use></svg>Laptoplar</a>
   <button><svg class="icon"><use href="#ic-compare"></use></svg>Karşılaştır<span class="bn-badge" id="bnCompareBadge">0</span></button>
   <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="bn-wa"><svg class="icon"><use href="#ic-chat"></use></svg>WhatsApp</a>
 </nav>
@@ -4670,6 +4710,66 @@ async function loadLaptopCatalog() {
   if (location.hash.indexOf('#laptop/') === 0) {
     activateStorefront('laptop');
   }
+})();
+
+// ================================================================
+// REDESIGN ADIM 2 — HEADER
+// Yalnızca görünüm/gezinme katmanı. Telefon/laptop veri akışına, state
+// değişkenlerine, #urun/ ve #laptop/ linklerine DOKUNMAZ.
+// - Kaydırma durumu: scroll dinleyicisi yerine IntersectionObserver
+//   (sayfa kaydırılırken hiçbir kod çalışmaz; sadece eşik geçilince).
+// - "Telefonlar / Laptoplar": mevcut storefront düğmelerine tıklatır
+//   (geçiş mantığı initStorefrontToggle'da AYNEN kalır), sonra ilgili
+//   katalog başlığına kaydırır. Adres çubuğuna hash yazmaz.
+// - Aktif mağaza vurgusu: #toggleBtnLaptop'un "active" sınıfı izlenir
+//   (#laptop/ derin linkiyle açılışta da doğru çalışır).
+// ================================================================
+(function initRedesignHeader() {
+  const nav = document.getElementById('siteNavbar');
+  if (!nav) return;
+  const sentinel = document.getElementById('navSentinel');
+  if (sentinel && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      nav.classList.toggle('is-scrolled', !entries[0].isIntersecting);
+    }).observe(sentinel);
+  } else {
+    nav.classList.add('is-scrolled');
+  }
+
+  const btnPhone = document.getElementById('toggleBtnPhone');
+  const btnLaptop = document.getElementById('toggleBtnLaptop');
+  // Header (masaüstü) + alt menü (mobil) bağlantıları birlikte yönetilir.
+  const storeLinks = document.querySelectorAll('[data-nav-store]');
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function syncCurrentStore() {
+    const laptopActive = !!(btnLaptop && btnLaptop.classList.contains('active'));
+    storeLinks.forEach(function (a) {
+      if ((a.dataset.navStore === 'laptop') === laptopActive) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+
+  storeLinks.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      const wantLaptop = a.dataset.navStore === 'laptop';
+      const btn = wantLaptop ? btnLaptop : btnPhone;
+      if (!btn) return; // düğme yoksa normal bağlantı gibi davran
+      e.preventDefault();
+      if (!btn.classList.contains('active')) btn.click();
+      const target = document.getElementById(wantLaptop ? 'laptopCatalogTitle' : 'catalog');
+      if (target) {
+        requestAnimationFrame(function () {
+          target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+        });
+      }
+    });
+  });
+
+  if (btnLaptop && 'MutationObserver' in window) {
+    new MutationObserver(syncCurrentStore).observe(btnLaptop, { attributes: true, attributeFilter: ['class'] });
+  }
+  syncCurrentStore();
 })();
 </script>
 </body>
