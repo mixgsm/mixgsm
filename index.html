@@ -914,6 +914,45 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    daralabilmesine izin veriliyor (telefon arama kutusunda sorun yok). */
 #laptop-section .laptop-search { min-width: 0; }
 #laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
+
+/* REDESIGN ADIM 4 — KATALOG GİRİŞİ + LAPTOP TANITIM BANDI
+   Mağaza geçişi: başlıklı, ikonlu, sade segment kontrolü (48px+ dokunma
+   alanı, mobilde yazı >=13px, gerekirse 2 satır). ".catalog-entry" öneki
+   eski .storefront-toggle kurallarını (480px'teki 11.5px dahil) güvenle ezer.
+   Laptop bandı: ikinci bir hero değil, kompakt tanıtım; altın vurgu sadece
+   üst yazı + birincil butonda. .laptop-hero-note her zaman görünür. */
+#catalogEntry { scroll-margin-top: var(--nav-h); }
+.catalog-entry { padding: 40px 20px 8px; }
+/* Küçük bölüm etiketi (hero üst yazısıyla aynı dil). Görünen metin CSS ile
+   BÜYÜK HARF ("ÜRÜNLER", lang="tr" sayesinde doğru İ/Ü); ekran okuyucular
+   doğal "Ürünler" okur. */
+.catalog-entry-label { margin: 0 0 14px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.catalog-entry .storefront-toggle { max-width: 520px; margin: 0 auto; padding: 4px; gap: 4px; border: 0; border-radius: 16px; background: var(--surface); }
+.catalog-entry .storefront-toggle-btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 8px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; line-height: 1.25; white-space: normal; text-align: center; transition: background-color .2s var(--ease-out), color .2s var(--ease-out); }
+.catalog-entry .storefront-toggle-btn svg.icon { font-size: 18px; flex: 0 0 auto; }
+.catalog-entry .storefront-toggle-btn.active { background: var(--text); color: var(--text-invert); }
+.catalog-entry .storefront-toggle-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .catalog-entry { padding: 32px 16px 4px; }
+  .catalog-entry .storefront-toggle { margin: 0; }
+  .catalog-entry .storefront-toggle-btn { font-size: 13px; padding: 8px 8px; gap: 6px; }
+}
+@media (max-width: 359px) {
+  .catalog-entry .storefront-toggle-btn { flex-direction: column; gap: 4px; min-height: 60px; }
+}
+#laptop-section .laptop-hero { max-width: 640px; margin: 36px auto 0; padding: 0 20px; }
+#laptop-section .laptop-hero-eyebrow { font-size: 11.5px; letter-spacing: .16em; margin: 0 0 10px; }
+#laptop-section .laptop-hero-title { font-size: clamp(22px, 5.4vw, 28px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; }
+#laptop-section .laptop-hero-sub { font-size: 14.5px; line-height: 1.55; margin: 0 auto 20px; max-width: 460px; }
+#laptop-section .laptop-hero-actions .laptop-btn-primary,
+#laptop-section .laptop-hero-actions .laptop-btn-outline { min-height: 48px; padding: 12px 20px; font-size: 14px; }
+#laptop-section .laptop-hero-note { display: block; margin: 14px 0 0; font-size: 13px; }
+#laptop-section #laptopCatalogTitle { margin-top: 48px; }
+@media (max-width: 480px) {
+  #laptop-section .laptop-hero { margin-top: 28px; }
+  #laptop-section .laptop-hero-actions { flex-direction: column; }
+  #laptop-section .laptop-hero-actions > button { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -987,7 +1026,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <h1 class="home-hero-title" id="homeHeroTitle"><span class="home-hero-l1">Günün Teknolojisi,</span> <span class="home-hero-l2">Bugünün Fiyatı.</span></h1>
       <p class="home-hero-sub">Yeni nesil akıllı cihazlar ve bilgisayarlar, her an güncellenen fiyatlarla MİX GSM'de</p>
       <div class="home-hero-actions">
-        <a href="#storefrontToggle" class="home-hero-cta">Cihazları Keşfet <svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></a>
+        <a href="#catalogEntry" class="home-hero-cta">Cihazları Keşfet <svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></a>
         <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="home-hero-wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
       </div>
     </div>
@@ -1009,10 +1048,15 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 <!-- FAZ 2: Storefront toggle. Telefon/Kişisel Bakım <-> Laptop & PC gecisi.
      Yeni, izole bir kontrol - mevcut nav/filter/buton sistemlerine dokunmaz. -->
+<!-- REDESIGN ADIM 4: Katalog girişi. Geçiş düğmesinin ID/rol/aria/data ve
+     .active yapısı AYNEN korundu; sadece emoji yerine ikon + başlık eklendi. -->
+<section class="catalog-entry zone-light" id="catalogEntry" aria-labelledby="catalogEntryTitle">
+  <h2 class="catalog-entry-label" id="catalogEntryTitle">Ürünler</h2>
 <div class="storefront-toggle" id="storefrontToggle" role="tablist" aria-label="Ürün kategorisi seçimi">
-  <button type="button" class="storefront-toggle-btn active" id="toggleBtnPhone" role="tab" aria-selected="true" aria-controls="phone-section" data-storefront="phone">📱 Telefon &amp; Kişisel Bakım</button>
-  <button type="button" class="storefront-toggle-btn" id="toggleBtnLaptop" role="tab" aria-selected="false" aria-controls="laptop-section" data-storefront="laptop">💻 Laptop &amp; PC</button>
+  <button type="button" class="storefront-toggle-btn active" id="toggleBtnPhone" role="tab" aria-selected="true" aria-controls="phone-section" data-storefront="phone"><svg class="icon" aria-hidden="true"><use href="#ic-smartphone"></use></svg><span>Telefon &amp; Kişisel Bakım</span></button>
+  <button type="button" class="storefront-toggle-btn" id="toggleBtnLaptop" role="tab" aria-selected="false" aria-controls="laptop-section" data-storefront="laptop"><svg class="icon" aria-hidden="true"><use href="#ic-laptop"></use></svg><span>Laptop &amp; PC</span></button>
 </div>
+</section>
 
 <!-- FAZ 2: DOM izolasyonu - mevcut telefon/kişisel bakım storefront'u
      (hero, trust-strip, öne çıkanlar, katalog) hiçbir yapısal değişiklik
@@ -1146,11 +1190,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 <div id="laptop-section" hidden aria-hidden="true" inert>
   <section class="laptop-hero">
     <p class="laptop-hero-eyebrow">MİX GSM · LAPTOP &amp; PC</p>
-    <h2 class="laptop-hero-title">💻 Aradığın Laptopu Birlikte Bulalım</h2>
+    <h2 class="laptop-hero-title">Aradığın Laptopu Birlikte Bulalım</h2>
     <p class="laptop-hero-sub">Bütçenizi ve kullanım amacınızı bize söyleyin. İhtiyacınıza uygun modelleri sizin için araştıralım.</p>
     <div class="laptop-hero-actions">
-      <button type="button" class="laptop-btn-primary" id="laptopFindBtn">🔎 Bana Laptop Bul</button>
-      <button type="button" class="laptop-btn-outline" id="laptopStockBtn">💻 Stoktaki Laptoplar</button>
+      <button type="button" class="laptop-btn-primary" id="laptopFindBtn">Bana Laptop Bul</button>
+      <button type="button" class="laptop-btn-outline" id="laptopStockBtn">Stoktaki Laptoplar</button>
     </div>
     <p class="laptop-hero-note">Laptop kataloğu yükleniyor…</p>
   </section>
