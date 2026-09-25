@@ -1,0 +1,8 @@
+{
+  "name": "mixgsm-site-scripts",
+  "private": true,
+  "description": "MIX GSM sitesi icin katalog/fiyat listesi ureten yardimci script'lerin bagimliliklari (GitHub Actions tarafindan kullanilir).",
+  "dependencies": {
+    "playwright": "1.56.0"
+  }
+}
