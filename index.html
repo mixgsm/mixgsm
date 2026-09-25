@@ -67,6 +67,14 @@
   "image": "https://mixgsm.tr/og-cover.jpg",
   "url": "https://mixgsm.tr/",
   "telephone": "+905424818255",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      "opens": "09:00",
+      "closes": "20:00"
+    }
+  ],
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D",
@@ -203,7 +211,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .nav-links a { transition: color .15s; }
 .nav-links a:hover { color: var(--text); }
 .nav-wa { background: var(--whatsapp); color: #06210f; padding: 8px 14px; border-radius: 99px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; }
-.nav-menu-btn { display: none; background: transparent; border: 1px solid var(--line); color: var(--text); width: 36px; height: 36px; border-radius: 10px; align-items: center; justify-content: center; cursor: pointer; }
 .nav-actions { display: flex; align-items: center; gap: 10px; }
 .theme-toggle-btn { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 1px solid var(--line); color: var(--text); cursor: pointer; }
 .theme-toggle-btn:hover { border-color: color-mix(in srgb, var(--text) 20%, transparent); }
@@ -298,14 +305,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 }
 
 /* Hero */
-.hero { max-width: 1200px; margin: 0 auto; padding: 40px 20px 36px; display: grid; grid-template-columns: 1fr; gap: 28px; align-items: center; }
-.hero-copy { }
-.hero-eyebrow { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 12px; }
-.hero h1 { font-size: clamp(34px, 7vw, 52px); font-weight: 600; margin: 0 0 12px; letter-spacing: -1.2px; line-height: 1.05; }
-.hero-slogan { font-size: 17px; color: var(--muted); margin: 0 0 28px; font-weight: 400; max-width: 440px; line-height: 1.5; }
-.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.btn-primary { background: var(--text); color: var(--text-invert); padding: 14px 22px; border-radius: 12px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--text); transition: opacity .15s; }
-.btn-primary:hover { opacity: .88; }
 .btn-finder { background: transparent; color: var(--text); border: 1px solid var(--line); padding: 12px 18px; border-radius: 12px; font-weight: 500; font-size: 13px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; transition: border-color .15s, background .15s; }
 .btn-finder:hover { border-color: color-mix(in srgb, var(--text) 20%, transparent); background: var(--surface); }
 .btn-whatsapp { background: rgba(37,211,102,0.1); color: var(--whatsapp); border: 1px solid rgba(37,211,102,0.28); padding: 14px 22px; border-radius: 12px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
@@ -317,23 +316,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    yeşil zemin + koyu metin kullananlar) zaten yeterli kontrasta sahip,
    dokunulmadı. */
 :root[data-theme="light"] .btn-whatsapp { color: #0C7A40; }
-.hero-visual { position: relative; aspect-ratio: 1 / 1; max-height: 420px; display: flex; align-items: center; justify-content: center; border-radius: 24px; background: radial-gradient(circle at 50% 40%, var(--surface) 0%, var(--bg) 72%); overflow: hidden; }
-.hero-visual::after { content: ""; position: absolute; left: 50%; bottom: 6%; width: 55%; height: 14%; background: rgba(230,57,70,0.16); filter: blur(38px); border-radius: 50%; }
-.hero-visual img { position: relative; z-index: var(--z-inline); max-width: 78%; max-height: 88%; object-fit: contain; filter: drop-shadow(0 24px 30px rgba(0,0,0,0.55)); }
-.hero-visual .hero-visual-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
-@media(min-width: 900px) {
-  .hero { grid-template-columns: 1.05fr 1fr; grid-template-areas: "copy visual" "actions visual"; gap: 20px 48px; padding: 64px 40px 80px; }
-  .hero-copy { grid-area: copy; align-self: end; }
-  .hero-actions { grid-area: actions; align-self: start; }
-  .hero-visual { grid-area: visual; align-self: center; max-height: 480px; }
-}
+
 
 /* Trust strip */
-.trust-strip { max-width: 1200px; margin: 0 auto; padding: 0 20px 8px; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.trust-strip::-webkit-scrollbar { display: none; }
-.trust-item { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 14px 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
-.trust-item svg.icon { color: var(--muted); font-size: 15px; }
-.trust-item + .trust-item { border-left: 1px solid var(--line); padding-left: 18px; }
 
 /* Section headings */
 .section-title { text-align: center; margin: 72px 0 28px; padding: 0 20px; }
@@ -342,15 +327,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .section-title p { color: var(--muted); font-size: 13.5px; margin: 0; font-weight: 400; }
 
 /* Featured */
-.featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
 /* Steps */
-.steps-grid { display: flex; flex-direction: column; gap: 0; max-width: 720px; margin: 0 auto 8px; padding: 0 20px; }
-.step-row { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--line); }
-.step-row:last-child { border-bottom: none; }
-.step-num { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-.step-row h3 { font-size: 14px; color: var(--text); margin: 0 0 3px; font-weight: 600; }
-.step-row p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
 
 /* Catalog layout */
 .catalog-layout { max-width: 1240px; margin: 0 auto; padding: 0 20px; display: grid; grid-template-columns: 1fr; gap: 24px; }
@@ -534,19 +512,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .compare-thumb { width: 68px; height: 68px; object-fit: contain; margin: 0 auto 8px; display: block; }
 
 /* Store Section */
-.store-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; }
 .store-gallery img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; cursor: pointer; transition: filter .15s; }
 .store-gallery img:hover { filter: brightness(1.08); }
 .store-gallery img:first-child { grid-row: 1 / span 2; }
-.store-info { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-.store-info h3 { margin: 0 0 10px; font-size: 18px; font-weight: 600; }
-.store-info p { color: var(--muted); font-size: 13.5px; margin: 0 0 22px; line-height: 1.6; }
-.store-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.btn-outline { border: 1px solid var(--line); background: transparent; color: var(--text); padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; transition: background .15s; }
-.btn-outline:hover { background: var(--surface-2); }
-.btn-rate { border: 1px solid var(--line); background: transparent; color: var(--text); padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 500; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; transition: background .15s; }
-.btn-rate:hover { background: var(--surface-2); }
 
 /* Lightbox */
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: var(--z-lightbox); display: none; align-items: center; justify-content: center; }
@@ -556,7 +525,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .lightbox-close svg.icon { font-size: 18px; }
 
 /* Reviews */
-.reviews-wrap { max-width: 640px; margin: 0 auto; padding: 0 20px; }
 .ref-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px; text-align: center; }
 .stars { color: var(--text); font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
 .ref-quote { font-size: 15px; font-weight: 500; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
@@ -578,8 +546,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .site-footer { border-top: 1px solid var(--line); margin-top: 60px; padding: 40px 20px calc(40px + var(--bottomnav-h)); text-align: center; color: var(--muted); font-size: 13px; }
 .footer-brand { font-weight: 600; color: var(--text); font-size: 15px; margin-bottom: 4px; }
 .footer-slogan { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
-.social-links { display: flex; justify-content: center; gap: 18px; margin: 18px 0; }
-.social-links a { color: var(--text); font-weight: 500; font-size: 13px; }
 .footer-line { font-size: 12.5px; line-height: 1.8; }
 .footer-line a { text-decoration: underline; text-underline-offset: 2px; }
 @media(min-width: 721px) { .site-footer { padding-bottom: 40px; } }
@@ -613,9 +579,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   body { padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); }
 }
 
-@media(max-width: 900px) {
-  .store-grid { grid-template-columns: 1fr; }
-}
+
 @media(max-width: 768px) {
   .store-gallery { grid-template-columns: 1fr 1fr; }
   .store-gallery img:first-child { grid-row: auto; grid-column: 1 / span 2; }
@@ -785,9 +749,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    gap 6px->8px: rozetler artik solid renkli oldugu icin birbirine daha
    yakin/kalabalik hissettirmemesi icin biraz daha nefes payi verildi. */
 #laptop-section .laptop-card-left-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; z-index: var(--z-inline); }
-/* FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen bağımsız rozetlerdir, ikisi birden
-   olabilir - bu yüzden konumlandırma artık .laptop-card-tags sarmalayıcıda,
-   .laptop-card-tag yalnızca görünümden sorumlu. */
+/* Rozet konumlandırması .laptop-card-tags sarmalayıcıda, .laptop-card-tag
+   yalnızca görünümden sorumlu (kartta en fazla bir ana rozet). */
 #laptop-section .laptop-card-tags { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; z-index: var(--z-inline); }
 #laptop-section .laptop-card-tag { background: var(--laptop-gold); color: #16130a; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 99px; white-space: nowrap; }
 #laptop-section .laptop-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -1752,7 +1715,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <div class="laptop-modal laptop-form-modal" id="laptopFinderModal" role="dialog" aria-modal="true" aria-labelledby="lfTitle" tabindex="-1">
     <div class="laptop-modalbox laptop-form-box">
       <button type="button" class="laptop-modal-close" id="laptopFinderCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-      <h2 id="lfTitle" class="laptop-form-title">🔎 Bana Laptop Bul</h2>
+      <h2 id="lfTitle" class="laptop-form-title">Bana Laptop Bul</h2>
       <p class="laptop-form-sub">Aşağıdaki bilgileri doldurun, size en uygun laptopu WhatsApp üzerinden birlikte bulalım.</p>
 
       <form id="laptopFinderForm" novalidate>
@@ -3989,7 +3952,9 @@ function normalizeLaptopGithubImageUrl(value) {
 // Gerçek kart görseli render'ı Faz 4'te bu iki yardımcıyı kullanacak;
 // Faz 3'te henüz katalog kartı UI'ı yok (bkz. yukarıdaki not), bu yüzden
 // burada sadece altyapı hazırlanıyor ve doğrudan çağrılarak test edilebilir.
-const LAPTOP_FALLBACK_IMAGE = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/laptop-gorsel-yok.jpg';
+// REDESIGN FİNAL: laptop-photos/laptop-gorsel-yok.jpg depoda hiç yoktu (kırık
+// görsel). Depoda VAR olan ortak "görsel yok" dosyası kullanılıyor.
+const LAPTOP_FALLBACK_IMAGE = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
 
 function laptopProductImageOrFallback(p) {
   const img = p && p.img ? String(p.img).trim() : '';
@@ -4311,12 +4276,10 @@ function laptopCardMarkup(p) {
   const badge = p.stock === 'IN' ? '<span class="laptop-card-badge in">● STOKTA</span>'
     : p.stock === 'ASK' ? '<span class="laptop-card-badge ask">Sorunuz</span>'
     : '<span class="laptop-card-badge out">● SATILDI</span>';
-  // FAZ 5 DÜZELTME: Fırsat ve Yeni Gelen birbirinden BAĞIMSIZ rozetlerdir -
-  // bir üründe ikisi de true ise ikisi de aynı anda gösterilir (if/else-if
-  // DEĞİL, iki ayrı bağımsız kontrol).
   const tagSpans = [];
-  if (p.deal) tagSpans.push('<span class="laptop-card-tag">🔥 Fırsat</span>');
-  if (p.newArrival) tagSpans.push('<span class="laptop-card-tag">🆕 Yeni Gelen</span>');
+  // REDESIGN FİNAL: tek ana rozet (öncelik Fırsat > Yeni Gelen), emojisiz.
+  if (p.deal) tagSpans.push('<span class="laptop-card-tag">Fırsat</span>');
+  else if (p.newArrival) tagSpans.push('<span class="laptop-card-tag">Yeni Gelen</span>');
   const tag = tagSpans.length ? '<div class="laptop-card-tags">' + tagSpans.join('') + '</div>' : '';
   const priceMarkup = p.price === null
     ? '<span class="laptop-card-price ask">WhatsApp\'tan Sor</span>'
@@ -4502,25 +4465,19 @@ function renderLaptopGallery(p) {
   });
 }
 
-// FAZ 5 DÜZELTME: Modal rozetleri - kartta (laptopCardMarkup) kullanılan
-// AYNI alanlar (deal/newArrival), AYNI BAĞIMSIZ mantık: ikisi de true ise
-// ikisi de aynı anda gösterilir (öncelik/if-else YOK). Sade emoji + kısa
-// metin, ekstra renk/animasyon yok, sadece var(--laptop-gold).
+// Modal rozeti - kartla (laptopCardMarkup) aynı alanlar (deal/newArrival)
+// ve aynı öncelik; ekstra renk/animasyon yok, sadece var(--laptop-gold).
 function renderLaptopModalBadges(p) {
   const wrap = document.getElementById('laptopModalBadges');
   if (!wrap) return;
   wrap.textContent = '';
   if (!p) return;
-  if (p.deal) {
+  // REDESIGN FİNAL: kartla aynı — tek rozet (Fırsat > Yeni Gelen), emojisiz.
+  const label = p.deal ? 'Fırsat' : (p.newArrival ? 'Yeni Gelen' : '');
+  if (label) {
     const badge = document.createElement('span');
     badge.className = 'laptop-modal-badge';
-    badge.textContent = '🔥 Fırsat';
-    wrap.appendChild(badge);
-  }
-  if (p.newArrival) {
-    const badge = document.createElement('span');
-    badge.className = 'laptop-modal-badge';
-    badge.textContent = '🆕 Yeni Gelen';
+    badge.textContent = label;
     wrap.appendChild(badge);
   }
 }
