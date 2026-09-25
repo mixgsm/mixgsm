@@ -934,6 +934,51 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .brand-strip-scroller { flex-direction: column; gap: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; }
   .brand-group { flex-wrap: wrap; justify-content: center; }
 }
+
+/* REDESIGN ADIM 6 — İHTİYACA GÖRE (BENTO)
+   Koyu bölüm; kartlar çerçevesiz/gölgesiz, zeminden bir ton açık yüzey +
+   çok hafif köşe ışığı. <360: tek sütun, 360–767: 2×2 (açıklama gizli),
+   768–899: 2 sütun (Oyun ve Tasarım tam genişlik), >=900: 4 sütunlu Bento
+   (Oyun büyük kart, 2×2 alan). Bağlantılar en az 44px. */
+.bento { padding: 44px 20px 48px; }
+.bento-label { margin: 0 0 18px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.bento-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.bento-card { position: relative; display: flex; flex-direction: column; min-width: 0; padding: 18px 16px 8px; border-radius: 20px; background: radial-gradient(120% 90% at 100% 0%, rgba(128,150,210,0.13), transparent 55%), var(--surface); color: var(--text); }
+.bento-ic { font-size: 24px; color: #C9D2E6; margin-bottom: 14px; }
+.bento-title { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+.bento-desc { display: none; margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.bento-links { margin-top: auto; display: flex; flex-direction: column; }
+.bento-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--muted); transition: color .2s var(--ease-out); }
+.bento-link span { display: inline-block; transition: transform .2s var(--ease-out); }
+.bento-link:hover { color: var(--text); }
+.bento-link:hover span { transform: translateX(2px); }
+.bento-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 359px) {
+  .bento-grid { grid-template-columns: 1fr; gap: 10px; }
+  .bento-card { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 14px 16px 6px; }
+  .bento-ic { margin: 0; }
+  .bento-title { margin: 0; }
+  .bento-links { grid-column: 1 / -1; flex-direction: row; gap: 20px; }
+}
+@media (min-width: 768px) {
+  .bento { padding: 56px 32px 60px; }
+  .bento-card { padding: 22px 22px 8px; }
+  .bento-card--lg, .bento-card--tasarim { grid-column: span 2; }
+  .bento-title { font-size: 20px; }
+  .bento-desc { display: block; }
+  .bento-links { flex-direction: row; gap: 24px; }
+}
+@media (min-width: 900px) {
+  .bento-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .bento-card { min-height: 190px; padding: 24px 22px 10px; }
+  .bento-card--lg { grid-column: 1 / span 2; grid-row: 1 / span 2; padding: 32px 30px 14px; background: radial-gradient(90% 80% at 85% 10%, rgba(128,150,210,0.18), transparent 60%), var(--surface); }
+  .bento-card--is { grid-column: 3 / span 2; }
+  .bento-card--okul { grid-column: 3; }
+  .bento-card--tasarim { grid-column: 4; }
+  .bento-card--lg .bento-ic { font-size: 34px; margin-bottom: 20px; }
+  .bento-card--lg .bento-title { font-size: clamp(30px, 3.2vw, 40px); letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 10px; }
+  .bento-card--lg .bento-desc { font-size: 16px; }
+}
 #laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
 
 /* REDESIGN ADIM 4 — KATALOG GİRİŞİ + LAPTOP TANITIM BANDI
@@ -1008,6 +1053,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <symbol id="ic-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"></path></symbol>
   <symbol id="ic-smartphone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect><line x1="10.5" y1="18" x2="13.5" y2="18"></line></symbol>
   <symbol id="ic-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="10.5" rx="1.5"></rect><path d="M2 19h20"></path></symbol>
+  <symbol id="ic-gamepad" viewBox="0 0 24 24"><path d="M7.5 7h9a4.5 4.5 0 0 1 4.37 5.6l-.95 3.8a2.3 2.3 0 0 1-3.9 1.05L14.3 15.5H9.7l-1.72 1.95a2.3 2.3 0 0 1-3.9-1.05l-.95-3.8A4.5 4.5 0 0 1 7.5 7z"></path><line x1="8" y1="10" x2="8" y2="13"></line><line x1="6.5" y1="11.5" x2="9.5" y2="11.5"></line><circle cx="15.5" cy="10.8" r=".6"></circle><circle cx="17" cy="12.6" r=".6"></circle></symbol>
+  <symbol id="ic-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"></path><path d="M3 12.5h18"></path></symbol>
+  <symbol id="ic-cap" viewBox="0 0 24 24"><polygon points="12 4 22 9 12 14 2 9 12 4"></polygon><path d="M6 11v4.5c0 1.4 2.7 3 6 3s6-1.6 6-3V11"></path><line x1="22" y1="9" x2="22" y2="14"></line></symbol>
+  <symbol id="ic-pen" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><line x1="13" y1="7" x2="17" y2="11"></line></symbol>
 </svg>
 
 <!-- REDESIGN ADIM 2: header'ın "kaydırıldı" durumunu tetikleyen görünmez
@@ -1097,6 +1146,51 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <button type="button" class="brand-link" data-brand-val="HP" aria-pressed="false">HP</button>
       <button type="button" class="brand-link" data-brand-val="ASUS" aria-pressed="false">Asus</button>
     </div>
+  </div>
+</section>
+<!-- REDESIGN ADIM 6: İhtiyaca göre (Bento). Ürün/sayı/görsel YOK; her kart
+     mevcut filtrelere yönlendirir (telefon: Kullanım Alanı filtresi,
+     laptop: Kullanım Amacı filtresi, Tasarım: "Bana Laptop Bul" formu).
+     Laptop verisi sadece Laptop bağlantısına tıklanınca (mevcut lazy-load). -->
+<section class="bento zone-dark" id="bento" aria-labelledby="bentoTitle">
+  <h2 class="bento-label" id="bentoTitle">İhtiyaca Göre</h2>
+  <div class="bento-grid">
+    <article class="bento-card bento-card--lg">
+      <svg class="icon bento-ic" aria-hidden="true"><use href="#ic-gamepad"></use></svg>
+      <h3 class="bento-title">Oyun &amp; Performans</h3>
+      <p class="bento-desc">Akıcı oyun, güçlü işlemci.</p>
+      <div class="bento-links">
+        <a href="#catalog" class="bento-link" data-bento-phone="perf" aria-label="Oyun ve Performans: performans odaklı telefonları göster">Telefon <span aria-hidden="true">→</span></a>
+        <a href="#laptopCatalogTitle" class="bento-link" data-bento-laptop="Gaming" aria-label="Oyun ve Performans: oyun laptoplarını göster">Laptop <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+    <article class="bento-card bento-card--is">
+      <svg class="icon bento-ic" aria-hidden="true"><use href="#ic-briefcase"></use></svg>
+      <h3 class="bento-title">İş &amp; Ofis</h3>
+      <p class="bento-desc">Gün boyu verimli çalışma.</p>
+      <div class="bento-links">
+        <a href="#catalog" class="bento-link" data-bento-phone="battery" aria-label="İş ve Ofis: uzun pil ömürlü telefonları göster">Telefon <span aria-hidden="true">→</span></a>
+        <a href="#laptopCatalogTitle" class="bento-link" data-bento-laptop="İş / Ofis" aria-label="İş ve Ofis: iş laptoplarını göster">Laptop <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+    <article class="bento-card bento-card--okul">
+      <svg class="icon bento-ic" aria-hidden="true"><use href="#ic-cap"></use></svg>
+      <h3 class="bento-title">Okul &amp; Öğrenci</h3>
+      <p class="bento-desc">Bütçe dostu, günlük işler için.</p>
+      <div class="bento-links">
+        <a href="#catalog" class="bento-link" data-bento-phone="price" aria-label="Okul ve Öğrenci: uygun fiyatlı telefonları göster">Telefon <span aria-hidden="true">→</span></a>
+        <a href="#laptopCatalogTitle" class="bento-link" data-bento-laptop="Öğrenci" aria-label="Okul ve Öğrenci: öğrenci laptoplarını göster">Laptop <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
+    <article class="bento-card bento-card--tasarim">
+      <svg class="icon bento-ic" aria-hidden="true"><use href="#ic-pen"></use></svg>
+      <h3 class="bento-title">Tasarım &amp; Üretim</h3>
+      <p class="bento-desc">Fotoğraf, video, yaratıcı işler.</p>
+      <div class="bento-links">
+        <a href="#catalog" class="bento-link" data-bento-phone="camera" aria-label="Tasarım ve Üretim: güçlü kameralı telefonları göster">Telefon <span aria-hidden="true">→</span></a>
+        <a href="#laptopCatalogTitle" class="bento-link" data-bento-form="Tasarım / Video Kurgu" aria-label="Tasarım ve Üretim: laptop önerisi formunu aç">Laptop <span aria-hidden="true">→</span></a>
+      </div>
+    </article>
   </div>
 </section>
 </div><!-- /#home-vitrin -->
@@ -4991,6 +5085,61 @@ async function loadLaptopCatalog() {
     const real = products.filter(p => !isNonProductRow(p));
     document.querySelectorAll('.brand-link[data-brand-term]').forEach(a => { a.hidden = !real.some(p => searchScore(p, a.dataset.brandTerm) > 0); });
   }).observe(grid, { childList: true });
+})();
+
+// ================================================================
+// REDESIGN ADIM 6 — İHTİYACA GÖRE (BENTO)
+// Bağımsız; mevcut fonksiyonlar/veri DEĞİŞMEZ. Sadece mevcut kontrolleri
+// tetikler. Laptop verisi yalnızca Laptop bağlantısında (mevcut lazy-load).
+// Tasarım formu: kullanıcı taslağı korunur; Kullanım Amacı boşsa doldurulur.
+// ================================================================
+(function initBento() {
+  const root = document.getElementById('bento');
+  if (!root) return;
+  const $ = id => document.getElementById(id);
+  const smooth = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const go = id => { const t = $(id); if (t) t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }); };
+  const setInput = (el, v) => { if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+  const onLaptopReady = cb => {
+    if (!$('toggleBtnLaptop').classList.contains('active')) $('toggleBtnLaptop').click();
+    const t0 = Date.now();
+    (function wait() {
+      const busy = typeof LaptopStore === 'undefined' || LaptopStore.loading;
+      if (busy && Date.now() - t0 < 15000) return setTimeout(wait, 120);
+      cb(!busy && LaptopStore.loaded);
+    })();
+  };
+
+  root.addEventListener('click', e => {
+    const a = e.target.closest('.bento-link');
+    if (!a) return;
+    e.preventDefault();                                          // hash yazılmaz
+    document.querySelectorAll('.brand-link[aria-pressed="true"]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    const d = a.dataset;
+    if (d.bentoPhone) {
+      if (!$('toggleBtnPhone').classList.contains('active')) $('toggleBtnPhone').click();
+      setInput($('q'), '');
+      $('advClearBtn').click();
+      document.querySelector('#categoryFilters button[data-group="PHONE"]').click();
+      document.querySelector('#quickusePills button[data-quick="' + d.bentoPhone + '"]').click();
+      return go('catalog');
+    }
+    onLaptopReady(ok => {
+      if (d.bentoForm) {
+        $('laptopFindBtn').click();                              // mevcut form (taslak + odak + Escape)
+        const u = $('lfUsage');
+        if (u && !u.value) { u.value = d.bentoForm; u.dispatchEvent(new Event('change', { bubbles: true })); }
+        return;
+      }
+      if (ok) {
+        setInput($('laptopQ'), '');
+        $('laptopFilterClearBtn').click();
+        const b = [...document.querySelectorAll('#laptopUsageGroup button')].find(x => x.dataset.val === d.bentoLaptop);
+        if (b) b.click();                                        // yoksa: tüm laptoplar
+      }
+      go('laptopCatalogTitle');
+    });
+  });
 })();
 </script>
 </body>
