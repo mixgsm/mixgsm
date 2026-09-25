@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>MİX GSM - Güncel Fiyat Listesi</title>
+<style>
+
+  :root{
+    --bg:#080808;--surface:#111111;--surface-2:#171717;--text:#F5F5F5;--muted:#8A8A8A;
+    --accent:#E63946;--whatsapp:#25D366;--amber:#F59E0B;--line:rgba(255,255,255,0.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;}
+  a{color:inherit}
+  .u-groupheader{margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+  .u-groupheader h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    font-weight:700;margin:0;}
+  .u-brandheader{margin:14px 0 8px;}
+  .u-brandheader h3{font-size:17px;font-weight:700;margin:0;color:var(--text);}
+  .u-brandheader .cont{font-size:13px;font-weight:500;color:var(--muted);}
+  .model-block{background:var(--surface);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+  .model-block .model-name{font-size:14.5px;font-weight:700;margin:0 0 6px;color:var(--text);}
+  .variant-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+  .variant-row + .variant-row{border-top:1px solid var(--line);}
+  .variant-row .variant{flex:1 1 auto;font-size:13px;color:var(--muted);min-width:0;}
+  .variant-row .price{font-size:16px;font-weight:800;color:var(--text);white-space:nowrap;
+    letter-spacing:-.2px;}
+  .variant-row.no-variant .price{flex:1 1 auto;}
+  .stock-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+    padding:4px 9px 4px 7px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+  .stock-badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .stock-badge.st-in{background:rgba(37,211,102,0.14);color:var(--whatsapp);}
+  .stock-badge.st-in .dot{background:var(--whatsapp);}
+  .stock-badge.st-out{background:rgba(230,57,70,0.14);color:var(--accent);}
+  .stock-badge.st-out .dot{background:var(--accent);}
+  .stock-badge.st-ask{background:rgba(245,158,11,0.16);color:var(--amber);}
+  .stock-badge.st-ask .dot{background:var(--amber);}
+  .stock-badge.st-unknown{background:rgba(255,255,255,0.08);color:var(--muted);}
+  .stock-badge.st-unknown .dot{background:var(--muted);}
+
+  body{padding:0 16px 40px;}
+  .wrap{max-width:640px;margin:0 auto;}
+  .top{display:flex;align-items:center;gap:12px;padding:22px 0 16px;}
+  .top img{width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;}
+  .top .brand-name{font-size:18px;font-weight:700;margin:0;}
+  .top .brand-sub{font-size:12.5px;color:var(--muted);margin:2px 0 0;}
+  h1{font-size:20px;margin:6px 0 2px;}
+  .lead{color:var(--muted);font-size:13px;margin:0 0 18px;}
+  .pdf-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);
+    color:#fff;font-weight:700;font-size:15px;text-decoration:none;border-radius:14px;padding:15px 18px;margin-bottom:22px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:24px;}
+  .thumb{display:block;text-decoration:none;color:var(--text);background:var(--surface);border-radius:12px;
+    overflow:hidden;border:1px solid var(--line);}
+  .thumb img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover;background:var(--surface-2);}
+  .thumb span{display:block;text-align:center;font-size:12px;padding:7px 0;color:var(--muted);}
+  .foot{padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7;}
+  .foot a{font-weight:600;text-decoration:none;}
+  .foot .wa{color:var(--whatsapp);}
+  .foot .site{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="/mix-gsm-logo.jpg" alt="MİX GSM logosu">
+    <div>
+      <p class="brand-name">MİX GSM</p>
+      <p class="brand-sub">Gaziantep • Telefon ve Teknoloji Mağazası</p>
+    </div>
+  </div>
+  <h1>Güncel Fiyat ve Stok Listesi</h1>
+  <p class="lead">Son güncelleme: 25 Eylül 2026 11:14</p>
+  <a class="pdf-btn" href="fiyat-listesi.pdf">PDF olarak indir</a>
+  <div class="grid">
+    
+    <a class="thumb" href="fiyat-listesi-01.jpg" target="_blank" rel="noopener">
+      <img src="fiyat-listesi-01.jpg" alt="Fiyat listesi sayfa 1" loading="lazy">
+      <span>Sayfa 1 / 5</span>
+    </a>
+
+    <a class="thumb" href="fiyat-listesi-02.jpg" target="_blank" rel="noopener">
+      <img src="fiyat-listesi-02.jpg" alt="Fiyat listesi sayfa 2" loading="lazy">
+      <span>Sayfa 2 / 5</span>
+    </a>
+
+    <a class="thumb" href="fiyat-listesi-03.jpg" target="_blank" rel="noopener">
+      <img src="fiyat-listesi-03.jpg" alt="Fiyat listesi sayfa 3" loading="lazy">
+      <span>Sayfa 3 / 5</span>
+    </a>
+
+    <a class="thumb" href="fiyat-listesi-04.jpg" target="_blank" rel="noopener">
+      <img src="fiyat-listesi-04.jpg" alt="Fiyat listesi sayfa 4" loading="lazy">
+      <span>Sayfa 4 / 5</span>
+    </a>
+
+    <a class="thumb" href="fiyat-listesi-05.jpg" target="_blank" rel="noopener">
+      <img src="fiyat-listesi-05.jpg" alt="Fiyat listesi sayfa 5" loading="lazy">
+      <span>Sayfa 5 / 5</span>
+    </a>
+  </div>
+  <div class="foot">
+    Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep<br>
+    WhatsApp: <a class="wa" href="https://wa.me/905424818255">0542 481 82 55</a><br>
+    Tüm site: <a class="site" href="https://mixgsm.tr/">mixgsm.tr</a>
+  </div>
+</div>
+</body>
+</html>
