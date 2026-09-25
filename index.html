@@ -979,6 +979,58 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .bento-card--lg .bento-title { font-size: clamp(30px, 3.2vw, 40px); letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 10px; }
   .bento-card--lg .bento-desc { font-size: 16px; }
 }
+
+/* REDESIGN ADIM 7 — ÖNE ÇIKAN FIRSATLAR + YENİ GELENLER + LAPTOP FIRSATLARI
+   Kartlar mevcut katalog kartlarıdır (.card / .laptop-card); burada sadece
+   yerleşim. <1024px: yatay kaydırmalı şerit (scrollbar gizli, sonraki kartın
+   kenarı görünür, sağda hafif solma — marka şeridiyle aynı yaklaşım).
+   >=1024px: 4 sütun tek satır, en fazla 4 kart (fazlası gizli, boş kart yok).
+   Fırsatlar: hafif vurgu zemini + daha güçlü başlık. Yeni Gelenler: sade. */
+.vitrin { padding: 40px 0 44px; }
+.vitrin[hidden] { display: none; }
+.vitrin-head { max-width: 1200px; margin: 0 auto 16px; padding: 0 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; column-gap: 12px; }
+.vitrin-title { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; color: var(--text); }
+.vitrin-more { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--muted); transition: color .2s var(--ease-out); }
+.vitrin-more span { display: inline-block; transition: transform .2s var(--ease-out); }
+.vitrin-more:hover { color: var(--text); }
+.vitrin-more:hover span { transform: translateX(2px); }
+.vitrin-more:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 6px; }
+.vitrin-track { display: flex; gap: 12px; padding: 4px 20px 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.vitrin-track::-webkit-scrollbar { display: none; }
+.vitrin-track > .card, #laptop-section .vitrin-track > .laptop-card { flex: 0 0 72%; max-width: 300px; min-width: 0; scroll-snap-align: start; }
+.vitrin .visual { height: 210px; padding: 34px 16px; }
+/* Görsel kutusu önceden boyutlu: yatay şeritte sonraki kart görünür görünmez yüklenir. */
+.vitrin .visual img { width: 100%; height: 100%; max-height: 142px; object-fit: contain; }
+/* Vitrinde rozetler görselin üstünde okunaklı kalsın (katalog kartı değişmez). */
+.vitrin .tagbadge, .vitrin .stock { background: var(--surface-2); box-shadow: 0 0 0 1px var(--line); }
+.vitrin--deal .tagbadge.tag-firsat { background: color-mix(in srgb, var(--accent) 86%, #000); color: #fff; box-shadow: none; font-weight: 600; }
+.vitrin--deal { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.vitrin--deal .vitrin-title { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+.vitrin--deal .vitrin-title::before { content: ""; flex: 0 0 auto; width: 4px; height: .9em; border-radius: 2px; background: var(--accent); }
+.vitrin--new .vitrin-title { color: color-mix(in srgb, var(--text) 88%, transparent); }
+#laptop-section .vitrin--laptop { margin-top: 36px; }
+#laptop-section .vitrin--laptop { background: color-mix(in srgb, var(--laptop-gold) 7%, var(--surface)); }
+#laptop-section .vitrin--laptop .vitrin-title { font-size: 20px; }
+#laptop-section .vitrin--laptop .vitrin-title::before { background: var(--laptop-gold); }
+@media (max-width: 359px) {
+  .vitrin-track > .card, #laptop-section .vitrin-track > .laptop-card { flex-basis: 82%; }
+}
+/* Görsel yüklenince kart yüksekliği değişmesin (16:9 kutu sabit). */
+#laptop-section .vitrin .laptop-card-visual img { position: absolute; inset: 0; }
+@media (min-width: 768px) {
+  .vitrin { padding: 52px 0 56px; }
+  .vitrin-head { padding: 0 32px; margin-bottom: 20px; }
+  .vitrin-track { padding-left: 32px; padding-right: 32px; scroll-padding-inline: 32px; gap: 14px; }
+  .vitrin-track > .card, #laptop-section .vitrin-track > .laptop-card { flex-basis: calc((100% - 28px) / 2.6); max-width: none; }
+  .vitrin-title { font-size: 24px; }
+  .vitrin--deal .vitrin-title, #laptop-section .vitrin--laptop .vitrin-title { font-size: 30px; }
+}
+@media (min-width: 1024px) {
+  .vitrin-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; max-width: 1200px; margin: 0 auto; overflow: visible; scroll-snap-type: none; -webkit-mask-image: none; mask-image: none; }
+  .vitrin-track > :nth-child(n+5), #laptop-section .vitrin-track > .laptop-card:nth-child(n+5) { display: none; }
+  .vitrin .visual { height: 240px; padding: 38px 18px; }
+  .vitrin .visual img { max-height: 164px; }
+}
 #laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
 
 /* REDESIGN ADIM 4 — KATALOG GİRİŞİ + LAPTOP TANITIM BANDI
@@ -1193,6 +1245,22 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     </article>
   </div>
 </section>
+<!-- REDESIGN ADIM 7: Öne Çıkan Fırsatlar + Yeni Gelenler (telefon).
+     Ürünler SADECE mevcut katalogdan gelir (Sheet'teki Fırsat / Yeni etiketi);
+     sabit liste, sabit ID, sahte fiyat/stok/görsel YOK. Kartlar JS ile
+     (initVitrin) doldurulur; uygun ürün yoksa bölüm gizli kalır. -->
+<section class="vitrin vitrin--deal zone-light" id="vitrinDeals" aria-labelledby="vitrinDealsTitle" hidden>
+  <div class="vitrin-head">
+    <h2 class="vitrin-title" id="vitrinDealsTitle">Öne Çıkan Fırsatlar</h2>
+  </div>
+  <div class="vitrin-track" id="vitrinDealsTrack"></div>
+</section>
+<section class="vitrin vitrin--new zone-light" id="vitrinNew" aria-labelledby="vitrinNewTitle" hidden>
+  <div class="vitrin-head">
+    <h2 class="vitrin-title" id="vitrinNewTitle">Yeni Gelenler</h2>
+  </div>
+  <div class="vitrin-track" id="vitrinNewTrack"></div>
+</section>
 </div><!-- /#home-vitrin -->
 
 <!-- FAZ 2: Storefront toggle. Telefon/Kişisel Bakım <-> Laptop & PC gecisi.
@@ -1216,11 +1284,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
      görünür). #heroProductImg / #heroVisualEmpty ID'leri oraya taşındı,
      renderHeroProduct() değişmeden onları doldurmaya devam ediyor. -->
 
-<div class="section-title" id="featuredTitle" style="display:none;">
-  <h2>Bugün MİX GSM'de</h2>
-  <p>Güncel stoktan öne çıkan modeller.</p>
-</div>
-<section class="featured-grid" id="featuredGrid"></section>
+<!-- REDESIGN ADIM 7: "Bugün MİX GSM'de" bölümü kaldırıldı (yerini Öne Çıkan
+     Fırsatlar aldı). renderFeatured() DOM yoksa sessizce çıkıyor. -->
 
 <div class="section-title" id="catalog">
   <h2>Telefon Kataloğu</h2>
@@ -1346,6 +1411,16 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <button type="button" class="laptop-btn-outline" id="laptopStockBtn">Stoktaki Laptoplar</button>
     </div>
     <p class="laptop-hero-note">Laptop kataloğu yükleniyor…</p>
+  </section>
+
+  <!-- REDESIGN ADIM 7: Laptop Fırsatları. Sadece laptop verisi (mevcut
+       lazy-load ile) yüklendikten sonra dolar; açılışta istek yapmaz. -->
+  <section class="vitrin vitrin--deal vitrin--laptop" id="vitrinLaptopDeals" aria-labelledby="vitrinLaptopDealsTitle" hidden>
+    <div class="vitrin-head">
+      <h2 class="vitrin-title" id="vitrinLaptopDealsTitle">Laptop Fırsatları</h2>
+      <a href="#laptopCatalogTitle" class="vitrin-more" id="vitrinLaptopMore">Fırsatları Gör <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="vitrin-track" id="vitrinLaptopDealsTrack"></div>
   </section>
 
   <div class="section-title" id="laptopCatalogTitle">
@@ -5140,6 +5215,229 @@ async function loadLaptopCatalog() {
       go('laptopCatalogTitle');
     });
   });
+})();
+
+// ================================================================
+// REDESIGN ADIM 7 — ÖNE ÇIKAN FIRSATLAR + YENİ GELENLER + LAPTOP FIRSATLARI
+// Bağımsız blok; mevcut fonksiyonlar/veri DEĞİŞMEZ. Kartlar mevcut kart
+// yapısıyla (telefon: render() ile aynı işaretleme + openProduct/toggleFav/
+// toggleCompare; laptop: laptopCardMarkup + openLaptopProductFromCard).
+// Vitrinler #grid / #laptopGrid'e ASLA yazmaz; sadece onları izler
+// (MutationObserver) ve kendi kaplarına yazar -> döngü oluşmaz.
+// Laptop vitrini yalnızca LaptopStore dolunca oluşur (yeni istek YOK).
+// ================================================================
+(function initVitrin() {
+  const $ = id => document.getElementById(id);
+  const phoneGrid = $('grid');
+  const laptopGrid = $('laptopGrid');
+  const secDeals = $('vitrinDeals'), trackDeals = $('vitrinDealsTrack');
+  const secNew = $('vitrinNew'), trackNew = $('vitrinNewTrack');
+  const secLaptop = $('vitrinLaptopDeals'), trackLaptop = $('vitrinLaptopDealsTrack');
+  if (!phoneGrid || !secDeals || !secNew) return;
+
+  const MAX = 8;                                   // mobil şerit; masaüstünde CSS ilk 4'ü gösterir
+  const NO_PHOTO = /gorsel-yok\.jpg(?:[?#]|$)/i;  // telefon + laptop "görsel yok" dosyaları
+  const failed = new Set();                        // gerçek görseli yüklenemeyen modeller (oturum boyunca)
+  const norm = v => String(v || '').trim().toLocaleUpperCase('tr');
+  const smooth = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  // --- Seçim kuralları (ileride tarih alanı gelirse sadece burası değişir) ---
+  const isVitrinDeal = p => p.tagLabel === 'Fırsat' && p.group === 'PHONE';   // kişisel bakım hariç
+  const isVitrinNew = p => p.tagLabel === 'Yeni';
+  const phoneOk = p => !isNonProductRow(p) && p.stock === 'IN' && p.p !== null;
+  const hasPhonePhoto = p => imageCandidatesForProduct(p).some(u => !NO_PHOTO.test(u));
+  const phoneKey = p => 'p|' + norm(p.b) + '|' + norm(p.m);
+  const laptopOk = p => p.deal && p.stock === 'IN' && p.price !== null && !!String(p.img || '').trim();
+  const laptopKey = p => 'l|' + norm(p.brand) + '|' + norm(p.model);
+
+  // Aynı model tek kart + markalar arasında dönüşümlü seçim. Her markanın
+  // içindeki sıra ve markaların sırası gerçek katalog sırasıdır.
+  function pick(list, keyOf, brandOf) {
+    const seen = new Set(), byBrand = new Map();
+    list.forEach(p => {
+      const k = keyOf(p);
+      if (seen.has(k) || failed.has(k)) return;
+      seen.add(k);
+      const b = norm(brandOf(p));
+      if (!byBrand.has(b)) byBrand.set(b, []);
+      byBrand.get(b).push(p);
+    });
+    const queues = [...byBrand.values()], out = [];
+    for (let i = 0; out.length < MAX && queues.some(q => i < q.length); i++) {
+      queues.forEach(q => { if (i < q.length && out.length < MAX) out.push(q[i]); });
+    }
+    return out;
+  }
+
+  // Telefon kartı: render() içindeki kartla aynı sınıflar/işleyiciler.
+  function phoneCard(p) {
+    const i = products.indexOf(p);
+    const cmp = compareList.includes(favKeyOf(p));
+    const fav = isFav(p);
+    const tag = p.tagLabel ? `<span class="tagbadge ${p.tagClass}">${escapeHtml(p.tagLabel)}</span>` : '';
+    return `
+    <article class="card ${cmp ? "comparing" : ""}" data-vitrin-key="${escapeHtml(phoneKey(p))}" data-i="${i}" onclick="openProduct(${i})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
+      <div class="visual">
+        ${tag}
+        <span class="stock">● Stokta</span>
+        <button class="fav ${fav ? "active" : ""}" onclick="toggleFav(event, ${i})" aria-label="${fav ? "Favorilerden çıkar" : "Favoriye ekle"}"><svg class="icon"><use href="#ic-heart"></use></svg></button>
+        ${autoImageMarkup(p)}
+      </div>
+      <div class="info">
+        <div class="brand">${escapeHtml(p.b)}</div>
+        <div class="name">${escapeHtml(p.m)}</div>
+        <span class="spec">${escapeHtml(p.s)}</span>
+        <div class="bottom">
+          <div class="price">
+            <small>GÜNCEL FİYAT</small>
+            <strong>${fmt(p.p)} <em>TL</em></strong>
+          </div>
+          <button class="compare-toggle ${cmp ? "active" : ""}" onclick="toggleCompare(event, ${i})"><svg class="icon"><use href="#ic-compare"></use></svg> ${cmp ? "Seçildi" : "Karşılaştır"}</button>
+        </div>
+      </div>
+    </article>`;
+  }
+
+  // Favori/karşılaştırma değişince kartları yeniden çizmeden durumu eşitle.
+  function syncPhoneState(track) {
+    track.querySelectorAll('.card[data-i]').forEach(card => {
+      const p = products[+card.dataset.i];
+      if (!p) return;
+      const cmp = compareList.includes(favKeyOf(p));
+      const fav = isFav(p);
+      card.classList.toggle('comparing', cmp);
+      const f = card.querySelector('.fav');
+      if (f && f.classList.contains('active') !== fav) {
+        f.classList.toggle('active', fav);
+        f.setAttribute('aria-label', fav ? 'Favorilerden çıkar' : 'Favoriye ekle');
+      }
+      const c = card.querySelector('.compare-toggle');
+      if (c && c.classList.contains('active') !== cmp) {
+        c.classList.toggle('active', cmp);
+        c.innerHTML = '<svg class="icon"><use href="#ic-compare"></use></svg> ' + (cmp ? 'Seçildi' : 'Karşılaştır');
+      }
+    });
+  }
+
+  // Bölümü doldur / gizle. İçerik aynıysa DOM'a dokunulmaz (görseller yeniden yüklenmez).
+  function fill(section, track, items, sig, markup) {
+    if (!items.length) {
+      section.hidden = true;
+      track.innerHTML = '';
+      track.dataset.sig = '';
+      return;
+    }
+    section.hidden = false;
+    if (track.dataset.sig === sig) return;
+    track.dataset.sig = sig;
+    track.innerHTML = items.map(markup).join('');
+  }
+
+  function laptopCard(p) {
+    // Mevcut laptop kartı; vitrinde tek rozet (Fırsat) — katalog kartı değişmez.
+    const k = escapeHtml(laptopKey(p));
+    return laptopCardMarkup(p).replace('<article class="laptop-card"', '<article class="laptop-card" data-vitrin-key="' + k + '"');
+  }
+  function singleLaptopBadge(track) {
+    track.querySelectorAll('.laptop-card-tags').forEach(box => {
+      while (box.children.length > 1) box.lastElementChild.remove();
+      if (box.firstElementChild) box.firstElementChild.textContent = 'Fırsat';
+    });
+  }
+
+  function update() {
+    if (Array.isArray(products) && products.length) {
+      const base = products.filter(phoneOk);
+      const deals = pick(base.filter(p => isVitrinDeal(p) && hasPhonePhoto(p)), phoneKey, p => p.b);
+      const fresh = pick(base.filter(p => isVitrinNew(p) && hasPhonePhoto(p)), phoneKey, p => p.b);
+      const sigOf = list => list.map(p => [products.indexOf(p), phoneKey(p), p.s, p.p, p.tagLabel].join('~')).join('|');
+      fill(secDeals, trackDeals, deals, sigOf(deals), phoneCard);
+      fill(secNew, trackNew, fresh, sigOf(fresh), phoneCard);
+      syncPhoneState(trackDeals);
+      syncPhoneState(trackNew);
+    }
+    updateLaptop();
+  }
+
+  // Laptop vitrini ilk kez görününce üstte yer açılır. Kullanıcı az önce
+  // laptop kataloğuna giden bir bağlantıya bastıysa (veri henüz yüklenirken
+  // başlamış kaydırma), hedef kaymasın diye başlığa yeniden hizalanır.
+  let lastLaptopNav = 0;
+  document.addEventListener('click', e => {
+    const el = e.target.closest && e.target.closest('a[href="#laptopCatalogTitle"]:not([data-bento-form]), [data-brand-val], #laptopStockBtn');
+    if (el) lastLaptopNav = Date.now();
+  }, true);
+  function updateLaptop() {
+    if (!secLaptop || typeof LaptopStore === 'undefined' || !LaptopStore.products || !LaptopStore.products.length) return;
+    const list = pick(LaptopStore.products.filter(laptopOk), laptopKey, p => p.brand);
+    const sig = list.map(p => [LaptopStore.products.indexOf(p), laptopKey(p), p.price].join('~')).join('|');
+    const before = trackLaptop.dataset.sig;
+    const wasHidden = secLaptop.hidden;
+    fill(secLaptop, trackLaptop, list, sig, laptopCard);
+    if (trackLaptop.dataset.sig !== before) singleLaptopBadge(trackLaptop);
+    if (wasHidden && !secLaptop.hidden && Date.now() - lastLaptopNav < 5000) {
+      const t = $('laptopCatalogTitle');
+      if (t) requestAnimationFrame(() => t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
+    }
+  }
+
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; update(); });
+  }
+
+  // Görsel kontrolü: yedek görseller tükenip "görsel yok" dosyasına düşen
+  // (ya da hiç yüklenemeyen) kart vitrinden çıkarılır, sıradaki ürün gelir.
+  function watchPhotos(section, track, dropOnAnyError) {
+    const drop = img => {
+      const card = img.closest('[data-vitrin-key]');
+      if (!card || !track.contains(card)) return;
+      failed.add(card.dataset.vitrinKey);
+      card.remove();
+      track.dataset.sig = 'x';                      // bir sonraki güncellemede yeniden seç
+      if (!track.children.length) section.hidden = true;
+      schedule();
+    };
+    track.addEventListener('load', e => {
+      const t = e.target;
+      if (t && t.tagName === 'IMG' && NO_PHOTO.test(t.currentSrc || t.src)) drop(t);
+    }, true);
+    track.addEventListener('error', e => {
+      const t = e.target;
+      if (!t || t.tagName !== 'IMG') return;
+      if (dropOnAnyError || NO_PHOTO.test(t.src)) drop(t);   // telefon: ara hatalar tryNextProductImage'da
+    }, true);
+  }
+  watchPhotos(secDeals, trackDeals, false);
+  watchPhotos(secNew, trackNew, false);
+
+  if (secLaptop && trackLaptop) {
+    watchPhotos(secLaptop, trackLaptop, true);
+    trackLaptop.addEventListener('click', e => {
+      const card = e.target.closest('.laptop-card');
+      if (card && trackLaptop.contains(card)) openLaptopProductFromCard(card);   // Enter/Space: genel role="button" dinleyicisi
+    });
+    const more = $('vitrinLaptopMore');
+    if (more) more.addEventListener('click', e => {
+      e.preventDefault();                                                      // hash yazılmaz
+      const lq = $('laptopQ');
+      if (lq && lq.value) { lq.value = ''; lq.dispatchEvent(new Event('input', { bubbles: true })); }
+      const clr = $('laptopFilterClearBtn');
+      if (clr) clr.click();
+      const sort = $('laptopSort');
+      if (sort) { sort.value = 'deal'; sort.dispatchEvent(new Event('change', { bubbles: true })); }   // mevcut "Fırsatlar" sıralaması
+      const t = $('laptopCatalogTitle');
+      if (t) t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    });
+  }
+
+  // Telefon: kare başına tek güncelleme. Laptop: hemen (mikro görev) —
+  // böylece vitrin, veri yüklenince yapılan kaydırmalardan ÖNCE yerini alır.
+  new MutationObserver(schedule).observe(phoneGrid, { childList: true });
+  if (laptopGrid) new MutationObserver(updateLaptop).observe(laptopGrid, { childList: true });
+  schedule();
 })();
 </script>
 </body>
