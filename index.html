@@ -913,6 +913,27 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    butonunu ekranın 40px dışına itiyordu. min-width:0 ile kutunun
    daralabilmesine izin veriliyor (telefon arama kutusunda sorun yok). */
 #laptop-section .laptop-search { min-width: 0; }
+
+/* REDESIGN ADIM 5 — MARKA ŞERİDİ
+   İnce ve sakin: kart/çerçeve/gölge yok; sade yazı, düşük kontrast. Seçili
+   markada ince alt çizgi. <1100px tek satır, sadece şerit içinde yatay
+   kaydırma (scrollbar gizli, sağda çok hafif solma). >=1100px iki satır
+   (telefon / laptop), ortalı. */
+.brand-strip { padding: 26px 0 22px; }
+.brand-strip-label { margin: 0 0 6px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.brand-strip-scroller { display: flex; align-items: center; gap: 28px; padding: 0 20px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.brand-strip-scroller::-webkit-scrollbar { display: none; }
+.brand-group { flex: 0 0 auto; display: flex; align-items: center; }
+.brand-group[hidden] { display: none; }
+.brand-group-label { margin-right: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--muted); opacity: .65; }
+.brand-link { position: relative; min-height: 44px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500; line-height: 1; white-space: nowrap; color: var(--muted); cursor: pointer; transition: color .2s var(--ease-out); }
+.brand-link:hover, .brand-link[aria-pressed="true"] { color: var(--text); }
+.brand-link[aria-pressed="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 9px; height: 1.5px; border-radius: 2px; background: currentColor; }
+.brand-link:focus-visible { outline: 2px solid var(--text); outline-offset: -3px; border-radius: 8px; }
+@media (min-width: 1100px) {
+  .brand-strip-scroller { flex-direction: column; gap: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .brand-group { flex-wrap: wrap; justify-content: center; }
+}
 #laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
 
 /* REDESIGN ADIM 4 — KATALOG GİRİŞİ + LAPTOP TANITIM BANDI
@@ -1044,6 +1065,40 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg></span>WhatsApp'tan Hızlı Destek</li>
   </ul>
 </div>
+<!-- REDESIGN ADIM 5: Marka şeridi. Sadece katalogdaki GERÇEK markalar, logo
+     yok (sade yazı). Telefon markaları mevcut arama kutusunu (#q), laptop
+     markaları mevcut laptop marka filtresini tetikler (bkz. initBrandStrip). -->
+<section class="brand-strip zone-light" aria-labelledby="brandStripTitle">
+  <h2 class="brand-strip-label" id="brandStripTitle">Markalar</h2>
+  <div class="brand-strip-scroller">
+    <div class="brand-group" role="group" aria-label="Telefon ve kişisel bakım markaları">
+      <span class="brand-group-label" aria-hidden="true">Telefon &amp; Kişisel Bakım</span>
+      <button type="button" class="brand-link" data-brand-term="xiaomi" aria-pressed="false">Xiaomi</button>
+      <button type="button" class="brand-link" data-brand-term="infinix" aria-pressed="false">Infinix</button>
+      <button type="button" class="brand-link" data-brand-term="tecno" aria-pressed="false">Tecno</button>
+      <button type="button" class="brand-link" data-brand-term="samsung" aria-pressed="false">Samsung</button>
+      <button type="button" class="brand-link" data-brand-term="iphone" aria-pressed="false">Apple</button>
+      <button type="button" class="brand-link" data-brand-term="oneplus" aria-pressed="false">OnePlus</button>
+      <button type="button" class="brand-link" data-brand-term="redmagic" aria-pressed="false">Red Magic</button>
+      <button type="button" class="brand-link" data-brand-term="google" aria-pressed="false">Google</button>
+      <button type="button" class="brand-link" data-brand-term="dyson" aria-pressed="false">Dyson</button>
+      <button type="button" class="brand-link" data-brand-term="braun" aria-pressed="false">Braun</button>
+      <button type="button" class="brand-link" data-brand-term="philips" aria-pressed="false">Philips</button>
+    </div>
+    <div class="brand-group" role="group" aria-label="Laptop ve PC markaları">
+      <span class="brand-group-label" aria-hidden="true">Laptop &amp; PC</span>
+      <button type="button" class="brand-link" data-brand-val="ACER" aria-pressed="false">Acer</button>
+      <button type="button" class="brand-link" data-brand-val="DELL" aria-pressed="false">Dell</button>
+      <button type="button" class="brand-link" data-brand-val="APPLE" aria-pressed="false">Apple</button>
+      <button type="button" class="brand-link" data-brand-val="MONSTER" aria-pressed="false">Monster</button>
+      <button type="button" class="brand-link" data-brand-val="HUAWEI" aria-pressed="false">Huawei</button>
+      <button type="button" class="brand-link" data-brand-val="LENOVO" aria-pressed="false">Lenovo</button>
+      <button type="button" class="brand-link" data-brand-val="CASPER" aria-pressed="false">Casper</button>
+      <button type="button" class="brand-link" data-brand-val="HP" aria-pressed="false">HP</button>
+      <button type="button" class="brand-link" data-brand-val="ASUS" aria-pressed="false">Asus</button>
+    </div>
+  </div>
+</section>
 </div><!-- /#home-vitrin -->
 
 <!-- FAZ 2: Storefront toggle. Telefon/Kişisel Bakım <-> Laptop & PC gecisi.
@@ -4881,6 +4936,61 @@ async function loadLaptopCatalog() {
     new MutationObserver(syncCurrentStore).observe(btnLaptop, { attributes: true, attributeFilter: ['class'] });
   }
   syncCurrentStore();
+})();
+
+// ================================================================
+// REDESIGN ADIM 5 — MARKA ŞERİDİ
+// Yeni ve bağımsız: mevcut fonksiyonlar/veri DEĞİŞMEZ. Sadece mevcut
+// kontrolleri tetikler (storefront düğmeleri, #advClearBtn + #q arama
+// kutusu, #laptopFilterClearBtn + laptop marka düğmeleri). products ve
+// LaptopStore yalnızca OKUNUR. Adres çubuğuna hash yazılmaz.
+// ================================================================
+(function initBrandStrip() {
+  const links = document.querySelectorAll('.brand-link');
+  if (!links.length) return;
+  const $ = id => document.getElementById(id);
+  const smooth = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const scrollTo = id => { const t = $(id); if (t) t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }); };
+  const select = el => links.forEach(a => a.setAttribute('aria-pressed', String(a === el)));
+  const setInput = (el, v) => { if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+
+  links.forEach(a => a.addEventListener('click', () => {
+    select(a);
+    if (a.dataset.brandTerm) {                                   // telefon
+      if (!$('toggleBtnPhone').classList.contains('active')) $('toggleBtnPhone').click();
+      $('advClearBtn').click();
+      setInput($('q'), a.dataset.brandTerm);
+      return scrollTo('catalog');
+    }
+    if (!$('toggleBtnLaptop').classList.contains('active')) $('toggleBtnLaptop').click();   // laptop (lazy-load burada başlar)
+    const started = Date.now();
+    (function apply() {
+      // Yükleme (JSON -> Sheet -> önbellek zinciri) bitene kadar bekle; hata olursa
+      // laptop kataloğunun kendi hata mesajı görünür, filtre uygulanmaz.
+      const busy = typeof LaptopStore === 'undefined' || LaptopStore.loading;
+      if (busy && Date.now() - started < 15000) return setTimeout(apply, 120);
+      if (!busy && LaptopStore.loaded) {
+        setInput($('laptopQ'), '');
+        $('laptopFilterClearBtn').click();
+        const b = document.querySelector('#laptopBrandGroup button[data-val="' + a.dataset.brandVal + '"]');
+        if (b) b.click();                                        // yoksa: tüm laptoplar (güvenli yedek)
+      }
+      scrollTo('laptopCatalogTitle');
+    })();
+  }));
+
+  // Kullanıcı aramayı/filtreleri kendisi değiştirirse seçim kalkar.
+  const clear = e => { if (e.isTrusted) select(null); };
+  ['q', 'laptopQ'].forEach(id => $(id) && $(id).addEventListener('input', clear));
+  ['filterPanel', 'laptopFilterPanel', 'storefrontToggle'].forEach(id => $(id) && $(id).addEventListener('click', clear));
+
+  // Telefon kataloğu yüklenince katalogda artık bulunmayan telefon markalarını gizle.
+  const grid = $('grid');
+  if (grid && 'MutationObserver' in window) new MutationObserver(() => {
+    if (typeof products === 'undefined' || !products.length) return;
+    const real = products.filter(p => !isNonProductRow(p));
+    document.querySelectorAll('.brand-link[data-brand-term]').forEach(a => { a.hidden = !real.some(p => searchScore(p, a.dataset.brandTerm) > 0); });
+  }).observe(grid, { childList: true });
 })();
 </script>
 </body>
