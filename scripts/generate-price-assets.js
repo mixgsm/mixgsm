@@ -32,7 +32,7 @@
 //      varsayimi YOKTUR, font kucultme YOKTUR.
 //   3) PDF icin: ayni birimler tek bir akan HTML'de CSS sayfa-kirilim
 //      kurallarina (break-inside/avoid, thead tekrari degil ama blok
-//      butunlugu) birakilir; site adresi ve WhatsApp linki gercek <a
+//      butunlugu) birakilir; site adresi ve WhatsApp linki gercek 
 //      href> olarak yazilir (Chromium PDF baskisi bunlari tiklanabilir
 //      link olarak gomer), metin rasterize edilmez (secilebilir kalir).
 "use strict";
@@ -509,6 +509,76 @@ async function renderJpgPages(browser, units, catalog, business, logoDataUri, ou
   return outFiles;
 }
 
+// ---------------------------------------------------------------- 5) PAYLASIM SAYFASI (tek link: JPG'ler + PDF)
+// Musterinin WhatsApp/Instagram'da paylasilan TEK bir linke tiklayip
+// tum JPG sayfalarini ve PDF'i gorebilecegi kucuk, statik bir sayfa.
+// price-assets/index.html olarak yazilir; GitHub Pages klasor icin bu
+// dosyayi otomatik sunar, yani link https://mixgsm.tr/price-assets/
+// olur. Sayfa sayisi (jpgFiles) HER CALISTIRMADA gercek uretilen
+// dosyalara gore degisir - burada sabit sayi varsayimi YOKTUR.
+function buildGalleryHtml(jpgFiles, catalog, business) {
+  const biz = requireBusiness(business);
+  const when = fmtWhen(catalog.generatedAt);
+  const thumbs = jpgFiles.map((f, i) => `
+    <a class="thumb" href="${esc(f)}" target="_blank" rel="noopener">
+      <img src="${esc(f)}" alt="Fiyat listesi sayfa ${i + 1}" loading="lazy">
+      <span>Sayfa ${i + 1} / ${jpgFiles.length}</span>
+    </a>`).join("\n");
+  return `<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>M\u0130X GSM - G\u00fcncel Fiyat Listesi</title>
+<style>
+${THEME_CSS}
+  body{padding:0 16px 40px;}
+  .wrap{max-width:640px;margin:0 auto;}
+  .top{display:flex;align-items:center;gap:12px;padding:22px 0 16px;}
+  .top img{width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;}
+  .top .brand-name{font-size:18px;font-weight:700;margin:0;}
+  .top .brand-sub{font-size:12.5px;color:var(--muted);margin:2px 0 0;}
+  h1{font-size:20px;margin:6px 0 2px;}
+  .lead{color:var(--muted);font-size:13px;margin:0 0 18px;}
+  .pdf-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);
+    color:#fff;font-weight:700;font-size:15px;text-decoration:none;border-radius:14px;padding:15px 18px;margin-bottom:22px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:24px;}
+  .thumb{display:block;text-decoration:none;color:var(--text);background:var(--surface);border-radius:12px;
+    overflow:hidden;border:1px solid var(--line);}
+  .thumb img{width:100%;display:block;aspect-ratio:9/16;object-fit:cover;background:var(--surface-2);}
+  .thumb span{display:block;text-align:center;font-size:12px;padding:7px 0;color:var(--muted);}
+  .foot{padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.7;}
+  .foot a{font-weight:600;text-decoration:none;}
+  .foot .wa{color:var(--whatsapp);}
+  .foot .site{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="/mix-gsm-logo.jpg" alt="M\u0130X GSM logosu">
+    <div>
+      <p class="brand-name">M\u0130X GSM</p>
+      <p class="brand-sub">Gaziantep \u2022 Telefon ve Teknoloji Ma\u011fazas\u0131</p>
+    </div>
+  </div>
+  <h1>G\u00fcncel Fiyat ve Stok Listesi</h1>
+  <p class="lead">Son g\u00fcncelleme: ${esc(when)}</p>
+  <a class="pdf-btn" href="fiyat-listesi.pdf">PDF olarak indir</a>
+  <div class="grid">
+    ${thumbs}
+  </div>
+  <div class="foot">
+    ${esc(biz.address)}<br>
+    WhatsApp: <a class="wa" href="${esc(biz.phone.whatsapp_url)}">${esc(biz.phone.display)}</a><br>
+    T\u00fcm site: <a class="site" href="https://mixgsm.tr/">mixgsm.tr</a>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
 // ---------------------------------------------------------------- calistirma
 async function main() {
   const { chromium } = require("playwright");
@@ -551,6 +621,11 @@ async function main() {
     const pdfSize = fs.statSync(OUT_PDF).size;
     console.log(`fiyat-listesi.pdf yazildi (${(pdfSize / 1024).toFixed(0)} KB)`);
     console.log(`${jpgFiles.length} JPG sayfasi yazildi: ${jpgFiles.join(", ")}`);
+
+    // 3) Paylasim sayfasi - musteriye WhatsApp/Instagram'da atilacak TEK
+    // link (mixgsm.tr/price-assets/), tum JPG'lere ve PDF'e buradan erisilir.
+    fs.writeFileSync(path.join(OUT_DIR, "index.html"), buildGalleryHtml(jpgFiles, catalog, business), "utf8");
+    console.log("price-assets/index.html yazildi (paylasim linki: mixgsm.tr/price-assets/).");
   } finally {
     await browser.close();
   }
