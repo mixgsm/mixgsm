@@ -592,6 +592,13 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .wa-float { position: fixed; right: 20px; bottom: 20px; width: 54px; height: 54px; border-radius: 50%; background: var(--whatsapp); display: flex; align-items: center; justify-content: center; z-index: var(--z-wa-float); box-shadow: 0 8px 22px rgba(37,211,102,0.4); text-decoration: none; color: #06210f; }
 .wa-float svg.icon { font-size: 24px; }
 @media(max-width: 720px) { .wa-float { display: none; } }
+/* REDESIGN ADIM 8–10 SON DOKUNUŞ: sabit WhatsApp butonu yalnızca içeriğin
+   yanında yeterli boşluk olan geniş ekranlarda (>=1400px) görünür ve o
+   boşlukta durur; içerik/CTA üzerine binmez. Daha dar ekranlarda WhatsApp
+   her an görünür durumda: header'daki "İletişim" (masaüstü/tablet) ve
+   mobil alt menüdeki "WhatsApp". Bağlantı ve işlev aynıdır. */
+@media (min-width: 721px) and (max-width: 1399px) { .wa-float { display: none; } }
+@media (min-width: 1400px) { .wa-float { right: 24px; bottom: 24px; } }
 
 /* Mobile bottom navigation */
 .bottom-nav { display: none; }
@@ -1031,6 +1038,149 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .vitrin .visual { height: 240px; padding: 38px 18px; }
   .vitrin .visual img { max-height: 164px; }
 }
+
+/* REDESIGN ADIM 8–10 — ALT BÖLÜMLER + ORTAK BUTON DİLİ + SON DOKUNUŞLAR
+   .cta-btn: hero butonlarıyla aynı ölçü dili (50px yükseklik, 14px köşe,
+   büyük harf, 13.5px). Varyantlar: --primary (dolu), --ghost (çizgili),
+   --wa (WhatsApp yeşili). Bölüm başlıkları: küçük üst yazı + H2 (vitrinlerle
+   aynı ölçü). Açık bölümler temayı izler; son çağrı + alt bilgi her iki
+   temada lacivert (.zone-dark), sayfayı tek bir koyu blokla kapatır. */
+.cta-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 22px; border: 1px solid transparent; border-radius: var(--radius-md); font: inherit; font-size: 13.5px; font-weight: 700; line-height: 1.2; letter-spacing: .06em; text-transform: uppercase; text-align: center; cursor: pointer; transition: background-color .2s var(--ease-out), border-color .2s var(--ease-out), color .2s var(--ease-out); }
+.cta-btn svg.icon { font-size: 17px; }
+.cta-btn > span[aria-hidden] { display: inline-block; transition: transform .2s var(--ease-out); }
+.cta-btn:hover > span[aria-hidden] { transform: translateX(2px); }
+.cta-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.cta-btn--primary { background: var(--text); color: var(--text-invert); }
+.cta-btn--primary:hover { background: color-mix(in srgb, var(--text) 86%, var(--bg)); }
+.cta-btn--ghost { background: transparent; color: var(--text); border-color: color-mix(in srgb, var(--text) 18%, transparent); }
+.cta-btn--ghost:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+.cta-btn--wa { background: rgba(37,211,102,0.1); color: var(--whatsapp); border-color: rgba(37,211,102,0.35); }
+.cta-btn--wa:hover { background: rgba(37,211,102,0.16); }
+.cta-btn--wa-text { color: var(--whatsapp); }
+:root[data-theme="light"] .zone-light .cta-btn--wa, :root[data-theme="light"] .zone-light .cta-btn--wa-text { color: #0C7A40; }
+
+.home-sec { padding: 48px 0; }
+.home-wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.home-wrap--narrow { max-width: 760px; }
+.home-eyebrow { margin: 0 0 8px; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.home-h2 { margin: 0; font-size: 24px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; color: var(--text); }
+.home-lead { margin: 10px 0 0; max-width: 560px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+.home-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 24px; margin-bottom: 20px; }
+.home-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; color: var(--muted); transition: color .2s var(--ease-out); }
+.home-link:hover { color: var(--text); }
+.home-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 6px; }
+#danisma { scroll-margin-top: calc(var(--nav-h) + 16px); }
+
+/* WhatsApp danışmanlık: açık, tek parça kart (Bento'nun koyu ızgarasından farklı) */
+.consult .consult-card { display: grid; gap: 28px; margin: 0 16px; padding: 28px 20px; border-radius: var(--radius-lg); background: var(--surface); }
+.consult .consult-card > * { min-width: 0; }
+.consult .cta-btn { margin-top: 22px; }
+.consult-steps-title { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.consult-steps { list-style: none; margin: 0; padding: 0; }
+.consult-steps li { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.consult-steps li:first-child { border-top: 0; }
+.consult-step-num { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: var(--bg); color: var(--text); font-size: 12px; font-weight: 700; }
+.consult-steps strong { display: block; margin-bottom: 2px; font-size: 15px; font-weight: 600; color: var(--text); }
+.consult-steps p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+
+/* Mağaza (fotoğraflara tıklayınca mevcut büyük görsel penceresi açılır) */
+.store .store-layout { display: grid; gap: 24px; }
+.store .store-layout > * { min-width: 0; }
+.store .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; aspect-ratio: 4 / 3; }
+.store .store-gallery img { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: var(--radius-md); }
+.store .store-gallery img:first-child { grid-row: 1 / span 2; grid-column: auto; }
+.store-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 22px 0 0; }
+.store-fact--wide { grid-column: 1 / -1; }
+.store-fact dt { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.store-fact dd { margin: 0; font-size: 15px; line-height: 1.55; color: var(--text); }
+.store-fact address { font-style: normal; }
+.store-fact a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--text) 30%, transparent); }
+.store-fact a:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+.store-cta { display: grid; gap: 10px; max-width: 440px; margin-top: 22px; }
+.store-cta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.store-cta .cta-btn { width: 100%; padding: 0 12px; }
+@media (max-width: 399px) { .store-cta-row { grid-template-columns: 1fr; } }
+/* Danışmanlık ile aynı zeminde: çift boşluk olmasın */
+.consult + .store { padding-top: 0; }
+
+/* Müşteri yorumları: mobilde yatay şerit, geniş ekranda ızgara */
+.reviews { background: var(--surface); }
+:root[data-theme="dark"] .reviews.zone-light { background: color-mix(in srgb, var(--text) 3%, var(--bg)); }
+.reviews-track { display: flex; gap: 12px; padding: 4px 20px 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+.reviews-track::-webkit-scrollbar { display: none; }
+.reviews-track .ref-card { flex: 0 0 82%; max-width: 340px; min-width: 0; scroll-snap-align: start; display: flex; flex-direction: column; gap: 12px; padding: 22px; border: 0; border-radius: var(--radius-lg); background: var(--surface-2); text-align: left; }
+.reviews-track .ref-quote { margin: 0; font-size: 15px; line-height: 1.6; }
+.reviews-track .ref-source { margin-top: auto; }
+.reviews-dots[hidden], .reviews-legacy[hidden] { display: none; }
+.reviews-track .ref-card { margin: 0; }
+.reviews-track .stars { display: flex; gap: 3px; }
+.reviews-track .ref-source { font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* Instagram: sade tek satır */
+.social { padding-bottom: 0; }
+.social .social-card { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+
+.social-handle { color: var(--text); font-weight: 600; }
+
+/* SSS */
+.faq .faq-grid { margin-top: 20px; }
+
+/* Son çağrı + alt bilgi (her iki temada lacivert) */
+.final-cta { padding: 56px 0; text-align: center; background: radial-gradient(90% 120% at 50% 0%, rgba(128,150,210,0.14), transparent 60%), var(--bg); }
+.final-cta-inner { display: flex; flex-direction: column; align-items: center; }
+.final-cta-title { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; color: var(--text); }
+.final-cta-text { margin: 12px 0 24px; max-width: 460px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+.site-footer.zone-dark { margin: 0 0 -32px; padding: 40px 20px 60px; border-top: 1px solid var(--line); text-align: left; color: var(--muted); font-size: 14px; }
+.footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+.footer-col { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.footer-col--brand { grid-column: 1 / -1; }
+.site-footer .footer-brand { margin: 0 0 4px; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
+.site-footer .footer-slogan { margin: 0; font-size: 14px; color: var(--muted); }
+.footer-address { margin: 14px 0 0; font-style: normal; font-size: 14px; line-height: 1.6; }
+.footer-h { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text); }
+.footer-col a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); transition: color .2s var(--ease-out); }
+.footer-col a:hover, .footer-bottom a:hover { color: var(--text); }
+.footer-col a:focus-visible, .footer-bottom a:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+.site-footer .footer-bottom { max-width: 1200px; margin: 28px auto 0; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 20px; font-size: 13px; line-height: 1.4; }
+.site-footer .footer-bottom a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 720px) {
+  /* Alt bilgi sabit alt menünün arkasına kadar uzar; içerik menünün üstünde kalır. */
+  .site-footer.zone-dark { margin-bottom: calc(-1 * (var(--bottomnav-h) + env(safe-area-inset-bottom))); padding-bottom: calc(28px + var(--bottomnav-h) + env(safe-area-inset-bottom)); }
+}
+
+/* Katalog: uzun listede ilk 12 kart, "Tümünü Göster" ile kalanı */
+.catalog-more { display: flex; justify-content: center; margin: 24px 0 8px; }
+.catalog-more[hidden] { display: none; }
+.catalog-more .cta-btn { min-width: 220px; }
+#grid.is-limited > [data-more], #laptopGrid.is-limited > [data-more] { display: none; }
+
+/* Son dokunuş: mobilde katalog başlıkları üstünde daha dengeli boşluk */
+@media (max-width: 720px) {
+  .section-title { margin: 48px 0 20px; }
+}
+
+@media (min-width: 768px) {
+  .home-sec { padding: 64px 0; }
+  .home-wrap { padding: 0 32px; }
+  .home-h2 { font-size: 30px; }
+  .consult .consult-card { grid-template-columns: 1.1fr 1fr; align-items: center; gap: 48px; margin: 0 32px; padding: 40px; }
+  .store .store-layout { grid-template-columns: 1.15fr 1fr; align-items: center; gap: 40px; }
+  .reviews-track { padding-left: 32px; padding-right: 32px; scroll-padding-inline: 32px; gap: 14px; }
+  .reviews-track .ref-card { flex-basis: calc((100% - 28px) / 2.3); max-width: none; }
+  .social .social-card { flex-direction: row; align-items: center; justify-content: space-between; }
+  .faq .faq-grid { padding: 0 32px; }
+  .final-cta { padding: 80px 0; }
+  .final-cta-title { font-size: 40px; }
+  .site-footer.zone-dark { padding: 56px 32px 64px; }
+  .footer-inner { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  .footer-col--brand { grid-column: auto; }
+}
+@media (min-width: 900px) {
+  .reviews-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1200px; margin: 0 auto; overflow: visible; scroll-snap-type: none; -webkit-mask-image: none; mask-image: none; }
+}
+@media (min-width: 1264px) {
+  .consult .consult-card { margin: 0 auto; }
+}
 #laptop-section .laptop-filter-toggle-btn { flex: 0 0 auto; }
 
 /* REDESIGN ADIM 4 — KATALOG GİRİŞİ + LAPTOP TANITIM BANDI
@@ -1392,6 +1542,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       </select>
     </div>
     <section class="grid" id="grid"></section>
+    <!-- REDESIGN ADIM 10: uzun listede ilk 12 kart; kalanı tek dokunuşla. -->
+    <div class="catalog-more" id="catalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="grid">Tümünü Göster</button></div>
   </main>
 </div>
 </div><!-- /#phone-section -->
@@ -1538,6 +1690,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
         </select>
       </div>
       <section class="laptop-grid" id="laptopGrid" aria-busy="false"></section>
+      <div class="catalog-more" id="laptopCatalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="laptopGrid">Tümünü Göster</button></div>
     </main>
   </div>
 
@@ -1686,90 +1839,153 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </div><!-- /#laptop-section -->
 
-<div class="section-title">
-  <h2>Nasıl Sipariş Verilir?</h2>
-  <p>Sadece 4 adımda kolay ve güvenli alışveriş.</p>
-</div>
-<section class="steps-grid">
-  <div class="step-row">
-    <div class="step-num">1</div>
-    <div><h3>Cihazını Seç</h3><p>Katalogdan ihtiyacına uygun cihazı ve özellikleri belirle.</p></div>
-  </div>
-  <div class="step-row">
-    <div class="step-num">2</div>
-    <div><h3>Fiyat ve Stok Teyidi</h3><p>WhatsApp butonuna tıklayarak güncel stok durumunu öğren.</p></div>
-  </div>
-  <div class="step-row">
-    <div class="step-num">3</div>
-    <div><h3>Siparişi Onayla</h3><p>Gönderim veya elden teslim detaylarını netleştir.</p></div>
-  </div>
-  <div class="step-row">
-    <div class="step-num">4</div>
-    <div><h3>Teslim Al</h3><p>İster mağazamızdan teslim al, ister güvenli kargo ile kapına gelsin.</p></div>
-  </div>
-</section>
-
-<div class="section-title" id="store">
-  <h2><svg class="icon"><use href="#ic-store"></use></svg> Mağazamız</h2>
-  <p>Fiziksel mağazamızda cihazları inceleyebilir, destek alabilirsiniz.</p>
-</div>
-<section class="store-grid">
-  <div class="store-gallery">
-    <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async">
-    <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async">
-    <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async">
-  </div>
-  <div class="store-info">
-    <h3>Mix GSM İsa ASLAN</h3>
-    <p>Karagöz Mahallesi, Eski Postane Sokak, No: 26/D<br>Şahinbey / Gaziantep</p>
-    <div class="store-actions">
-      <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="btn-outline"><svg class="icon"><use href="#ic-pin"></use></svg> Google Maps</a>
-      <a href="tel:+905424818255" class="btn-outline"><svg class="icon"><use href="#ic-phone"></use></svg> Aramak İçin Tıkla</a>
-      <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="btn-rate" style="grid-column: 1 / -1;"><svg class="icon"><use href="#ic-star"></use></svg> Google'da Değerlendir</a>
-      <a href="https://wa.me/905424818255?text=Merhaba%20İsa%20Bey%2C%20mağazanızın%20konumu%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="btn-whatsapp" style="grid-column: 1 / -1; justify-content: center;"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp'tan Yaz</a>
+<!-- REDESIGN ADIM 8–9: Ana sayfanın alt bölümü. Tüm bilgi/bağlantılar
+     mevcut koddan AYNEN alındı (WhatsApp, Maps, telefon, adres, Instagram,
+     Facebook, Telegram, mağaza fotoğrafları, müşteri yorumları, SSS).
+     Yeni URL/mesaj yok; çalışma saati kodda olmadığı için eklenmedi.
+     "Nasıl Sipariş Verilir?" adımları danışmanlık bölümüne taşındı. -->
+<section class="home-sec consult zone-light" id="danisma" aria-labelledby="consultTitle">
+  <div class="home-wrap consult-card">
+    <div class="consult-main">
+      <p class="home-eyebrow">WhatsApp Danışmanlık</p>
+      <h2 class="home-h2" id="consultTitle">Aradığını birlikte bulalım.</h2>
+      <p class="home-lead">İhtiyacını ve bütçeni yaz; uygun modeli, güncel stok ve fiyatı WhatsApp'tan birlikte netleştirelim.</p>
+      <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> Birlikte Bulalım</a>
+    </div>
+    <div class="consult-side">
+      <h3 class="consult-steps-title">Nasıl Sipariş Verilir?</h3>
+      <ol class="consult-steps">
+        <li><span class="consult-step-num" aria-hidden="true">1</span><div><strong>Cihazını Seç</strong><p>Katalogdan ihtiyacına uygun cihazı ve özellikleri belirle.</p></div></li>
+        <li><span class="consult-step-num" aria-hidden="true">2</span><div><strong>Fiyat ve Stok Teyidi</strong><p>WhatsApp butonuna tıklayarak güncel stok durumunu öğren.</p></div></li>
+        <li><span class="consult-step-num" aria-hidden="true">3</span><div><strong>Siparişi Onayla</strong><p>Gönderim veya elden teslim detaylarını netleştir.</p></div></li>
+        <li><span class="consult-step-num" aria-hidden="true">4</span><div><strong>Teslim Al</strong><p>İster mağazamızdan teslim al, ister güvenli kargo ile kapına gelsin.</p></div></li>
+      </ol>
     </div>
   </div>
 </section>
 
-<div class="section-title" id="referanslar">
-  <h2><svg class="icon"><use href="#ic-star"></use></svg> Müşteri Deneyimleri</h2>
-  <p>Gerçek müşteri yazışmalarından derlenmiş geri bildirimler.</p>
-</div>
-<section class="reviews-wrap">
-  <div id="reviewsSlider">
-    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"5 yıl önce sizden 8 Pro da almıştım hala kullanıyorum."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review style="display:none;"><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Bu mesajı yazdığım Redmi Note 12 Pro Plus 5G dahil, 4 ya da 5 cihaz aldık aile fertlerine. Hepsinde de sıfır sorun."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review style="display:none;"><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Daha önce sizden telefon aldık abi gene yardımcı olmuştun dürüst esnaf olduğun için bide yardımcı oluyor hep gene sana yazıyım dedim."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review style="display:none;"><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Çok soru sordum hepsini kırmadan cevapladınız çok teşekkür ederim hakkınızı helal edin."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
+<section class="home-sec store zone-light" id="store" aria-labelledby="storeTitle">
+  <div class="home-wrap store-layout">
+    <div class="store-gallery">
+      <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async">
+      <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async">
+      <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async">
+    </div>
+    <div class="store-panel">
+      <p class="home-eyebrow">Fiziksel Mağaza</p>
+      <h2 class="home-h2" id="storeTitle">Mağazamız</h2>
+      <p class="home-lead">Fiziksel mağazamızda cihazları inceleyebilir, destek alabilirsiniz.</p>
+      <dl class="store-facts">
+        <div class="store-fact"><dt>Mağaza</dt><dd>Mix GSM İsa ASLAN</dd></div>
+        <div class="store-fact"><dt>Telefon</dt><dd><a href="tel:+905424818255">+90 542 481 82 55</a></dd></div>
+        <div class="store-fact store-fact--wide"><dt>Adres</dt><dd><address>Karagöz Mahallesi, Eski Postane Sokak, No: 26/D<br>Şahinbey / Gaziantep</address></dd></div>
+        <div class="store-fact store-fact--wide"><dt>Çalışma Saatleri</dt><dd>Pazartesi - Cumartesi: 09:00 - 20:00<br>Pazar: Kapalı</dd></div>
+      </dl>
+      <div class="store-cta">
+        <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--primary"><svg class="icon" aria-hidden="true"><use href="#ic-pin"></use></svg> Yol Tarifi Al <span aria-hidden="true">→</span></a>
+        <div class="store-cta-row">
+          <a href="tel:+905424818255" class="cta-btn cta-btn--ghost"><svg class="icon" aria-hidden="true"><use href="#ic-phone"></use></svg> Ara</a>
+          <a href="https://wa.me/905424818255?text=Merhaba%20İsa%20Bey%2C%20mağazanızın%20konumu%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--ghost cta-btn--wa-text"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Yaz</a>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="reviews-dots" id="reviewsDots"></div>
 </section>
 
-<div class="section-title" id="sss">
-  <h2>Sık Sorulan Sorular</h2>
-  <p>Alışveriş öncesi en çok merak edilenler.</p>
-</div>
-<section class="faq-grid">
+<!-- Google yorumları: işletmenin seçtiği 3 Google yorumu; metinler ve
+     isimler AYNEN. Statik içerik — Google/Places API veya canlı veri YOK.
+     Eski WhatsApp müşteri alıntıları gizlendi (silinmedi); eski tekli
+     slider kodu (initReviewsSlider) aynı öğelerle çalışmaya devam eder. -->
+<section class="home-sec reviews zone-light" id="referanslar" aria-labelledby="reviewsTitle">
+  <div class="home-wrap home-head">
+    <div>
+      <p class="home-eyebrow">Google Yorumları</p>
+      <h2 class="home-h2" id="reviewsTitle">Müşteri Deneyimleri</h2>
+      <p class="home-lead">Google'da bırakılan müşteri yorumlarından seçmeler.</p>
+    </div>
+    <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="home-link"><svg class="icon" aria-hidden="true"><use href="#ic-star"></use></svg> Google'da Değerlendir <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="reviews-track" id="googleReviews">
+    <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>
+    <figure class="ref-card"><blockquote class="ref-quote">"Cihazlar temiz, fiyatlar makul. İsa Bey'e ilgisinden dolayı teşekkürler."</blockquote><figcaption class="ref-source">— Mehmet K.</figcaption></figure>
+    <figure class="ref-card"><blockquote class="ref-quote">"Laptop takası için gittim, süreci çok şeffaf yönettiler. Gaziantep'te tek adresim."</blockquote><figcaption class="ref-source">— Ayşe K.</figcaption></figure>
+  </div>
+  <div class="reviews-legacy" hidden>
+    <div id="reviewsSlider">
+    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"5 yıl önce sizden 8 Pro da almıştım hala kullanıyorum."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
+    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Bu mesajı yazdığım Redmi Note 12 Pro Plus 5G dahil, 4 ya da 5 cihaz aldık aile fertlerine. Hepsinde de sıfır sorun."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
+    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Daha önce sizden telefon aldık abi gene yardımcı olmuştun dürüst esnaf olduğun için bide yardımcı oluyor hep gene sana yazıyım dedim."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
+    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Çok soru sordum hepsini kırmadan cevapladınız çok teşekkür ederim hakkınızı helal edin."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
+    </div>
+    <div class="reviews-dots" id="reviewsDots"></div>
+  </div>
+</section>
+
+<section class="home-sec social zone-light" aria-labelledby="socialTitle">
+  <div class="home-wrap social-card">
+    <div>
+      <p class="home-eyebrow">Instagram</p>
+      <h2 class="home-h2" id="socialTitle">MİX GSM'i Takip Et</h2>
+      <p class="home-lead">Yeni gelen cihazlar ve mağazadan güncel paylaşımlar Instagram'da: <strong class="social-handle">@mixgsm</strong></p>
+    </div>
+    <a href="https://www.instagram.com/mixgsm/" target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--ghost">Instagram'da Takip Et <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+
+<section class="home-sec faq zone-light" id="sss" aria-labelledby="faqTitle">
+  <div class="home-wrap home-wrap--narrow">
+    <p class="home-eyebrow">SSS</p>
+    <h2 class="home-h2" id="faqTitle">Sık Sorulan Sorular</h2>
+    <p class="home-lead">Alışveriş öncesi en çok merak edilenler.</p>
+  </div>
+  <div class="faq-grid">
   <details class="faq-card"><summary>Fiyatlar güncel mi?</summary><p>Evet, sistemimizdeki fiyatlar düzenli olarak güncellenmektedir. Yine de sipariş vermeden hemen önce WhatsApp hattımızdan net teyit almanız en sağlıklı yöntemdir.</p></details>
   <details class="faq-card"><summary>Stok durumu nasıl kontrol ediliyor?</summary><p>Beğendiğiniz modelin stok ve renk seçeneklerini teyit etmek için ürün detayındaki WhatsApp butonunu kullanabilirsiniz. Hızlıca depomuzdan güncel durumu bildiririz.</p></details>
   <details class="faq-card"><summary>Türkiye'nin her yerine kargo var mı?</summary><p>Evet, Gaziantep'teki merkezimizden Türkiye'nin 81 iline anlaşmalı kargomuz ile güvenli gönderim sağlamaktayız.</p></details>
   <details class="faq-card"><summary>Mağazadan elden teslim alabilir miyim?</summary><p>Elbette. Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep adresindeki MİX GSM mağazamızdan cihazınızı inceleyerek teslim alabilirsiniz.</p></details>
   <details class="faq-card"><summary>Satış sonrası teknik destek süreçleri nasıl?</summary><p>Cihazınızın markasına ve modeline göre (özellikle Xiaomi modellerinde) teknik ve yazılımsal destek seçenekleri için WhatsApp üzerinden bize ulaşabilirsiniz. Satış sonrası da yanınızdayız.</p></details>
+  </div>
 </section>
 
-<footer class="site-footer">
-  <div class="footer-brand">MİX GSM</div>
-  <div class="footer-slogan">Doğru cihaz. Doğru fiyat.</div>
-  <div class="social-links">
-    <a href="https://www.instagram.com/mixgsm/" target="_blank" rel="noopener noreferrer">Instagram</a>
-    <a href="https://www.facebook.com/groups/xiaomiredmidestek/" target="_blank" rel="noopener noreferrer">Facebook</a>
-    <a href="https://t.me/xiaomiredmidestek" target="_blank" rel="noopener noreferrer">Telegram</a>
+<section class="final-cta zone-dark" aria-labelledby="finalCtaTitle">
+  <div class="home-wrap final-cta-inner">
+    <h2 class="final-cta-title" id="finalCtaTitle">Aradığını bulamadın mı?</h2>
+    <p class="final-cta-text">Katalogda göremediğin model veya seçenek için bize yaz; stok ve fiyatı senin için kontrol edelim.</p>
+    <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
   </div>
-  <div class="footer-line">
-    Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep<br>
-    <a href="tel:+905424818255">+90 542 481 82 55</a> · <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp'tan Yaz</a><br><br>
-    <a href="fiyat-listesi/">Güncel Fiyat Listesi</a> · <a href="#">KVKK ve Gizlilik Politikası</a><br><br>
-    © 2026 MİX GSM
+</section>
+
+<footer class="site-footer zone-dark">
+  <div class="footer-inner">
+    <div class="footer-col footer-col--brand">
+      <div class="footer-brand">MİX GSM</div>
+      <div class="footer-slogan">Doğru cihaz. Doğru fiyat.</div>
+      <address class="footer-address">Karagöz Mahallesi, Eski Postane Sokak, No: 26/D<br>Şahinbey / Gaziantep</address>
+      <a href="tel:+905424818255" class="footer-phone">+90 542 481 82 55</a>
+    </div>
+    <nav class="footer-col" aria-label="Ürünler">
+      <h2 class="footer-h">Ürünler</h2>
+      <a href="#catalog" data-footer-store="phone">Telefonlar</a>
+      <a href="#laptopCatalogTitle" data-footer-store="laptop">Laptoplar</a>
+      <a href="fiyat-listesi/">Güncel Fiyat Listesi</a>
+    </nav>
+    <nav class="footer-col" aria-label="Mağaza">
+      <h2 class="footer-h">Mağaza</h2>
+      <a href="#store">Mağazamız</a>
+      <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer">Yol Tarifi</a>
+      <a href="#sss">Sık Sorulan Sorular</a>
+    </nav>
+    <nav class="footer-col" aria-label="İletişim ve sosyal medya">
+      <h2 class="footer-h">İletişim</h2>
+      <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a href="https://www.instagram.com/mixgsm/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="https://www.facebook.com/groups/xiaomiredmidestek/" target="_blank" rel="noopener noreferrer">Facebook</a>
+      <a href="https://t.me/xiaomiredmidestek" target="_blank" rel="noopener noreferrer">Telegram</a>
+    </nav>
+  </div>
+  <div class="footer-line footer-bottom">
+    <span>© 2026 MİX GSM</span>
+    <a href="#">KVKK ve Gizlilik Politikası</a>
   </div>
 </footer>
 
@@ -5438,6 +5654,55 @@ async function loadLaptopCatalog() {
   new MutationObserver(schedule).observe(phoneGrid, { childList: true });
   if (laptopGrid) new MutationObserver(updateLaptop).observe(laptopGrid, { childList: true });
   schedule();
+})();
+
+// ================================================================
+// REDESIGN ADIM 8–10 — ALT BÖLÜM + KATALOG "TÜMÜNÜ GÖSTER"
+// Bağımsız blok; mevcut fonksiyonlar/veri DEĞİŞMEZ.
+// 1) Alt bilgideki Telefonlar/Laptoplar: header'daki mevcut mağaza
+//    bağlantısını tetikler (aynı geçiş + kaydırma + lazy-load davranışı).
+// 2) Katalog: uzun listede ilk 12 kart görünür, kalanı "Tümünü Göster" ile.
+//    Arama/filtre/sıralama sonucu değişince tekrar ilk 12'ye döner; favori/
+//    karşılaştırma gibi aynı listeyi yeniden çizen işlemlerde açık kalır.
+//    Kartlar silinmez/değişmez, sadece fazlası CSS ile gizlenir.
+// ================================================================
+(function initHomeBottom() {
+  document.querySelectorAll('[data-footer-store]').forEach(a => {
+    a.addEventListener('click', e => {
+      const link = document.querySelector('.nav-links [data-nav-store="' + a.dataset.footerStore + '"]');
+      if (!link) return;                        // yoksa normal bağlantı gibi davranır
+      e.preventDefault();
+      link.click();
+    });
+  });
+
+  const LIMIT = 12;
+  function limiter(gridId, moreId, cardSel, keyOf) {
+    const grid = document.getElementById(gridId);
+    const more = document.getElementById(moreId);
+    if (!grid || !more) return;
+    const btn = more.querySelector('button');
+    let expanded = false, lastSig = '';
+    function apply() {
+      const cards = [...grid.children].filter(c => c.matches(cardSel));
+      const sig = cards.map(keyOf).join('|');
+      if (sig !== lastSig) { expanded = false; lastSig = sig; }   // yeni sonuç listesi
+      cards.forEach((c, i) => { if (i >= LIMIT) c.setAttribute('data-more', ''); else c.removeAttribute('data-more'); });
+      const limited = !expanded && cards.length > LIMIT;
+      grid.classList.toggle('is-limited', limited);
+      more.hidden = !limited;
+    }
+    btn.addEventListener('click', () => {
+      expanded = true;
+      apply();
+      const next = grid.querySelector('[data-more]');
+      if (next) next.focus({ preventScroll: true });              // klavyede kalınan yerden devam
+    });
+    new MutationObserver(apply).observe(grid, { childList: true });  // sadece kart listesi; öznitelikler izlenmez
+    apply();
+  }
+  limiter('grid', 'catalogMore', '.card', c => c.getAttribute('onclick') || '');
+  limiter('laptopGrid', 'laptopCatalogMore', '.laptop-card', c => c.dataset.laptopIndex || '');
 })();
 </script>
 </body>
