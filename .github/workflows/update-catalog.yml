@@ -11,6 +11,8 @@ on:
       - "scripts/generate-catalog.js"
       - "scripts/generate-catalog-laptop.js"
       - "scripts/generate-price-page.js"
+      - "scripts/generate-price-assets.js"
+      - "package.json"
 
 permissions:
   contents: write
@@ -51,14 +53,45 @@ jobs:
       - name: Katalog, besleme ve fiyat sayfasi tutarliligini dogrula
         run: node scripts/generate-price-page.js --verify
 
+      # FAZ 4: WhatsApp/Instagram'da paylasilan mobil fiyat listesi (JPG
+      # sayfalari + tiklanabilir linkli PDF). catalog.json'i bir "mini
+      # tarayici" (Playwright/Chromium) ile goruntuye/PDF'e ceviriyor, bu
+      # yuzden TELEFON/LAPTOP/fiyat sayfasi adimlarindan TAMAMEN BAGIMSIZ
+      # ve continue-on-error: true - bu adimlardan biri (bagimlilik kurulumu,
+      # tarayici indirme, render) basarisiz olsa bile TELEFON kataloğunun
+      # commit'i ASLA etkilenmez (laptop adimiyla ayni izolasyon deseni).
+      - name: Fiyat listesi gorselleri icin bagimliliklari kur (Playwright)
+        continue-on-error: true
+        run: npm install
+
+      - name: Playwright Chromium kur
+        continue-on-error: true
+        run: npx playwright install --with-deps chromium
+
+      - name: Mobil fiyat listesi JPG + PDF olustur (catalog.json'dan)
+        continue-on-error: true
+        run: node scripts/generate-price-assets.js
+
       - name: Degisiklik varsa commit + push et
         run: |
           git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html
+          # price-assets AYRI ve GUVENLI eklenir: yukaridaki FAZ 4 adimlari
+          # (continue-on-error) herhangi bir nedenle calisip price-assets/
+          # klasorunu hic olusturamamis olabilir. "git add price-assets"
+          # boyle bir durumda dogrudan (yukaridaki satirla BIRLIKTE)
+          # cagrilirsa, olmayan bir pathspec icin git HATA VERIR ve script
+          # -eo pipefail nedeniyle orada durur - bu da TELEFON/LAPTOP/fiyat
+          # sayfasi degisikliklerinin bile commit'lenmesini ENGELLER. Bu
+          # yuzden once yukarida ayri eklenir, price-assets ise SADECE
+          # klasor gercekten varsa, ayri bir adimda eklenir.
+          if [ -d price-assets ]; then
+            git add price-assets
+          fi
           if git diff --cached --quiet; then
             echo "Degisiklik yok, commit atilmiyor."
           else
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
-            git commit -m "chore: catalog.json / catalog-laptop.json otomatik guncellendi"
+            git commit -m "chore: catalog.json / catalog-laptop.json / fiyat listesi gorselleri otomatik guncellendi"
             git push
           fi
