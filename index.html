@@ -22,17 +22,13 @@
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080808">
-<!-- GÜVENLİK: CSP (Content Security Policy). GitHub Pages statik barındırma
-     olduğu için gerçek bir HTTP header (en güçlü/tam koruma) yerine bu meta
-     etiketiyle uygulanıyor - meta ile "frame-ancestors" ve "report-uri" gibi
-     bazı yönergeler desteklenmiyor (tarayıcı bunları sessizce yok sayar,
-     hataya sebep olmaz). script-src/style-src içinde 'unsafe-inline' hâlâ
-     var çünkü ürün kartları gibi HER render() çağrısında yeniden oluşturulan
-     dinamik elementlerdeki onclick'ler ve <style> bloğu bunu gerektiriyor;
-     bunları tamamen kaldırmak site mimarisini baştan yazmayı gerektirir
-     (bkz. "mevcut sistemi bozma" kuralı). Buna rağmen bu politika gerçek bir
-     koruma sağlıyor: harici/enjekte script-style kaynaklarını, izinsiz
-     ağ bağlantılarını ve form/nesne tabanlı saldırı yüzeylerini kapatıyor. -->
+<!-- GÜVENLİK: CSP (Content Security Policy). GitHub Pages özel HTTP başlığı
+     gönderemediği için meta etiketiyle uygulanıyor; meta ile "frame-ancestors",
+     "report-uri" gibi yönergeler desteklenmez. Sayfada satır içi olay
+     (onclick/onerror…) YOK. script-src'de 'unsafe-inline' yalnızca iki satır
+     içi script bloğu (tema + uygulama) için duruyor; kaldırmak JS'in ayrı
+     dosyaya taşınmasını gerektirir. style-src'de 'unsafe-inline' satır içi
+     style="" öznitelikleri için gerekli. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <link rel="icon" href="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg">
 <!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
@@ -87,6 +83,66 @@
     "https://www.instagram.com/mixgsm/",
     "https://www.facebook.com/groups/xiaomiredmidestek/",
     "https://t.me/xiaomiredmidestek"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://mixgsm.tr/#website",
+      "url": "https://mixgsm.tr/",
+      "name": "MİX GSM",
+      "inLanguage": "tr-TR"
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://mixgsm.tr/#sss",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Fiyatlar güncel mi?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Evet, sistemimizdeki fiyatlar düzenli olarak güncellenmektedir. Yine de sipariş vermeden hemen önce WhatsApp hattımızdan net teyit almanız en sağlıklı yöntemdir."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Stok durumu nasıl kontrol ediliyor?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Beğendiğiniz modelin stok ve renk seçeneklerini teyit etmek için ürün detayındaki WhatsApp butonunu kullanabilirsiniz. Hızlıca depomuzdan güncel durumu bildiririz."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Türkiye'nin her yerine kargo var mı?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Evet, Gaziantep'teki merkezimizden Türkiye'nin 81 iline anlaşmalı kargomuz ile güvenli gönderim sağlamaktayız."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Mağazadan elden teslim alabilir miyim?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Elbette. Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep adresindeki MİX GSM mağazamızdan cihazınızı inceleyerek teslim alabilirsiniz."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Satış sonrası teknik destek süreçleri nasıl?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cihazınızın markasına ve modeline göre (özellikle Xiaomi modellerinde) teknik ve yazılımsal destek seçenekleri için WhatsApp üzerinden bize ulaşabilirsiniz. Satış sonrası da yanınızdayız."
+          }
+        }
+      ]
+    }
   ]
 }
 </script>
@@ -526,12 +582,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 /* Reviews */
 .ref-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 28px; text-align: center; }
-.stars { color: var(--text); font-size: 14px; margin-bottom: 14px; letter-spacing: 2px; }
 .ref-quote { font-size: 15px; font-weight: 500; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
 .ref-source { font-size: 12px; color: var(--muted); font-weight: 400; }
-.reviews-dots { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
-.reviews-dots button { width: 7px; height: 7px; padding: 0; border-radius: 50%; border: 0; background: var(--line); cursor: pointer; }
-.reviews-dots button.active { background: var(--text); }
 
 /* FAQ */
 .faq-grid { max-width: 760px; margin: 0 auto; padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
@@ -1002,6 +1054,24 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   .vitrin .visual img { max-height: 164px; }
 }
 
+/* REDESIGN SAĞLAMLAŞTIRMA — MASAÜSTÜ YATAY KAYDIRMA İPUCU
+   Dokunmatik cihazlarda şeritler çubuksuz kalır. Fare/trackpad kullanan
+   cihazlarda (hover + ince imleç) şeritlerin kaydırılabildiği ince, temaya
+   uyumlu bir çubukla belli olur. JS yok, kaydırma/snap davranışı aynı. */
+@media (hover: hover) and (pointer: fine) {
+  .vitrin-track, .reviews-track, .brand-strip-scroller { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text) 24%, transparent) transparent; }
+  .vitrin-track::-webkit-scrollbar, .reviews-track::-webkit-scrollbar, .brand-strip-scroller::-webkit-scrollbar { display: block; height: 6px; }
+  .vitrin-track::-webkit-scrollbar-thumb, .reviews-track::-webkit-scrollbar-thumb, .brand-strip-scroller::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--text) 24%, transparent); border-radius: 3px; }
+  .vitrin-track::-webkit-scrollbar-track, .reviews-track::-webkit-scrollbar-track, .brand-strip-scroller::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* REDESIGN SAĞLAMLAŞTIRMA — OKUNABİLİRLİK (WCAG AA 4.5:1). Renk paleti
+   aynı; sadece küçük metinlerde aynı rengin koyu/açık tonu kullanılır. */
+:root[data-theme="light"] .adv-clear, :root[data-theme="light"] .comparetraybar .btn-clear, :root[data-theme="light"] .comparebar button:not(.btn-view-fav) { color: color-mix(in srgb, var(--accent) 80%, #000); }
+:root[data-theme="dark"] .comparetraybar .btn-clear, :root[data-theme="dark"] .comparebar button:not(.btn-view-fav) { color: color-mix(in srgb, var(--accent) 78%, #fff); }
+:root[data-theme="light"] .bottom-nav .bn-wa { color: #0C7A40; }
+:root[data-theme="light"] #laptop-section .laptop-hero-eyebrow { color: color-mix(in srgb, var(--laptop-gold) 62%, #000); }
+
 /* REDESIGN ADIM 8–10 — ALT BÖLÜMLER + ORTAK BUTON DİLİ + SON DOKUNUŞLAR
    .cta-btn: hero butonlarıyla aynı ölçü dili (50px yükseklik, 14px köşe,
    büyük harf, 13.5px). Varyantlar: --primary (dolu), --ghost (çizgili),
@@ -1052,6 +1122,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .store .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; aspect-ratio: 4 / 3; }
 .store .store-gallery img { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: var(--radius-md); }
 .store .store-gallery img:first-child { grid-row: 1 / span 2; grid-column: auto; }
+.store .store-gallery img { cursor: zoom-in; }
+.store .store-gallery img:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .store-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 22px 0 0; }
 .store-fact--wide { grid-column: 1 / -1; }
 .store-fact dt { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
@@ -1074,9 +1146,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .reviews-track .ref-card { flex: 0 0 82%; max-width: 340px; min-width: 0; scroll-snap-align: start; display: flex; flex-direction: column; gap: 12px; padding: 22px; border: 0; border-radius: var(--radius-lg); background: var(--surface-2); text-align: left; }
 .reviews-track .ref-quote { margin: 0; font-size: 15px; line-height: 1.6; }
 .reviews-track .ref-source { margin-top: auto; }
-.reviews-dots[hidden], .reviews-legacy[hidden] { display: none; }
 .reviews-track .ref-card { margin: 0; }
-.reviews-track .stars { display: flex; gap: 3px; }
 .reviews-track .ref-source { font-size: 13px; font-weight: 600; color: var(--text); }
 
 /* Instagram: sade tek satır */
@@ -1830,9 +1900,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 <section class="home-sec store zone-light" id="store" aria-labelledby="storeTitle">
   <div class="home-wrap store-layout">
     <div class="store-gallery">
-      <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async">
-      <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async">
-      <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async">
+      <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza Dış Görünüş — büyüt">
+      <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza İç Görünüş — büyüt">
+      <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza Vitrin — büyüt">
     </div>
     <div class="store-panel">
       <p class="home-eyebrow">Fiziksel Mağaza</p>
@@ -1856,9 +1926,8 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </section>
 
 <!-- Google yorumları: işletmenin seçtiği 3 Google yorumu; metinler ve
-     isimler AYNEN. Statik içerik — Google/Places API veya canlı veri YOK.
-     Eski WhatsApp müşteri alıntıları gizlendi (silinmedi); eski tekli
-     slider kodu (initReviewsSlider) aynı öğelerle çalışmaya devam eder. -->
+     isimler AYNEN. Statik içerik — Google/Places API, puan/yıldız veya canlı
+     veri YOK. Eski WhatsApp alıntıları ve tekli slider kodu kaldırıldı. -->
 <section class="home-sec reviews zone-light" id="referanslar" aria-labelledby="reviewsTitle">
   <div class="home-wrap home-head">
     <div>
@@ -1872,15 +1941,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Cihazlar temiz, fiyatlar makul. İsa Bey'e ilgisinden dolayı teşekkürler."</blockquote><figcaption class="ref-source">— Mehmet K.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Laptop takası için gittim, süreci çok şeffaf yönettiler. Gaziantep'te tek adresim."</blockquote><figcaption class="ref-source">— Ayşe K.</figcaption></figure>
-  </div>
-  <div class="reviews-legacy" hidden>
-    <div id="reviewsSlider">
-    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"5 yıl önce sizden 8 Pro da almıştım hala kullanıyorum."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Bu mesajı yazdığım Redmi Note 12 Pro Plus 5G dahil, 4 ya da 5 cihaz aldık aile fertlerine. Hepsinde de sıfır sorun."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Daha önce sizden telefon aldık abi gene yardımcı olmuştun dürüst esnaf olduğun için bide yardımcı oluyor hep gene sana yazıyım dedim."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    <div class="ref-card" data-review><div class="stars"><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg><svg class="icon"><use href="#ic-star"></use></svg></div><div class="ref-quote">"Çok soru sordum hepsini kırmadan cevapladınız çok teşekkür ederim hakkınızı helal edin."</div><div class="ref-source">Gerçek Müşteri Deneyimi</div></div>
-    </div>
-    <div class="reviews-dots" id="reviewsDots"></div>
   </div>
 </section>
 
@@ -1998,21 +2058,21 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <button>Temizle</button>
 </div>
 
-<div class="comparemodal" id="favmodal" role="dialog" aria-modal="true">
+<div class="comparemodal" id="favmodal" role="dialog" aria-modal="true" aria-labelledby="favModalTitle">
   <div class="comparebox">
     <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
-    <h2 style="margin:0 0 16px;font-size:20px;">Favorilerim</h2>
+    <h2 id="favModalTitle" style="margin:0 0 16px;font-size:20px;">Favorilerim</h2>
     <div id="favListWrap"></div>
     <a id="favWaShare" class="modalwa" target="_blank" rel="noopener noreferrer" style="margin-top:16px;"><svg class="icon"><use href="#ic-chat"></use></svg> Favorileri WhatsApp'tan Gönder</a>
   </div>
 </div>
 
-<div class="comparemodal" id="findermodal" role="dialog" aria-modal="true">
+<div class="comparemodal" id="findermodal" role="dialog" aria-modal="true" aria-labelledby="finderModalTitle">
   <div class="comparebox" style="max-width:600px;">
     <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
-    <h2 style="margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:8px;"><svg class="icon"><use href="#ic-compass"></use></svg> Telefonumu Bul</h2>
+    <h2 id="finderModalTitle" style="margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:8px;"><svg class="icon" aria-hidden="true"><use href="#ic-compass"></use></svg> Telefonumu Bul</h2>
     <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Birkaç soruyla sana uygun modelleri önerelim. Öneriler yalnızca güncel katalogdaki gerçek stok ve fiyat verilerine dayanır.</p>
 
     <div id="finderStep1" class="finder-step">
@@ -2043,7 +2103,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <button class="btn-clear">Temizle</button>
 </div>
 
-<div class="comparemodal" id="comparemodal" role="dialog" aria-modal="true">
+<div class="comparemodal" id="comparemodal" role="dialog" aria-modal="true" aria-label="Ürün karşılaştırma">
   <div class="comparebox">
     <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
@@ -2052,11 +2112,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   </div>
 </div>
 
-<div class="comparemodal" id="legalmodal" role="dialog" aria-modal="true">
+<div class="comparemodal" id="legalmodal" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
   <div class="comparebox" style="max-width:640px;">
     <button class="close" aria-label="Kapat" style="position:sticky;float:right;top:0;"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <div style="clear:both;"></div>
-    <h2 style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
+    <h2 id="legalModalTitle" style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
     <div style="color:var(--muted);font-size:14px;line-height:1.8;">
       <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitedeki ürün kataloğunu görüntülemek için herhangi bir kayıt veya kişisel bilgi girmeniz gerekmez. Laptop kataloğundaki isteğe bağlı "Bana Laptop Bul" formu dışında, sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan başka bir form bulunmamaktadır.</p>
       <p><strong>"Bana Laptop Bul" formu:</strong> Bu formu doldurduğunuzda girdiğiniz bilgiler (bütçe, kullanım amacı, durum tercihi, ad-soyad, WhatsApp numaranız ve varsa ekran boyutu, öncelik, marka tercihi, notunuz) yalnızca formu gönderene kadar, sadece kullandığınız cihazın tarayıcı oturumunda (sessionStorage) geçici olarak tutulur; bu bilgiler MİX GSM sunucusuna veya üçüncü bir tarafa otomatik olarak gönderilmez. "Gönder" butonuna bastığınızda girdiğiniz bilgiler hazır bir WhatsApp mesajına dönüştürülür ve WhatsApp uygulamasına yönlendirilirsiniz; mesajı fiilen göndermek size kalır ve bu aşamadan sonra bilgileriniz WhatsApp/Meta'nın kendi gizlilik politikasına tabi olur. Formu gönderdiğinizde tarayıcınızdaki geçici kayıt otomatik olarak silinir; sekmeyi gönderim yapmadan kapatmanız halinde de bu geçici kayıt kendiliğinden kaybolur.</p>
@@ -2084,12 +2144,18 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="bn-wa"><svg class="icon"><use href="#ic-chat"></use></svg>WhatsApp</a>
 </nav>
 
-<div class="lightbox" id="lightbox">
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Mağaza fotoğrafı">
   <button class="lightbox-close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-  <img id="lightbox-img" src="" alt="Büyük Görsel">
+  <img id="lightbox-img" src="" alt="Mağaza fotoğrafı (büyük görünüm)">
 </div>
 
 <script>
+// REDESIGN SAĞLAMLAŞTIRMA — KAPSÜLLEME: tüm uygulama kodu tek bir fonksiyon
+// kapsamında. Telefon durumu (products, cat, q, sort, favs, compareList…) ve
+// laptop durumu (LaptopStore, LaptopFilters…) artık global DEĞİL; satır içi
+// olay kalmadığı için hiçbir fonksiyonun global olması gerekmiyor. Dışarıya
+// yalnızca salt-okunur tanılama/QA arayüzü açılır: window.MIXGSM.
+(function () {
 // Ortak body-scroll-kilidi (telefon VE laptop tum modal/cekmece acilis-kapanis
 // noktalari tarafindan kullanilir). Duz "overflow:hidden" iOS Safari'de arka
 // plan icerigin hala kaydirilabilir kalmasina yol acabiliyordu; bu yuzden
@@ -2353,44 +2419,6 @@ function renderHeroProduct() {
   empty.style.display = 'none';
 }
 
-// "Bugun MIX GSM'de": gercek katalogdan Apple / Samsung / Xiaomi grubunun
-// her birinden STOKTA olan birer urun secer (en yuksek fiyatli = one cikan
-// model). Sabit/uydurma bir liste degildir, her sayfa yuklemesinde canli
-// veriden yeniden hesaplanir. Bu markalardan birinde stokta urun yoksa o
-// kart sessizce atlanir.
-function renderFeatured() {
-  const wrap = document.getElementById('featuredGrid');
-  const title = document.getElementById('featuredTitle');
-  if (!wrap || !title) return;
-  const groups = ['APPLE', 'SAMSUNG', 'XIAOMI'];
-  const picks = [];
-  groups.forEach(g => {
-    const inGroup = products.filter(p => !isNonProductRow(p) && p.cat === g && p.stock === 'IN' && p.p !== null);
-    inGroup.sort((a, b) => b.p - a.p);
-    if (inGroup[0]) picks.push(inGroup[0]);
-  });
-  if (!picks.length) { wrap.innerHTML = ''; title.style.display = 'none'; return; }
-  title.style.display = '';
-  wrap.innerHTML = picks.map(p => {
-    const pIndex = products.indexOf(p);
-    const img = imageCandidatesForProduct(p)[0];
-    return `
-    <article class="card" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-      <div class="visual">
-        <span class="stock">● Stokta</span>
-        <img src="${escapeHtml(img)}" alt="${escapeHtml(p.b + ' ' + p.m)}" loading="lazy" decoding="async">
-      </div>
-      <div class="info">
-        <div class="brand">${escapeHtml(p.b)}</div>
-        <div class="name">${escapeHtml(p.m)}</div>
-        <div class="bottom">
-          <div class="price"><small>GÜNCEL FİYAT</small><strong>${fmt(p.p)} <em>TL</em></strong></div>
-        </div>
-      </div>
-    </article>`;
-  }).join('');
-}
-
 function isNonProductRow(p) {
   const brand = normalizeTR(p.b || '');
   const model = normalizeTR(p.m || '');
@@ -2648,6 +2676,14 @@ async function loadExtraPhotoFilesIfNeeded(productList) {
   });
   if (!hasUnmatched) return;
 
+  // PERFORMANS: GitHub API (IP başına saatte 60 istek sınırı) her sayfa
+  // açılışında değil, tarayıcı oturumu başına en fazla bir kez çağrılır.
+  const EXTRA_PHOTOS_SESSION_KEY = 'mixgsm-extra-photos-v1';
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(EXTRA_PHOTOS_SESSION_KEY) || 'null');
+    if (Array.isArray(cached) && cached.every(n => typeof n === 'string')) { EXTRA_PHOTO_FILES = cached; return; }
+  } catch (e) { /* bozuk/erişilemeyen önbellek: normal akışa devam */ }
+
   try {
     const data = await withTimeout(async (signal) => {
       const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
@@ -2662,6 +2698,7 @@ async function loadExtraPhotoFilesIfNeeded(productList) {
     EXTRA_PHOTO_FILES = data
       .map(item => item.name)
       .filter(name => name && /\.(jpg|jpeg|png|webp)$/i.test(name) && !known.has(name.toLowerCase()));
+    try { sessionStorage.setItem(EXTRA_PHOTOS_SESSION_KEY, JSON.stringify(EXTRA_PHOTO_FILES)); } catch (e) { /* kota/gizli mod */ }
   } catch (e) {
     // Sessizce yoksay: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
   }
@@ -2722,8 +2759,7 @@ function autoImageMarkup(p) {
     data-image-sources='${encoded}'
     data-image-index="0"
     alt="${escapeHtml(p.b)} ${escapeHtml(p.m)}"
-    loading="lazy" decoding="async"
-    onerror="tryNextProductImage(this)">`;
+    loading="lazy" decoding="async">`;
 }
 
 // Google Sheets'e ulasilamadiginda gosterilecek son basarili katalogu
@@ -2809,7 +2845,6 @@ async function loadCatalog() {
   render();
   updateProductSchema();
   renderHeroProduct();
-  renderFeatured();
   computeBudgetThreshold();
   const hashMatch = location.hash.match(/^#urun\/(.+)$/);
   if (hashMatch) {
@@ -2928,7 +2963,6 @@ async function loadFromGoogleSheets() {
     render();
     updateProductSchema();
     renderHeroProduct();
-    renderFeatured();
     computeBudgetThreshold();
 
     // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx), katalog yuklendikten
@@ -2954,7 +2988,6 @@ async function loadFromGoogleSheets() {
         render();
         updateProductSchema();
         renderHeroProduct();
-        renderFeatured();
         computeBudgetThreshold();
         const hashMatch = location.hash.match(/^#urun\/(.+)$/);
         if (hashMatch) {
@@ -2964,6 +2997,7 @@ async function loadFromGoogleSheets() {
         return;
       } catch (renderErr) { /* cache verisiyle render de basarisiz olursa asagidaki genel hataya dus */ }
     }
+    count.textContent = 'Katalog yüklenemedi';   // "Yükleniyor..." takılı kalmasın
     grid.innerHTML = `<div class="empty">Katalog şu anda yenileniyor. Lütfen sayfayı yenileyin veya WhatsApp üzerinden güncel stok/fiyat sorabilirsiniz.<br><br><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" style="display:inline-flex;margin-top:15px;justify-content:center;"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp'tan Ürün Sor</a></div>`;
   }
 }
@@ -2972,15 +3006,41 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// GUVENLIK: bir degeri, HTML onclick="...('...')" gibi CIFT TIRNAKLI bir
-// attribute icindeki TEK TIRNAKLI bir JS string literaline guvenle gomer.
-// Once JS-string kacisi (ters bolu + tek tirnak), sonra HTML-attribute
-// kacisi (escapeHtml) uygulanir. Bu kritik: urun marka/model/varyant metni
-// dogrudan Google Sheets'ten geldigi icin cift tirnak veya baska ozel
-// karakter icerebilir - onceki kod yalnizca tek tirnaklari kaciriyordu ve
-// bir hucrede cift tirnak olsa attribute'tan kacip script enjekte edilebilirdi.
-function jsAttr(value) {
-  return escapeHtml(String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+// REDESIGN SAĞLAMLAŞTIRMA: telefon kartı TEK yerde üretilir (katalog +
+// vitrinler). Satır içi onclick YOK; tıklamalar data-action ile merkezi
+// dinleyiciye (initActionDelegation) gider. İşaretleme ve sınıflar aynı.
+function phoneCardHtml(p, extraAttrs) {
+  const badge = p.stock === 'IN' ? '<span class="stock">● Stokta</span>'
+    : p.stock === 'ASK' ? '<span class="stock ask">Sorunuz</span>'
+    : '<span class="stock no">Tükendi</span>';
+  const priceDisplay = p.p === null ? `<strong class="price-query">WhatsApp'tan Sor</strong>` : `<strong>${fmt(p.p)} <em>TL</em></strong>`;
+  const pk = favKeyOf(p);
+  const pIndex = products.indexOf(p);
+  const imgMarkup = autoImageMarkup(p);
+  const tagMarkup = p.tagLabel ? `<span class="tagbadge ${p.tagClass}">${escapeHtml(p.tagLabel)}</span>` : '';
+  const isComparing = compareList.includes(pk);
+  const fav = isFav(p);
+  return `
+    <article class="card ${isComparing ? "comparing" : ""}" ${extraAttrs || ''} data-i="${pIndex}" data-action="open-product" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
+      <div class="visual">
+        ${tagMarkup}
+        ${badge}
+        <button type="button" class="fav ${fav ? "active" : ""}" data-action="fav" data-i="${pIndex}" aria-label="${fav ? "Favorilerden çıkar" : "Favoriye ekle"}"><svg class="icon" aria-hidden="true"><use href="#ic-heart"></use></svg></button>
+        ${imgMarkup}
+      </div>
+      <div class="info">
+        <div class="brand">${escapeHtml(p.b)}</div>
+        <div class="name">${escapeHtml(p.m)}</div>
+        <span class="spec">${escapeHtml(p.s)}</span>
+        <div class="bottom">
+          <div class="price">
+            <small>GÜNCEL FİYAT</small>
+            ${priceDisplay}
+          </div>
+          <button type="button" class="compare-toggle ${isComparing ? "active" : ""}" data-action="compare" data-i="${pIndex}"><svg class="icon" aria-hidden="true"><use href="#ic-compare"></use></svg> ${isComparing ? "Seçildi" : "Karşılaştır"}</button>
+        </div>
+      </div>
+    </article>`;
 }
 
 function render() {
@@ -3007,41 +3067,7 @@ function render() {
 
   count.textContent = `${filtered.length} ürün listeleniyor`;
   
-  grid.innerHTML = filtered.length ? filtered.map(p => {
-    const badge = p.stock === 'IN' ? '<span class="stock">● Stokta</span>'
-      : p.stock === 'ASK' ? '<span class="stock ask">Sorunuz</span>'
-      : '<span class="stock no">Tükendi</span>';
-    const priceDisplay = p.p === null ? `<strong class="price-query">WhatsApp'tan Sor</strong>` : `<strong>${fmt(p.p)} <em>TL</em></strong>`;
-    const pk = favKeyOf(p);
-    const pIndex = products.indexOf(p);
-    
-    const imgMarkup = autoImageMarkup(p);
-    const tagMarkup = p.tagLabel ? `<span class="tagbadge ${p.tagClass}">${escapeHtml(p.tagLabel)}</span>` : '';
-
-    const isComparing = compareList.includes(pk);
-
-    return `
-    <article class="card ${isComparing ? "comparing" : ""}" onclick="openProduct(${pIndex})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-      <div class="visual">
-        ${tagMarkup}
-        ${badge}
-        <button class="fav ${isFav(p) ? "active" : ""}" onclick="toggleFav(event, ${pIndex})" aria-label="${isFav(p) ? "Favorilerden çıkar" : "Favoriye ekle"}"><svg class="icon"><use href="#ic-heart"></use></svg></button>
-        ${imgMarkup}
-      </div>
-      <div class="info">
-        <div class="brand">${escapeHtml(p.b)}</div>
-        <div class="name">${escapeHtml(p.m)}</div>
-        <span class="spec">${escapeHtml(p.s)}</span>
-        <div class="bottom">
-          <div class="price">
-            <small>GÜNCEL FİYAT</small>
-            ${priceDisplay}
-          </div>
-          <button class="compare-toggle ${isComparing ? "active" : ""}" onclick="toggleCompare(event, ${pIndex})"><svg class="icon"><use href="#ic-compare"></use></svg> ${isComparing ? "Seçildi" : "Karşılaştır"}</button>
-        </div>
-      </div>
-    </article>`;
-  }).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+  grid.innerHTML = filtered.length ? filtered.map(p => phoneCardHtml(p  )).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
 }
 
 // Arama debounce: kullanici her harfe bastiginda degil, yazmayi ~300ms
@@ -3226,7 +3252,7 @@ function renderSimilarProducts(p) {
     const spIndex = products.indexOf(sp);
     const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
-    return `<div class="similar-item" onclick="openProduct(${spIndex})" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
+    return `<div class="similar-item" data-action="open-product" data-i="${spIndex}" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
       <img src="${escapeHtml(spImg)}" alt="${escapeHtml(sp.m)}" loading="lazy" decoding="async">
       <div class="similar-name">${escapeHtml(sp.m)}</div>
       <div class="similar-price">${spPrice}</div>
@@ -3241,7 +3267,8 @@ function renderProductModal(p) {
   const sources = imageCandidatesForProduct(p);
   modalImg.dataset.imageSources = JSON.stringify(sources);
   modalImg.dataset.imageIndex = "0";
-  modalImg.onerror = function() { tryNextProductImage(this); };
+  // Görsel hatası: merkezi 'error' dinleyicisi (initActionDelegation) yönetir.
+  modalImg.onerror = null;
   modalImg.src = sources[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
   
   document.getElementById("mb").textContent = p.b;
@@ -3462,7 +3489,7 @@ function renderCompareTable() {
       <img class="compare-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
       <div>${escapeHtml(p.b)}</div>
       <div>${escapeHtml(p.m)}</div>
-      <button class="compare-remove" onclick="removeFromCompare('${jsAttr(pk)}')">Kaldır ✕</button>
+      <button type="button" class="compare-remove" data-action="remove-compare" data-key="${escapeHtml(pk)}">Kaldır <span aria-hidden="true">✕</span></button>
     </th>`;
   });
   html += '</tr></thead><tbody>';
@@ -3561,12 +3588,12 @@ function renderFavList() {
     const pk = favKeyOf(p);
     const pIndex = products.indexOf(p);
     return `<div class="fav-item">
-      <div onclick="closeFavModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
+      <div data-action="fav-open" data-i="${pIndex}" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
         <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
         <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
         <div class="fav-item-price">${priceText}</div>
       </div>
-      <button class="compare-remove" onclick="removeFav('${jsAttr(pk)}')">Kaldır ✕</button>
+      <button type="button" class="compare-remove" data-action="remove-fav" data-key="${escapeHtml(pk)}">Kaldır <span aria-hidden="true">✕</span></button>
     </div>`;
   }).join('') + '</div>';
 
@@ -3627,15 +3654,15 @@ function renderFinderStep(step) {
   });
   if (step === 1) {
     document.getElementById('finderBudgetOpts').innerHTML = FINDER_BUDGETS.map((b, i) =>
-      `<button class="finder-opt" onclick="selectFinderBudget(${i})">${escapeHtml(b.label)}</button>`
+      `<button type="button" class="finder-opt" data-action="finder-budget" data-i="${i}">${escapeHtml(b.label)}</button>`
     ).join('');
   } else if (step === 2) {
     document.getElementById('finderPriorityOpts').innerHTML = FINDER_PRIORITIES.map((p, i) =>
-      `<button class="finder-opt" onclick="selectFinderPriority(${i})">${p.label}</button>`
+      `<button type="button" class="finder-opt" data-action="finder-priority" data-i="${i}">${p.label}</button>`
     ).join('');
   } else if (step === 3) {
     document.getElementById('finderBrandOpts').innerHTML = FINDER_BRANDS.map((b, i) =>
-      `<button class="finder-opt" onclick="selectFinderBrand(${i})">${escapeHtml(b.label)}</button>`
+      `<button type="button" class="finder-opt" data-action="finder-brand" data-i="${i}">${escapeHtml(b.label)}</button>`
     ).join('');
   }
 }
@@ -3697,7 +3724,7 @@ function showFinderResults() {
         const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
-        return `<div class="fav-item" onclick="closeFinderModal(); openProduct(${pIndex});" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
+        return `<div class="fav-item" data-action="finder-open" data-i="${pIndex}" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
           <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
           <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
           <div class="fav-item-price">${priceText}</div>
@@ -3733,6 +3760,45 @@ document.addEventListener("keydown", e => {
   }
 });
 
+// REDESIGN SAĞLAMLAŞTIRMA — MERKEZİ TIKLAMA YÖNETİMİ (event delegation)
+// JS ile üretilen kart/düğmelerde satır içi onclick/onerror YOK. Her öğe
+// data-action (+ data-i / data-key) taşır; tek bir belge dinleyicisi mevcut
+// fonksiyonları AYNEN çağırır. Sonradan eklenen kartlar da otomatik çalışır.
+// En içteki data-action kazanır (kart içindeki favori düğmesi kartı açmaz).
+(function initActionDelegation() {
+  const idx = el => { const n = parseInt(el.dataset.i, 10); return Number.isInteger(n) && n >= 0 ? n : -1; };
+  const actions = {
+    'open-product': (el) => { const i = idx(el); if (i > -1 && products[i]) openProduct(i); },
+    'fav': (el, e) => { const i = idx(el); if (i > -1 && products[i]) toggleFav(e, i); },
+    'compare': (el, e) => { const i = idx(el); if (i > -1 && products[i]) toggleCompare(e, i); },
+    'remove-compare': (el) => removeFromCompare(el.dataset.key || ''),
+    'remove-fav': (el) => removeFav(el.dataset.key || ''),
+    'fav-open': (el) => { const i = idx(el); closeFavModal(); if (i > -1 && products[i]) openProduct(i); },
+    'finder-open': (el) => { const i = idx(el); closeFinderModal(); if (i > -1 && products[i]) openProduct(i); },
+    'finder-budget': (el) => { const i = idx(el); if (i > -1) selectFinderBudget(i); },
+    'finder-priority': (el) => { const i = idx(el); if (i > -1) selectFinderPriority(i); },
+    'finder-brand': (el) => { const i = idx(el); if (i > -1) selectFinderBrand(i); },
+    'laptop-empty-wa': () => navigateToLaptopWhatsapp('Merhaba MİX GSM, laptop kataloğu hakkında bilgi almak istiyorum.'),
+    'laptop-reset': () => resetLaptopFilters()
+  };
+  document.addEventListener('click', e => {
+    const el = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!el) return;
+    const fn = actions[el.dataset.action];
+    if (fn) fn(el, e);
+  });
+
+  // Ürün görseli yedek zinciri: eski onerror="tryNextProductImage(this)" yerine
+  // tek bir yakalama (capture) dinleyicisi. "görsel yok" dosyası da
+  // yüklenemezse döngüye girmez.
+  document.addEventListener('error', e => {
+    const t = e.target;
+    if (!t || t.tagName !== 'IMG' || !t.hasAttribute('data-image-sources')) return;
+    if (/gorsel-yok\.jpg(?:[?#]|$)/i.test(t.src)) return;
+    tryNextProductImage(t);
+  }, true);
+})();
+
 // Geri/ileri tusuna basildiginda (orn. urun acikken "geri" tusu) modal
 // tutarli kalsin: link hala #urun/... ise o urunu ac, degilse kapat.
 window.addEventListener('popstate', () => {
@@ -3745,24 +3811,10 @@ window.addEventListener('popstate', () => {
   if (!anyModalOpen()) unlockBodyScroll();
 });
 
-window.addEventListener('DOMContentLoaded', () => { loadCatalog(); updateFavs(); initReviewsSlider(); });
+window.addEventListener('DOMContentLoaded', () => { loadCatalog(); updateFavs(); });
 
 // Sade yorum slider'i: mevcut 4 gercek musteri yorumu icerigi degismedi,
 // sadece tek seferde bir tanesi gosteriliyor (noktalarla gezinme).
-function initReviewsSlider() {
-  const cards = Array.from(document.querySelectorAll('#reviewsSlider [data-review]'));
-  const dotsWrap = document.getElementById('reviewsDots');
-  if (!cards.length || !dotsWrap) return;
-  let active = 0;
-  dotsWrap.innerHTML = cards.map((_, i) => `<button aria-label="Yorum ${i + 1}" class="${i === 0 ? 'active' : ''}"></button>`).join('');
-  const dots = Array.from(dotsWrap.children);
-  function show(i) {
-    active = i;
-    cards.forEach((c, idx) => { c.style.display = idx === i ? '' : 'none'; });
-    dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
-  }
-  dots.forEach((d, i) => d.addEventListener('click', () => show(i)));
-}
 
 // --- TEMA SİSTEMİ (Dark/Light) ------------------------------------------
 // Mevcut ürün/veri/filtre sistemlerinin ÜZERİNE eklenen, onlardan tamamen
@@ -4050,7 +4102,7 @@ function renderLaptopErrorState(message) {
   if (!el) return;
   setLaptopGridAriaBusy(false);
   el.innerHTML = '<div class="laptop-error">' + escapeHtml(message)
-    + '<br><br><button type="button" class="laptop-modalwa laptop-empty-wa" style="display:inline-flex;width:auto;padding:12px 20px;" onclick="navigateToLaptopWhatsapp(\'Merhaba MİX GSM, laptop kataloğu hakkında bilgi almak istiyorum.\')"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp\'tan Laptop Sor</button></div>';
+    + '<br><br><button type="button" class="laptop-modalwa laptop-empty-wa" style="display:inline-flex;width:auto;padding:12px 20px;" data-action="laptop-empty-wa"><svg class="icon"><use href="#ic-chat"></use></svg> WhatsApp\'tan Laptop Sor</button></div>';
 }
 
 // FAZ 4: Veri (same-origin/Sheet/cache) başarıyla geldiğinde çağrılır.
@@ -4263,7 +4315,7 @@ function renderLaptopFilteredEmptyState() {
   if (!el) return;
   setLaptopGridAriaBusy(false);
   el.innerHTML = '<div class="laptop-empty">Aradığınız kriterlere uygun laptop bulunamadı.'
-    + '<br><br><button type="button" class="laptop-adv-clear" onclick="resetLaptopFilters()" style="width:auto;display:inline-block;padding:10px 18px;">Filtreleri Temizle</button></div>';
+    + '<br><br><button type="button" class="laptop-adv-clear" data-action="laptop-reset" style="width:auto;display:inline-block;padding:10px 18px;">Filtreleri Temizle</button></div>';
 }
 
 function laptopCardMarkup(p) {
@@ -5159,6 +5211,7 @@ async function loadLaptopCatalog() {
   LaptopStore.loaded = false;
   setLaptopHeroNote('Laptop kataloğu şu anda güncellenemiyor. Güncel bilgi için WhatsApp\'tan bize ulaşabilirsiniz.');
   renderLaptopErrorState('Laptop kataloğu şu anda yüklenemedi. Güncel bilgi için WhatsApp\'tan bize ulaşabilirsiniz.');
+  { const lc = document.getElementById('laptopCount'); if (lc) lc.textContent = 'Katalog yüklenemedi'; }   // "Yükleniyor..." takılı kalmasın
   finishLaptopLoad();
 }
 // ================================================================
@@ -5442,33 +5495,9 @@ async function loadLaptopCatalog() {
     return out;
   }
 
-  // Telefon kartı: render() içindeki kartla aynı sınıflar/işleyiciler.
+  // Telefon kartı: katalogla AYNI ortak fonksiyon (phoneCardHtml).
   function phoneCard(p) {
-    const i = products.indexOf(p);
-    const cmp = compareList.includes(favKeyOf(p));
-    const fav = isFav(p);
-    const tag = p.tagLabel ? `<span class="tagbadge ${p.tagClass}">${escapeHtml(p.tagLabel)}</span>` : '';
-    return `
-    <article class="card ${cmp ? "comparing" : ""}" data-vitrin-key="${escapeHtml(phoneKey(p))}" data-i="${i}" onclick="openProduct(${i})" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-      <div class="visual">
-        ${tag}
-        <span class="stock">● Stokta</span>
-        <button class="fav ${fav ? "active" : ""}" onclick="toggleFav(event, ${i})" aria-label="${fav ? "Favorilerden çıkar" : "Favoriye ekle"}"><svg class="icon"><use href="#ic-heart"></use></svg></button>
-        ${autoImageMarkup(p)}
-      </div>
-      <div class="info">
-        <div class="brand">${escapeHtml(p.b)}</div>
-        <div class="name">${escapeHtml(p.m)}</div>
-        <span class="spec">${escapeHtml(p.s)}</span>
-        <div class="bottom">
-          <div class="price">
-            <small>GÜNCEL FİYAT</small>
-            <strong>${fmt(p.p)} <em>TL</em></strong>
-          </div>
-          <button class="compare-toggle ${cmp ? "active" : ""}" onclick="toggleCompare(event, ${i})"><svg class="icon"><use href="#ic-compare"></use></svg> ${cmp ? "Seçildi" : "Karşılaştır"}</button>
-        </div>
-      </div>
-    </article>`;
+    return phoneCardHtml(p, 'data-vitrin-key="' + escapeHtml(phoneKey(p)) + '"');
   }
 
   // Favori/karşılaştırma değişince kartları yeniden çizmeden durumu eşitle.
@@ -5487,7 +5516,7 @@ async function loadLaptopCatalog() {
       const c = card.querySelector('.compare-toggle');
       if (c && c.classList.contains('active') !== cmp) {
         c.classList.toggle('active', cmp);
-        c.innerHTML = '<svg class="icon"><use href="#ic-compare"></use></svg> ' + (cmp ? 'Seçildi' : 'Karşılaştır');
+        c.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#ic-compare"></use></svg> ' + (cmp ? 'Seçildi' : 'Karşılaştır');
       }
     });
   }
@@ -5658,8 +5687,76 @@ async function loadLaptopCatalog() {
     new MutationObserver(apply).observe(grid, { childList: true });  // sadece kart listesi; öznitelikler izlenmez
     apply();
   }
-  limiter('grid', 'catalogMore', '.card', c => c.getAttribute('onclick') || '');
+  limiter('grid', 'catalogMore', '.card', c => c.dataset.i || '');
   limiter('laptopGrid', 'laptopCatalogMore', '.laptop-card', c => c.dataset.laptopIndex || '');
+})();
+
+// ================================================================
+// REDESIGN SAĞLAMLAŞTIRMA — TELEFON PENCERELERİ ERİŞİLEBİLİRLİĞİ
+// Ürün, Favoriler, Telefon Bul, Karşılaştır, KVKK ve büyük fotoğraf
+// pencereleri için: açılınca odak pencerenin içinde, Tab/Shift+Tab pencerede
+// döner, kapanınca odak açan öğeye geri döner. Mevcut aç/kapa fonksiyonları
+// DEĞİŞMEZ; sadece sınıf değişimi izlenir. Laptop pencerelerinin kendi odak
+// yönetimi zaten var (dahil edilmedi).
+// ================================================================
+(function initDialogA11y() {
+  const DIALOGS = [['modal', 'open'], ['favmodal', 'open'], ['findermodal', 'open'], ['comparemodal', 'open'], ['legalmodal', 'open'], ['lightbox', 'active']];
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+  const stack = [];                      // { el, opener }
+  let lastOutside = null;
+  const dialogEls = DIALOGS.map(([id]) => document.getElementById(id)).filter(Boolean);
+  const inDialog = t => dialogEls.some(d => d.contains(t));
+  const visible = el => !!(el && el.isConnected && el.getClientRects().length);
+  // Pencere içindeki odaklar "açan öğe" sayılmaz (açılış anında da).
+  document.addEventListener('focusin', e => { if (!inDialog(e.target)) lastOutside = e.target; }, true);
+
+  DIALOGS.forEach(([id, cls]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let wasOpen = el.classList.contains(cls);
+    new MutationObserver(() => {
+      const isOpen = el.classList.contains(cls);
+      if (isOpen === wasOpen) return;
+      wasOpen = isOpen;
+      if (isOpen) {
+        stack.push({ el, opener: lastOutside });
+        if (!el.contains(document.activeElement)) {
+          const first = [...el.querySelectorAll(FOCUSABLE)].find(visible);
+          if (first) first.focus({ preventScroll: true });
+        }
+      } else {
+        const i = stack.findIndex(d => d.el === el);
+        const entry = i > -1 ? stack.splice(i, 1)[0] : null;
+        const a = document.activeElement;
+        if (entry && (!a || a === document.body || el.contains(a)) && visible(entry.opener)) entry.opener.focus({ preventScroll: true });
+      }
+    }).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || !stack.length) return;
+    const top = stack[stack.length - 1].el;
+    const items = [...top.querySelectorAll(FOCUSABLE)].filter(visible);
+    if (!items.length) { e.preventDefault(); return; }
+    const first = items[0], last = items[items.length - 1];
+    if (!top.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+})();
+
+  // Salt-okunur tanılama/QA arayüzü (tarayıcı konsolu ve otomatik testler).
+  // Durumu değiştiren bir şey açılmaz; mevcut fonksiyonlar aynen kullanılır.
+  window.MIXGSM = Object.freeze({
+    get products() { return products; },
+    LaptopStore: LaptopStore,
+    isNonProductRow: isNonProductRow,
+    searchScore: searchScore,
+    imageCandidatesForProduct: imageCandidatesForProduct,
+    productSlug: productSlug,
+    openProduct: openProduct,
+    openLaptopProduct: openLaptopProduct
+  });
 })();
 </script>
 </body>
