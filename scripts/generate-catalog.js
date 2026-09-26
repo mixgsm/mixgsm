@@ -15,6 +15,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const schema = require("./lib/catalog-schema");
 
 const SHEETS_URL =
   "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
@@ -152,13 +153,20 @@ async function main() {
   const tsv = await res.text();
   const products = parseTsvToProducts(tsv);
 
-  // GUVENLIK: Sheets gecici olarak bos/bozuk bir sey donerse (ornegin bakim
-  // sayfasi, izin hatasi vb.), catalog.json'u BOS/BOZUK veriyle EZMEYIZ.
-  // Onceki iyi surum repo'da oldugu gibi kalir, is akisi hata ile durur.
-  if (!products.length) {
+  // GUVENLIK: Sheets bos/bozuk donerse (bakim sayfasi, izin hatasi, kolon
+  // kaymasi, duplicate urun vb.) catalog.json'u EZMEYIZ. Onceki iyi surum
+  // repo'da oldugu gibi kalir, is akisi hata ile durur (commit/deploy yok).
+  const headerErrors = schema.validateHeader(schema.findHeaderLine(tsv), schema.PHONE_COLUMNS);
+  const previousRealCount = schema.readPreviousCount(
+    OUTPUT_PATH,
+    (list) => list.filter((p) => !schema.isNonProductRow(p)).length
+  );
+  const result = schema.validatePhoneCatalog(products, { previousRealCount });
+  result.errors.unshift(...headerErrors);
+  schema.report(result, "catalog.json");
+  if (result.errors.length) {
     throw new Error(
-      "Ayristirilan urun sayisi 0 - Sheets verisi beklenmedik formatta olabilir. " +
-        "Guvenlik icin catalog.json GUNCELLENMEDI."
+      `Dogrulama basarisiz (${result.errors.length} hata) - Guvenlik icin catalog.json GUNCELLENMEDI.`
     );
   }
 
@@ -169,7 +177,7 @@ async function main() {
   };
 
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(payload));
-  console.log(`catalog.json yazildi: ${products.length} urun.`);
+  console.log(`catalog.json yazildi: ${products.length} satir, ${result.stats.realCount} gercek urun.`);
 }
 
 if (require.main === module) {

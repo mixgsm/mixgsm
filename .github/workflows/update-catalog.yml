@@ -12,6 +12,8 @@ on:
       - "scripts/generate-catalog-laptop.js"
       - "scripts/generate-price-page.js"
       - "scripts/generate-price-assets.js"
+      - "scripts/lib/**"
+      - "scripts/tests/**"
       - "package.json"
 
 permissions:
@@ -32,6 +34,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
+      - name: Katalog dogrulama testleri
+        run: node --test scripts/tests/catalog-schema.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js

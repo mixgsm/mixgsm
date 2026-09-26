@@ -20,6 +20,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const schema = require("./lib/catalog-schema");
 
 // MIX GSM: Public Laptop Sheet TSV export linki (isa tarafindan onaylandi,
 // 22.09.2026). Bu SADECE musteri-facing alanlar icin ayrilmis Public Sheet -
@@ -223,7 +224,23 @@ async function main() {
     return;
   }
 
+  // DOGRULAMA: kolon kaymasi / duplicate ID / fiyat kolonu okunamiyor / ani
+  // urun kaybi varsa mevcut catalog-laptop.json KORUNUR. process.exitCode=1
+  // adimi Actions'ta kirmizi gosterir; continue-on-error sayesinde telefon
+  // akisi etkilenmez.
   const products = parseTsvToLaptopProducts(tsv);
+  const headerErrors = schema.validateHeader(schema.findHeaderLine(tsv), schema.LAPTOP_COLUMNS);
+  const previousCount = schema.readPreviousCount(OUTPUT_PATH, (list) => list.length);
+  const result = schema.validateLaptopCatalog(products, { previousCount });
+  result.errors.unshift(...headerErrors);
+  schema.report(result, "catalog-laptop.json");
+  if (result.errors.length) {
+    console.log("Laptop dogrulamasi basarisiz - mevcut catalog-laptop.json korunuyor.");
+    if (!fs.existsSync(OUTPUT_PATH)) writeEmptyCatalog("Dogrulama basarisiz.");
+    process.exitCode = 1;
+    return;
+  }
+
   const payload = {
     generatedAt: new Date().toISOString(),
     productCount: products.length,

@@ -1791,7 +1791,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <form id="laptopFinderForm" novalidate>
         <div class="laptop-form-row">
           <label for="lfBudget">Yaklaşık Bütçeniz (TL) *</label>
-          <input type="number" id="lfBudget" name="budget" min="0" placeholder="Örn: 30000" required>
+          <input type="number" id="lfBudget" name="budget" min="1" max="2000000" step="1" inputmode="numeric" placeholder="Örn: 30000" required>
           <span class="laptop-form-error" id="lfBudgetError"></span>
         </div>
 
@@ -1822,13 +1822,13 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
         <div class="laptop-form-row">
           <label for="lfName">Ad Soyad *</label>
-          <input type="text" id="lfName" name="name" placeholder="Ad Soyad" required>
+          <input type="text" id="lfName" name="name" placeholder="Ad Soyad" autocomplete="name" maxlength="60" required>
           <span class="laptop-form-error" id="lfNameError"></span>
         </div>
 
         <div class="laptop-form-row">
           <label for="lfPhone">WhatsApp Numaranız *</label>
-          <input type="tel" id="lfPhone" name="phone" placeholder="05xx xxx xx xx" required>
+          <input type="tel" id="lfPhone" name="phone" placeholder="05xx xxx xx xx" autocomplete="tel" inputmode="tel" maxlength="20" required>
           <span class="laptop-form-error" id="lfPhoneError"></span>
         </div>
 
@@ -2669,39 +2669,64 @@ function withTimeout(taskFn, timeoutMs) {
     .finally(() => clearTimeout(timer));
 }
 
-async function loadExtraPhotoFilesIfNeeded(productList) {
-  const hasUnmatched = productList.some(p => {
+// PERFORMANS: GitHub API (IP başına saatte 60 istek sınırı) her sayfa
+// açılışında değil, tarayıcı oturumu başına en fazla bir kez çağrılır.
+// Katalog İLK render'ı bu isteği BEKLEMEZ: oturum önbelleği varsa render'dan
+// önce senkron okunur; yoksa istek arka planda yapılır ve yeni dosya
+// bulunursa katalog bir kez yeniden çizilir.
+const EXTRA_PHOTOS_SESSION_KEY = 'mixgsm-extra-photos-v1';
+const EXTRA_PHOTOS_TIMEOUT_MS = 6000;
+const PHOTO_FILE_NAME = /^[A-Za-z0-9._%-]+\.(jpg|jpeg|png|webp)$/i;
+let extraPhotosResolved = false;
+
+function hasUnmatchedProducts(productList) {
+  return productList.some(p => {
     if (normalizeGithubImageUrl(p.img)) return false;
     return !GITHUB_PHOTO_FILES.some(file => imageFileScore(p, file) > 0);
   });
-  if (!hasUnmatched) return;
+}
 
-  // PERFORMANS: GitHub API (IP başına saatte 60 istek sınırı) her sayfa
-  // açılışında değil, tarayıcı oturumu başına en fazla bir kez çağrılır.
-  const EXTRA_PHOTOS_SESSION_KEY = 'mixgsm-extra-photos-v1';
+function loadCachedExtraPhotoFiles() {
+  if (extraPhotosResolved) return;
   try {
     const cached = JSON.parse(sessionStorage.getItem(EXTRA_PHOTOS_SESSION_KEY) || 'null');
-    if (Array.isArray(cached) && cached.every(n => typeof n === 'string')) { EXTRA_PHOTO_FILES = cached; return; }
-  } catch (e) { /* bozuk/erişilemeyen önbellek: normal akışa devam */ }
+    if (Array.isArray(cached) && cached.every(n => typeof n === 'string' && PHOTO_FILE_NAME.test(n))) {
+      EXTRA_PHOTO_FILES = cached;
+      extraPhotosResolved = true;
+    }
+  } catch (e) { /* bozuk/erişilemeyen önbellek: ağdan denenecek */ }
+}
 
-  try {
-    const data = await withTimeout(async (signal) => {
-      const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
-        headers: { 'Accept': 'application/vnd.github+json' }, signal
-      });
-      if (!res.ok) return null;
-      return res.json();
-    }, 6000);
-    if (!Array.isArray(data)) return;
+// Yeni (sabit listede olmayan) dosya bulunursa true döner.
+async function fetchExtraPhotoFiles() {
+  const data = await withTimeout(async (signal) => {
+    const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
+      headers: { 'Accept': 'application/vnd.github+json' }, signal
+    });
+    if (!res.ok) return null;
+    return res.json();
+  }, EXTRA_PHOTOS_TIMEOUT_MS);
+  if (!Array.isArray(data)) return false;
 
-    const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
-    EXTRA_PHOTO_FILES = data
-      .map(item => item.name)
-      .filter(name => name && /\.(jpg|jpeg|png|webp)$/i.test(name) && !known.has(name.toLowerCase()));
-    try { sessionStorage.setItem(EXTRA_PHOTOS_SESSION_KEY, JSON.stringify(EXTRA_PHOTO_FILES)); } catch (e) { /* kota/gizli mod */ }
-  } catch (e) {
-    // Sessizce yoksay: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
-  }
+  const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
+  EXTRA_PHOTO_FILES = data
+    .map(item => item && item.name)
+    .filter(name => typeof name === 'string' && PHOTO_FILE_NAME.test(name) && !known.has(name.toLowerCase()));
+  extraPhotosResolved = true;
+  try { sessionStorage.setItem(EXTRA_PHOTOS_SESSION_KEY, JSON.stringify(EXTRA_PHOTO_FILES)); } catch (e) { /* kota/gizli mod */ }
+  return EXTRA_PHOTO_FILES.length > 0;
+}
+
+function discoverExtraPhotosInBackground() {
+  if (extraPhotosResolved || !hasUnmatchedProducts(products)) return;
+  fetchExtraPhotoFiles().then(found => {
+    if (!found) return;
+    render();
+    updateProductSchema();
+    renderHeroProduct();
+  }).catch(() => {
+    // GitHub API yok/limit/zaman aşımı: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
+  });
 }
 
 function imageCandidatesForProduct(p) {
@@ -2777,9 +2802,87 @@ function saveCatalogCache(list) {
 function loadCatalogCache() {
   try {
     const raw = JSON.parse(localStorage.getItem(catalogCacheKey) || "null");
-    if (raw && Array.isArray(raw.products) && raw.products.length) return raw.products;
+    const list = raw ? sanitizePhoneList(raw.products) : [];
+    if (list.length) return list;
   } catch (e) { /* bozuk cache - yoksay */ }
   return null;
+}
+
+// GÜVENLİK/VERİ DOĞRULAMA: catalog.json, localStorage önbelleği ve Sheets
+// verisi GÜVENİLMEYEN girdi kabul edilir. Her ürün, render'dan önce bu şemaya
+// zorlanır: metin alanları yalnızca metin, fiyat yalnızca makul aralıkta tam
+// sayı (değilse null = "WhatsApp'tan Sor"), stok yalnızca IN/OUT/ASK
+// (bilinmeyen = ASK), etiket/kategori yalnızca bilinen değerler, görsel URL'si
+// yeniden beyaz listeden geçer. Alan adları ve anlamları DEĞİŞMEZ.
+const PHONE_PRICE_MIN = 100;
+const PHONE_PRICE_MAX = 300000;
+const LAPTOP_PRICE_MIN = 1000;
+const LAPTOP_PRICE_MAX = 500000;
+const STOCK_VALUES = ['IN', 'OUT', 'ASK'];
+const PHONE_CAT_VALUES = ['APPLE', 'SAMSUNG', 'XIAOMI', 'INFINIX_TECNO', 'OTHER'];
+const PHONE_TAGS = { 'MİX GSM Öneriyor': 'tag-oneri', 'Fırsat': 'tag-firsat', 'Popüler': 'tag-populer', 'Yeni': 'tag-yeni' };
+const PHONE_TEXT_FIELDS = ['b', 'm', 's', 'battery', 'screen', 'processor', 'camera', 'connectivity', 'registration', 'warranty'];
+
+function toText(v) {
+  if (typeof v === 'string') return v;
+  return typeof v === 'number' && Number.isFinite(v) ? String(v) : '';
+}
+function toPrice(v, min, max) {
+  return Number.isInteger(v) && v >= min && v <= max ? v : null;
+}
+function toStock(v) {
+  return STOCK_VALUES.includes(v) ? v : 'ASK';
+}
+
+function sanitizePhoneProduct(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const p = {};
+  PHONE_TEXT_FIELDS.forEach(k => { p[k] = toText(raw[k]); });
+  p.p = toPrice(raw.p, PHONE_PRICE_MIN, PHONE_PRICE_MAX);
+  p.stock = toStock(raw.stock);
+  p.cat = PHONE_CAT_VALUES.includes(raw.cat) ? raw.cat : 'OTHER';
+  p.group = raw.group === 'PERSONAL_CARE' ? 'PERSONAL_CARE' : 'PHONE';
+  p.img = normalizeGithubImageUrl(raw.img);
+  const tagClass = PHONE_TAGS[raw.tagLabel] || '';
+  p.tagLabel = tagClass ? raw.tagLabel : '';
+  p.tagClass = tagClass;
+  return p;
+}
+
+function sanitizePhoneList(list) {
+  return Array.isArray(list) ? list.map(sanitizePhoneProduct).filter(Boolean) : [];
+}
+
+// Adres çubuğundaki slug'ı çözer; bozuk %-kodlamada hata fırlatmak yerine ''
+// döner (bulunamayan ürün gibi davranır, katalog yükleme akışı bozulmaz).
+function safeDecodeSlug(value) {
+  try { return decodeURIComponent(value); } catch (e) { return ''; }
+}
+
+function openProductFromHash() {
+  const hashMatch = location.hash.match(/^#urun\/(.+)$/);
+  if (!hashMatch) return;
+  const slug = safeDecodeSlug(hashMatch[1]);
+  const idx = findProductBySlug(slug);
+  if (idx > -1) renderProductModal(products[idx]);
+}
+
+// Katalog verisi geldiğinde (catalog.json / Sheets / önbellek) ORTAK gösterim
+// adımları - eskiden üç yerde birebir kopyaydı. fromCache: bağlantı sorunu
+// nedeniyle son bilinen katalog gösteriliyor ("güncel olmayabilir" uyarısı).
+function showPhoneCatalog(list, fromCache) {
+  products = list;
+  if (!fromCache) saveCatalogCache(products);
+  const cacheNoticeEl = document.getElementById('cacheNotice');
+  if (cacheNoticeEl) cacheNoticeEl.style.display = fromCache ? 'block' : 'none';
+  loadCachedExtraPhotoFiles();
+  renderRamFilterOptions();
+  render();
+  updateProductSchema();
+  renderHeroProduct();
+  computeBudgetThreshold();
+  openProductFromHash();
+  if (!fromCache) discoverExtraPhotosInBackground();
 }
 
 // GUVENILIRLIK (same-origin ONCELIKLI yol): musteri tarayicisi katalogu
@@ -2799,10 +2902,11 @@ async function loadCatalogFromSameOrigin() {
     const res = await fetch('catalog.json?t=' + Date.now(), { cache: 'no-store', signal });
     if (!res.ok) throw new Error('catalog.json yok/erişilemedi (HTTP ' + res.status + ')');
     const data = await res.json();
-    if (!data || !Array.isArray(data.products) || !data.products.length) {
+    const list = data ? sanitizePhoneList(data.products) : [];
+    if (!list.length) {
       throw new Error('catalog.json boş/geçersiz');
     }
-    return data.products;
+    return list;
   }, 5000);
 }
 
@@ -2832,25 +2936,7 @@ async function loadCatalog() {
     return;
   }
 
-  // catalog.json basariyla alindi. Asagidaki adimlar, mevcut
-  // loadFromGoogleSheets() basarili-yol adimlarinin AYNISIDIR (o fonksiyon
-  // KENDI Sheets akisi icin degistirilmeden korunuyor, burada bilerek kucuk
-  // bir kod tekrari tercih edildi).
-  products = sameOriginProducts;
-  saveCatalogCache(products);
-  const cacheNoticeEl = document.getElementById('cacheNotice');
-  if (cacheNoticeEl) cacheNoticeEl.style.display = 'none';
-  await loadExtraPhotoFilesIfNeeded(products);
-  renderRamFilterOptions();
-  render();
-  updateProductSchema();
-  renderHeroProduct();
-  computeBudgetThreshold();
-  const hashMatch = location.hash.match(/^#urun\/(.+)$/);
-  if (hashMatch) {
-    const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
-    if (idx > -1) renderProductModal(products[idx]);
-  }
+  showPhoneCatalog(sameOriginProducts, false);
 }
 
 // Google Sheets'ten TEK bir dogrudan deneme yapar: fetch + HTTP durum
@@ -2954,24 +3040,11 @@ async function loadFromGoogleSheets() {
       });
     }
     
-    products = newProducts;
-    saveCatalogCache(newProducts);
-    const cacheNoticeEl = document.getElementById('cacheNotice');
-    if (cacheNoticeEl) cacheNoticeEl.style.display = 'none';
-    await loadExtraPhotoFilesIfNeeded(products);
-    renderRamFilterOptions();
-    render();
-    updateProductSchema();
-    renderHeroProduct();
-    computeBudgetThreshold();
-
-    // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx), katalog yuklendikten
-    // sonra ilgili urunu otomatik ac.
-    const hashMatch = location.hash.match(/^#urun\/(.+)$/);
-    if (hashMatch) {
-      const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
-      if (idx > -1) renderProductModal(products[idx]);
-    }
+    // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx) showPhoneCatalog
+    // katalog cizildikten sonra ilgili urunu otomatik acar.
+    const sheetProducts = sanitizePhoneList(newProducts);
+    if (!sheetProducts.length) throw new Error('Sheets verisi boş');
+    showPhoneCatalog(sheetProducts, false);
   } catch (err) {
     // DAYANIKLILIK: canli Google Sheets baglantisi basarisiz oldu. Eger daha
     // once basariyla yuklenmis bir katalog tarayicida sakliysa, musteriyi
@@ -2980,20 +3053,8 @@ async function loadFromGoogleSheets() {
     // yoksa mevcut hata ekrani aynen korunuyor.
     const cached = loadCatalogCache();
     if (cached && cached.length) {
-      products = cached;
-      const cacheNoticeEl = document.getElementById('cacheNotice');
-      if (cacheNoticeEl) cacheNoticeEl.style.display = 'block';
       try {
-        renderRamFilterOptions();
-        render();
-        updateProductSchema();
-        renderHeroProduct();
-        computeBudgetThreshold();
-        const hashMatch = location.hash.match(/^#urun\/(.+)$/);
-        if (hashMatch) {
-          const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
-          if (idx > -1) renderProductModal(products[idx]);
-        }
+        showPhoneCatalog(cached, true);
         return;
       } catch (renderErr) { /* cache verisiyle render de basarisiz olursa asagidaki genel hataya dus */ }
     }
@@ -3804,7 +3865,7 @@ document.addEventListener("keydown", e => {
 window.addEventListener('popstate', () => {
   const hashMatch = location.hash.match(/^#urun\/(.+)$/);
   if (hashMatch && products.length) {
-    const idx = findProductBySlug(decodeURIComponent(hashMatch[1]));
+    const idx = findProductBySlug(safeDecodeSlug(hashMatch[1]));
     if (idx > -1) { renderProductModal(products[idx]); return; }
   }
   document.getElementById("modal").classList.remove("open");
@@ -4037,12 +4098,37 @@ function saveLaptopCatalogCache(list) {
 function loadLaptopCatalogCache() {
   try {
     const raw = JSON.parse(localStorage.getItem(laptopCatalogCacheKey) || 'null');
-    if (raw && Array.isArray(raw.products) && raw.products.length && typeof raw.ts === 'number') {
+    const list = raw ? sanitizeLaptopList(raw.products) : [];
+    if (list.length && typeof raw.ts === 'number') {
       const ageMs = Date.now() - raw.ts;
-      return { products: raw.products, ageMs, isStale: ageMs > LAPTOP_CACHE_TTL_MS };
+      return { products: list, ageMs, isStale: ageMs > LAPTOP_CACHE_TTL_MS };
     }
   } catch (e) { /* bozuk cache - yoksay */ }
   return null;
+}
+
+// GÜVENLİK/VERİ DOĞRULAMA: telefondaki sanitizePhoneProduct ile aynı ilke
+// (catalog-laptop.json / Sheet / önbellek güvenilmeyen girdi). Alan adları aynı.
+const LAPTOP_TEXT_FIELDS = ['id', 'brand', 'model', 'cpu', 'cpuGen', 'ramGB', 'ramType', 'ssdGB', 'gpu',
+  'gpuVramGB', 'gpuTgpW', 'screen', 'hz', 'kbLight', 'cosmetic', 'batteryHealth', 'warranty', 'box',
+  'invoice', 'adapter', 'ramUpgrade', 'm2Slot', 'usage', 'saleDate', 'description'];
+const LAPTOP_IMAGE_FIELDS = ['img', 'img2', 'img3', 'img4', 'img5', 'img6'];
+
+function sanitizeLaptopProduct(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const p = {};
+  LAPTOP_TEXT_FIELDS.forEach(k => { p[k] = toText(raw[k]); });
+  LAPTOP_IMAGE_FIELDS.forEach(k => { p[k] = normalizeLaptopGithubImageUrl(raw[k]); });
+  p.condition = raw.condition === 'NEW' || raw.condition === 'USED' ? raw.condition : null;
+  p.price = toPrice(raw.price, LAPTOP_PRICE_MIN, LAPTOP_PRICE_MAX);
+  p.stock = toStock(raw.stock);
+  p.deal = raw.deal === true;
+  p.newArrival = raw.newArrival === true;
+  return p;
+}
+
+function sanitizeLaptopList(list) {
+  return Array.isArray(list) ? list.map(sanitizeLaptopProduct).filter(Boolean) : [];
 }
 
 const LaptopStore = {
@@ -4619,14 +4705,14 @@ function closeLaptopProduct() {
 function maybeOpenLaptopFromHash() {
   const hashMatch = location.hash.match(/^#laptop\/(.+)$/);
   if (!hashMatch) return;
-  const idx = findLaptopBySlug(decodeURIComponent(hashMatch[1]));
+  const idx = findLaptopBySlug(safeDecodeSlug(hashMatch[1]));
   if (idx > -1) renderLaptopModal(LaptopStore.products[idx]);
 }
 
 window.addEventListener('popstate', () => {
   const hashMatch = location.hash.match(/^#laptop\/(.+)$/);
   if (hashMatch && LaptopStore.products.length) {
-    const idx = findLaptopBySlug(decodeURIComponent(hashMatch[1]));
+    const idx = findLaptopBySlug(safeDecodeSlug(hashMatch[1]));
     if (idx > -1) { renderLaptopModal(LaptopStore.products[idx]); return; }
   }
   const modal = document.getElementById('laptopModal');
@@ -4763,14 +4849,39 @@ function closeLaptopFinder() {
   restoreLaptopFocus();
 }
 
+const LAPTOP_FORM_MAX_BUDGET = 2000000;
+
+// WhatsApp numarasini normalize eder; gecersizse null. Turkiye cep numarasi
+// (5xx, 05xx, 905xx, +90 5xx) -> "+90 5xx xxx xx xx". Yurt disi numara ancak
+// "+" / "00" ile yazilmissa (10-15 hane) kabul edilir. Harf veya izinli
+// olmayan karakter iceren giris reddedilir.
+function normalizeWhatsappPhone(value) {
+  const raw = String(value || '').trim();
+  if (!/^[0-9+\s().-]+$/.test(raw)) return null;
+  if (raw.indexOf('+') > 0 || (raw.match(/\+/g) || []).length > 1) return null;
+  const digits = raw.replace(/\D/g, '');
+  const tr = digits.match(/^(?:90|0)?(5\d{2})(\d{3})(\d{2})(\d{2})$/);
+  if (tr && !(raw.startsWith('+') && !digits.startsWith('90'))) {
+    return '+90 ' + tr[1] + ' ' + tr[2] + ' ' + tr[3] + ' ' + tr[4];
+  }
+  const intl = raw.startsWith('+') ? digits : (digits.startsWith('00') ? digits.slice(2) : '');
+  if (intl && /^[1-9]\d{9,14}$/.test(intl)) return '+' + intl;
+  return null;
+}
+
+function parseLaptopBudget(value) {
+  const n = Number(String(value || '').trim());
+  return Number.isFinite(n) && n >= 1 && n <= LAPTOP_FORM_MAX_BUDGET ? Math.round(n) : null;
+}
+
 function validateLaptopFinderForm() {
   let valid = true;
   const checks = [
-    ['lfBudget', v => v.trim() !== '' && Number(v) > 0, 'lfBudgetError', 'Lütfen geçerli bir bütçe girin.'],
+    ['lfBudget', v => parseLaptopBudget(v) !== null, 'lfBudgetError', 'Lütfen geçerli bir bütçe girin.'],
     ['lfUsage', v => v.trim() !== '', 'lfUsageError', 'Lütfen kullanım amacını seçin.'],
     ['lfCondition', v => v.trim() !== '', 'lfConditionError', 'Lütfen durum tercihini seçin.'],
-    ['lfName', v => v.trim().length >= 2, 'lfNameError', 'Lütfen adınızı ve soyadınızı girin.'],
-    ['lfPhone', v => /^[0-9+\s()-]{10,}$/.test(v.trim()), 'lfPhoneError', 'Lütfen geçerli bir WhatsApp numarası girin.']
+    ['lfName', v => v.trim().length >= 2 && /\p{L}/u.test(v), 'lfNameError', 'Lütfen adınızı ve soyadınızı girin.'],
+    ['lfPhone', v => normalizeWhatsappPhone(v) !== null, 'lfPhoneError', 'Lütfen geçerli bir WhatsApp numarası girin (örn. 0532 123 45 67).']
   ];
   checks.forEach(check => {
     const id = check[0], test = check[1], errId = check[2], msg = check[3];
@@ -4793,7 +4904,7 @@ function validateLaptopFinderForm() {
 function buildLaptopFinderWaMessage(data) {
   const lines = [
     'Merhaba MİX GSM, "Bana Laptop Bul" formunu doldurdum:',
-    'Bütçe: ' + data.budget + ' TL',
+    'Bütçe: ' + fmt(data.budget) + ' TL',
     'Kullanım Amacı: ' + data.usage,
     'Durum Tercihi: ' + data.condition,
     'Ad Soyad: ' + data.name,
@@ -4813,11 +4924,11 @@ function handleLaptopFinderSubmit(e) {
   if (!validateLaptopFinderForm()) return;
 
   const data = {
-    budget: document.getElementById('lfBudget').value.trim(),
+    budget: parseLaptopBudget(document.getElementById('lfBudget').value),
     usage: document.getElementById('lfUsage').value,
     condition: document.getElementById('lfCondition').value,
-    name: document.getElementById('lfName').value.trim(),
-    phone: document.getElementById('lfPhone').value.trim(),
+    name: document.getElementById('lfName').value.trim().replace(/\s+/g, ' '),
+    phone: normalizeWhatsappPhone(document.getElementById('lfPhone').value),
     screen: document.getElementById('lfScreen').value,
     priority: document.getElementById('lfPriority').value,
     brand: document.getElementById('lfBrand').value,
@@ -5139,8 +5250,9 @@ async function loadLaptopCatalog() {
   // (1) same-origin catalog-laptop.json dener.
   try {
     const sameOrigin = await loadLaptopCatalogFromSameOrigin();
-    if (Array.isArray(sameOrigin.products) && sameOrigin.products.length) {
-      LaptopStore.products = sameOrigin.products;
+    const sameOriginList = sanitizeLaptopList(sameOrigin && sameOrigin.products);
+    if (sameOriginList.length) {
+      LaptopStore.products = sameOriginList;
       LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
       saveLaptopCatalogCache(LaptopStore.products);
       setLaptopHeroNote(LaptopStore.products.length + ' laptop bulundu.');
@@ -5175,7 +5287,7 @@ async function loadLaptopCatalog() {
       } catch (firstErr) {
         tsv = await fetchLaptopTsvOnce(6000);
       }
-      LaptopStore.products = parseLaptopTsvToProducts(tsv);
+      LaptopStore.products = sanitizeLaptopList(parseLaptopTsvToProducts(tsv));
       LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
       saveLaptopCatalogCache(LaptopStore.products);
       if (LaptopStore.products.length) {
