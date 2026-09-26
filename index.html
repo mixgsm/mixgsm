@@ -29,8 +29,10 @@
      js/app.<hash>.js dosyasında, satır içi tek script (tema) sha256 ile izinli.
      Tema script'i veya js/ değişirse: node scripts/asset-version.js (hash'leri
      yeniler; CI testi unutulursa yakalar). style-src'de 'unsafe-inline' satır
-     içi style="" öznitelikleri için gerekli. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+     içi style="" öznitelikleri için gerekli. connect-src'deki
+     *.googleusercontent.com: Sheets dışa aktarma adresi oraya 307 ile
+     yönlendiriyor; olmadan catalog.json yokken Sheets yedeği hiç çalışmıyordu. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <link rel="icon" href="mix-gsm-logo.jpg" type="image/jpeg">
 <!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
      ağırlık 400-800, ~26 KB). CSP font-src 'self' olduğu için harici font

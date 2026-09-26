@@ -39,8 +39,10 @@ jobs:
           node-version: "20"
 
       # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
+      # Yalnizca VERI testleri: HTML/tasarim kaynakli bir QA hatasi fiyat
+      # guncellemelerini dondurmasin (tam QA: .github/workflows/qa.yml).
       - name: Katalog dogrulama testleri
-        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js scripts/tests/sitemap.test.js
+        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/sitemap.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js
