@@ -30,11 +30,14 @@
      dosyaya taşınmasını gerektirir. style-src'de 'unsafe-inline' satır içi
      style="" öznitelikleri için gerekli. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
-<link rel="icon" href="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg">
+<link rel="icon" href="mix-gsm-logo.jpg" type="image/jpeg">
 <!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
      ağırlık 400-800, ~26 KB). CSP font-src 'self' olduğu için harici font
      servisi kullanılamaz; dosya sitenin kendi /fonts/ klasöründen gelir. -->
 <link rel="preload" href="fonts/inter-var-tr.woff2" as="font" type="font/woff2" crossorigin>
+<!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
+     (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
+<link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -1299,7 +1302,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 <span class="nav-sentinel" id="navSentinel" aria-hidden="true"></span>
 <nav class="navbar" id="siteNavbar" aria-label="Ana menü">
   <div class="nav-brand">
-    <img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/mix-gsm-logo.jpg" alt="MİX GSM Logosu" width="28" height="28">
+    <img src="mix-gsm-logo.jpg" alt="MİX GSM Logosu" width="28" height="28">
     MİX GSM
   </div>
   <div class="nav-links">
@@ -2872,16 +2875,21 @@ function openProductFromHash() {
 // Katalog verisi geldiğinde (catalog.json / Sheets / önbellek) ORTAK gösterim
 // adımları - eskiden üç yerde birebir kopyaydı. fromCache: bağlantı sorunu
 // nedeniyle son bilinen katalog gösteriliyor ("güncel olmayabilir" uyarısı).
-function showPhoneCatalog(list, fromCache) {
+async function showPhoneCatalog(list, fromCache) {
   products = list;
   if (!fromCache) saveCatalogCache(products);
   const cacheNoticeEl = document.getElementById('cacheNotice');
   if (cacheNoticeEl) cacheNoticeEl.style.display = fromCache ? 'block' : 'none';
   loadCachedExtraPhotoFiles();
+  // PERFORMANS: hero (LCP) görseli yalnızca ürün listesine bağlı. src'si
+  // kataloğun tamamı çizilmeden ÖNCE atanır ve tarayıcıya kısa bir ara
+  // verilir: görsel isteği ancak çalışan görev bitince gönderildiği için ara
+  // olmadan indirme, ~100 kartlık render bitene kadar başlamazdı.
+  renderHeroProduct();
+  await new Promise(resolve => setTimeout(resolve, 0));
   renderRamFilterOptions();
   render();
   updateProductSchema();
-  renderHeroProduct();
   computeBudgetThreshold();
   openProductFromHash();
   if (!fromCache) discoverExtraPhotosInBackground();
@@ -2899,9 +2907,13 @@ function showPhoneCatalog(list, fromCache) {
 // ilk kez hic calismadiysa), asagida HIC DEGISTIRILMEDEN duran mevcut
 // "Google Sheets'ten dogrudan yukle" yontemine sessizce duser - musteri
 // bunu hicbir zaman fark etmez, urun veri yapisi/kolonlari DEGISMEZ.
+// ÖNBELLEK: URL sabit (<head>'deki preload ile eşleşsin diye). 'no-cache' =
+// tarayıcı her açılışta ETag ile sunucuya sorar (değişmediyse 304). Eski
+// "?t=Date.now()" CDN'i zaten atlatmıyordu (GitHub Pages CDN sorgu
+// parametresini yok sayıyor); güncellik yine CDN süresiyle (10 dk) sınırlı.
 async function loadCatalogFromSameOrigin() {
   return withTimeout(async (signal) => {
-    const res = await fetch('catalog.json?t=' + Date.now(), { cache: 'no-store', signal });
+    const res = await fetch('catalog.json', { cache: 'no-cache', signal });
     if (!res.ok) throw new Error('catalog.json yok/erişilemedi (HTTP ' + res.status + ')');
     const data = await res.json();
     const list = data ? sanitizePhoneList(data.products) : [];
@@ -2938,7 +2950,7 @@ async function loadCatalog() {
     return;
   }
 
-  showPhoneCatalog(sameOriginProducts, false);
+  await showPhoneCatalog(sameOriginProducts, false);
 }
 
 // Google Sheets'ten TEK bir dogrudan deneme yapar: fetch + HTTP durum
@@ -3046,7 +3058,7 @@ async function loadFromGoogleSheets() {
     // katalog cizildikten sonra ilgili urunu otomatik acar.
     const sheetProducts = sanitizePhoneList(newProducts);
     if (!sheetProducts.length) throw new Error('Sheets verisi boş');
-    showPhoneCatalog(sheetProducts, false);
+    await showPhoneCatalog(sheetProducts, false);
   } catch (err) {
     // DAYANIKLILIK: canli Google Sheets baglantisi basarisiz oldu. Eger daha
     // once basariyla yuklenmis bir katalog tarayicida sakliysa, musteriyi
@@ -3056,7 +3068,7 @@ async function loadFromGoogleSheets() {
     const cached = loadCatalogCache();
     if (cached && cached.length) {
       try {
-        showPhoneCatalog(cached, true);
+        await showPhoneCatalog(cached, true);
         return;
       } catch (renderErr) { /* cache verisiyle render de basarisiz olursa asagidaki genel hataya dus */ }
     }
