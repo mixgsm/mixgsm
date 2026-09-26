@@ -126,3 +126,32 @@ test("laptop fiyatlarinin cogu okunamiyorsa hata verir", () => {
 test("laptop sayisi yariya duserse hata verir", () => {
   assert.ok(validateLaptopCatalog([laptop()], { previousCount: 10 }).errors.length > 0);
 });
+
+// Ayni kuralin iki kopyasi (index.html <-> lib) sessizce ayrismasin: sitedeki
+// isNonProductRow/productSlug, gercek katalogdaki her satirda lib ile ayni sonucu vermeli.
+test("isNonProductRow ve productSlug index.html'deki kopyayla birebir ayni", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const vm = require("vm");
+  const root = path.join(__dirname, "..", "..");
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const between = (a, b) => {
+    const i = html.indexOf(a);
+    const j = html.indexOf(b, i);
+    assert.ok(i >= 0 && j > i, `index.html'de bolum bulunamadi: ${a}`);
+    return html.slice(i, j);
+  };
+  const source = between("function normalizeTR(", "function computeSearchScore(") +
+    between("function isNonProductRow(", "function normalizeGithubImageUrl(") +
+    ";({ isNonProductRow, productSlug })";
+  const site = vm.runInNewContext(source, {});
+  const rows = JSON.parse(fs.readFileSync(path.join(root, "catalog.json"), "utf8")).products.concat([
+    { b: "MARKA", m: "MODEL / ÜRÜN TANIMI", s: "" },
+    { b: "SAMSUNG", m: "SAMSUNG", s: "" },
+    { b: "İPHONE", m: "İPHONE 17 PRO", s: "256 GB" },
+  ]);
+  rows.forEach((p) => {
+    assert.equal(site.isNonProductRow(p), isNonProductRow(p), `isNonProductRow farkli: ${p.b} ${p.m}`);
+    assert.equal(site.productSlug(p), productSlug(p), `productSlug farkli: ${p.b} ${p.m}`);
+  });
+});

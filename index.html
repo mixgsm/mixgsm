@@ -2679,9 +2679,11 @@ const EXTRA_PHOTOS_TIMEOUT_MS = 6000;
 const PHOTO_FILE_NAME = /^[A-Za-z0-9._%-]+\.(jpg|jpeg|png|webp)$/i;
 let extraPhotosResolved = false;
 
+// Banner/başlık satırları (isNonProductRow) hiçbir görselle eşleşmez; onları
+// saymak, gerek yokken her oturumda GitHub API çağrısı yaptırıyordu.
 function hasUnmatchedProducts(productList) {
   return productList.some(p => {
-    if (normalizeGithubImageUrl(p.img)) return false;
+    if (isNonProductRow(p) || normalizeGithubImageUrl(p.img)) return false;
     return !GITHUB_PHOTO_FILES.some(file => imageFileScore(p, file) > 0);
   });
 }

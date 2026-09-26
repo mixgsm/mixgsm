@@ -12,6 +12,7 @@ on:
       - "scripts/generate-catalog-laptop.js"
       - "scripts/generate-price-page.js"
       - "scripts/generate-price-assets.js"
+      - "scripts/check-images.js"
       - "scripts/lib/**"
       - "scripts/tests/**"
       - "package.json"
@@ -37,7 +38,7 @@ jobs:
 
       # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
       - name: Katalog dogrulama testleri
-        run: node --test scripts/tests/catalog-schema.test.js
+        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js
@@ -58,6 +59,12 @@ jobs:
 
       - name: Katalog, besleme ve fiyat sayfasi tutarliligini dogrula
         run: node scripts/generate-price-page.js --verify
+
+      # Gorsel saglik raporu: eksik/kirik gorselleri Actions ozetinde UYARI
+      # olarak gosterir; yayini engellemez (site kirik gorselde yedek gosterir).
+      - name: Gorsel saglik kontrolu
+        continue-on-error: true
+        run: node scripts/check-images.js
 
       # FAZ 4: WhatsApp/Instagram'da paylasilan mobil fiyat listesi (JPG
       # sayfalari + tiklanabilir linkli PDF). catalog.json'i bir "mini
