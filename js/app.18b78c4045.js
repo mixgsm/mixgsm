@@ -11,6 +11,12 @@
 // position:fixed + scroll-offset restorasyonu tekniğine geçildi. Idempotent:
 // zaten kilitliyken tekrar cagrilirsa (ic ice acilan modal) mevcut scroll
 // offset'inin ustune yazmaz.
+// ERİŞİLEBİLİRLİK: "hareketi azalt" tercihinde JS'ten başlatılan kaydırmalar da
+// anında olur (CSS'teki scroll-behavior kuralı JS'teki behavior:'smooth'u ezmez).
+function smoothOrAuto() {
+  return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+}
+
 let bodyScrollLockY = 0;
 function lockBodyScroll() {
   if (document.body.style.position === 'fixed') return;
@@ -942,7 +948,7 @@ function phoneCardHtml(p, extraAttrs) {
   const isComparing = compareList.includes(pk);
   const fav = isFav(p);
   return `
-    <article class="card ${isComparing ? "comparing" : ""}" ${extraAttrs || ''} data-i="${pIndex}" data-action="open-product" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
+    <article class="card ${isComparing ? "comparing" : ""}" ${extraAttrs || ''} data-i="${pIndex}" data-action="open-product">
       <div class="visual">
         ${tagMarkup}
         ${badge}
@@ -951,7 +957,7 @@ function phoneCardHtml(p, extraAttrs) {
       </div>
       <div class="info">
         <div class="brand">${escapeHtml(p.b)}</div>
-        <div class="name">${escapeHtml(p.m)}</div>
+        <div class="name"><button type="button" class="card-open" data-action="open-product" data-i="${pIndex}" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">${escapeHtml(p.m)}</button></div>
         <span class="spec">${escapeHtml(p.s)}</span>
         <div class="bottom">
           <div class="price">
@@ -1325,7 +1331,7 @@ function updateCompareBar() {
 // karsilastirma tablosunu acar, yoksa katalogda urun secmeye yonlendirir.
 function bottomNavCompare() {
   if (compareList.length) { openCompareModal(); }
-  else { showToast('Önce karşılaştırmak için ürün seçin'); document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' }); }
+  else { showToast('Önce karşılaştırmak için ürün seçin'); document.getElementById('catalog').scrollIntoView({ behavior: smoothOrAuto() }); }
 }
 
 // Favoriler cubugu VE karsilastirma cubugu ayni anda gorunur olabilir.
@@ -1402,7 +1408,7 @@ function renderCompareTable() {
     ['Garanti / İade', p => p.warranty || '-'],
   ];
 
-  let html = '<table class="comparetable"><thead><tr><th></th>';
+  let html = '<table class="comparetable"><thead><tr><th><span class="sr-only">Özellik</span></th>';
   items.forEach(p => {
     const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
     const pk = `${p.b}|${p.m}|${p.s}`;
@@ -1844,7 +1850,7 @@ if (window.matchMedia) {
   onBackdropClick('legalmodal', closeLegalModal);
   on('.close', closeLegalModal, document.getElementById('legalmodal'));
 
-  on('.bottom-nav a[href="#"]', e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  on('.bottom-nav a[href="#"]', e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: smoothOrAuto() }); });
   on('.bottom-nav button', bottomNavCompare);
 
   on('#lightbox', closeLightbox);
@@ -2297,13 +2303,15 @@ function laptopCardMarkup(p) {
   const screenText = [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · ');
   const specsText = [condText, p.cpu, memText, p.gpu, screenText].filter(Boolean).slice(0, 4).join(' • ');
 
-  return '<article class="laptop-card" data-laptop-index="' + idx + '" role="button" tabindex="0" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">'
+  // ERİŞİLEBİLİRLİK: kartın tamamı fareyle tıklanır (grid click dinleyicisi);
+  // klavye/ekran okuyucu için gerçek düğme model adıdır (role="button" kart YOK).
+  return '<article class="laptop-card" data-laptop-index="' + idx + '">'
     + '<div class="laptop-card-visual">' + tag + leftBadges
     + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy" decoding="async">'
     + '</div>'
     + '<div class="laptop-card-body">'
     + '<div class="laptop-card-brand">' + escapeHtml(p.brand || '') + '</div>'
-    + '<div class="laptop-card-model">' + escapeHtml(p.model || '') + '</div>'
+    + '<div class="laptop-card-model"><button type="button" class="card-open" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">' + escapeHtml(p.model || title) + '</button></div>'
     + (specsText ? '<div class="laptop-card-specs">' + escapeHtml(specsText) + '</div>' : '')
     + '<div class="laptop-card-bottom">' + priceMarkup + '</div>'
     + '</div></article>';
@@ -2919,7 +2927,7 @@ function handleLaptopFinderSubmit(e) {
   const stockBtn = document.getElementById('laptopStockBtn');
   if (stockBtn) stockBtn.addEventListener('click', () => {
     const target = document.getElementById('laptopCatalogTitle');
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
+    if (target) target.scrollIntoView({ behavior: smoothOrAuto() });
   });
   const finderCloseBtn = document.getElementById('laptopFinderCloseBtn');
   if (finderCloseBtn) finderCloseBtn.addEventListener('click', closeLaptopFinder);
@@ -3595,7 +3603,7 @@ async function loadLaptopCatalog() {
     watchPhotos(secLaptop, trackLaptop, true);
     trackLaptop.addEventListener('click', e => {
       const card = e.target.closest('.laptop-card');
-      if (card && trackLaptop.contains(card)) openLaptopProductFromCard(card);   // Enter/Space: genel role="button" dinleyicisi
+      if (card && trackLaptop.contains(card)) openLaptopProductFromCard(card);   // Enter/Space: karttaki gerçek <button class="card-open"> tıklaması buraya kabarır
     });
     const more = $('vitrinLaptopMore');
     if (more) more.addEventListener('click', e => {
@@ -3658,7 +3666,8 @@ async function loadLaptopCatalog() {
       expanded = true;
       apply();
       const next = grid.querySelector('[data-more]');
-      if (next) next.focus({ preventScroll: true });              // klavyede kalınan yerden devam
+      const nextBtn = next && (next.querySelector('.card-open') || next);
+      if (nextBtn) nextBtn.focus({ preventScroll: true });        // klavyede kalınan yerden devam
     });
     new MutationObserver(apply).observe(grid, { childList: true });  // sadece kart listesi; öznitelikler izlenmez
     apply();

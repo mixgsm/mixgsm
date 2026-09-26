@@ -39,7 +39,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.6e4bb28899.js" defer></script>
+<script src="js/app.18b78c4045.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -474,6 +474,17 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .info { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; }
 .brand { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; }
 .name { font-size: 15.5px; font-weight: 600; margin: 4px 0 8px; color: var(--text); line-height: 1.3; }
+/* Kart açma düğmesi (model adı): görünüm düz metinle aynı; odak halkası genel
+   button:focus-visible kuralından gelir. */
+.card-open { all: unset; cursor: pointer; }
+/* Klavye odağında halka kartın tamamında (fare tıklamasında görünmez). :has
+   desteklemeyen tarayıcıda düğmenin kendi odak halkası kalır. */
+@supports selector(:has(*)) {
+  .card:has(.card-open:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+  #laptop-section .laptop-card:has(.card-open:focus-visible) { outline: 2px solid var(--laptop-gold); outline-offset: 2px; }
+  .card .card-open:focus-visible, #laptop-section .laptop-card .card-open:focus-visible { outline: none; }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .spec { font-size: 12px; color: var(--muted); font-weight: 400; margin-bottom: 16px; }
 .bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: auto; }
 .price small { display: block; color: var(--muted); font-size: 10px; font-weight: 500; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .4px; }
@@ -570,6 +581,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .comparetable th, .comparetable td { min-width: 130px; }
 .comparetable th:first-child, .comparetable td:first-child { text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap; min-width: 110px; }
 .compare-remove { background: transparent; border: 0; color: var(--accent); cursor: pointer; font-size: 11px; font-weight: 600; margin-top: 6px; }
+/* WCAG AA kontrast: koyu tabloda 4,3:1 -> 4,9:1; açık temada (beyaz/açık gri zemin) 3,7:1 -> 4,9+:1 */
+#comparemodal .compare-remove { color: #EB4D59; }
+:root[data-theme="light"] .compare-remove, :root[data-theme="light"] #comparemodal .compare-remove { color: #C8283A; }
 .compare-thumb { width: 68px; height: 68px; object-fit: contain; margin: 0 auto 8px; display: block; }
 
 /* Store Section */
@@ -777,7 +791,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* --- Laptop kartı --- */
 #laptop-section .laptop-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: border-color .2s, transform .2s; text-align: left; }
 #laptop-section .laptop-card:hover { border-color: color-mix(in srgb, var(--text) 16%, transparent); transform: translateY(-2px); }
-#laptop-section .laptop-card:focus-visible { outline: 2px solid var(--laptop-gold); outline-offset: 2px; }
+
 #laptop-section .laptop-card-visual { position: relative; aspect-ratio: 16 / 9; background: var(--surface); }
 #laptop-section .laptop-card-visual img { width: 100%; height: 100%; object-fit: contain; display: block; }
 /* GORSEL DUZELTME: .laptop-card-badge (stok etiketi) artik KENDİ BAŞINA
@@ -928,6 +942,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 #laptop-section .laptop-form-row.invalid input,
 #laptop-section .laptop-form-row.invalid select { border-color: #d85a5a; }
 #laptop-section .laptop-form-error { display: none; font-size: 11.5px; color: #d85a5a; }
+/* ERİŞİLEBİLİRLİK (WCAG AA kontrast): açık temada altın/kırmızı metin açık
+   zeminde okunaksızdı (2,3:1 ve 3,6:1); aynı tonun koyu karşılığı kullanılır. */
+:root[data-theme="light"] #laptop-section .laptop-form-error { color: #B42318; }
+:root[data-theme="light"] #laptop-section .laptop-modalprice { color: #8C6D0C; }
 #laptop-section .laptop-form-row.invalid .laptop-form-error { display: block; }
 #laptop-section .laptop-form-submit:disabled { opacity: .6; cursor: not-allowed; }
 
@@ -952,7 +970,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .brand-strip-scroller::-webkit-scrollbar { display: none; }
 .brand-group { flex: 0 0 auto; display: flex; align-items: center; }
 .brand-group[hidden] { display: none; }
-.brand-group-label { margin-right: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--muted); opacity: .65; }
+.brand-group-label { margin-right: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--muted); }
 .brand-link { position: relative; min-height: 44px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500; line-height: 1; white-space: nowrap; color: var(--muted); cursor: pointer; transition: color .2s var(--ease-out); }
 .brand-link:hover, .brand-link[aria-pressed="true"] { color: var(--text); }
 .brand-link[aria-pressed="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 9px; height: 1.5px; border-radius: 2px; background: currentColor; }
@@ -1074,7 +1092,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    aynı; sadece küçük metinlerde aynı rengin koyu/açık tonu kullanılır. */
 :root[data-theme="light"] .adv-clear, :root[data-theme="light"] .comparetraybar .btn-clear, :root[data-theme="light"] .comparebar button:not(.btn-view-fav) { color: color-mix(in srgb, var(--accent) 80%, #000); }
 :root[data-theme="dark"] .comparetraybar .btn-clear, :root[data-theme="dark"] .comparebar button:not(.btn-view-fav) { color: color-mix(in srgb, var(--accent) 78%, #fff); }
-:root[data-theme="light"] .bottom-nav .bn-wa { color: #0C7A40; }
+:root[data-theme="light"] .bottom-nav .bn-wa { color: #0A7039; }
 :root[data-theme="light"] #laptop-section .laptop-hero-eyebrow { color: color-mix(in srgb, var(--laptop-gold) 62%, #000); }
 
 /* REDESIGN ADIM 8–10 — ALT BÖLÜMLER + ORTAK BUTON DİLİ + SON DOKUNUŞLAR
@@ -1942,7 +1960,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     </div>
     <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="home-link"><svg class="icon" aria-hidden="true"><use href="#ic-star"></use></svg> Google'da Değerlendir <span aria-hidden="true">→</span></a>
   </div>
-  <div class="reviews-track" id="googleReviews">
+  <div class="reviews-track" id="googleReviews" tabindex="0" role="region" aria-label="Google yorumları">
     <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Cihazlar temiz, fiyatlar makul. İsa Bey'e ilgisinden dolayı teşekkürler."</blockquote><figcaption class="ref-source">— Mehmet K.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Laptop takası için gittim, süreci çok şeffaf yönettiler. Gaziantep'te tek adresim."</blockquote><figcaption class="ref-source">— Ayşe K.</figcaption></figure>
