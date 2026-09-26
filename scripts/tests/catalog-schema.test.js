@@ -127,18 +127,18 @@ test("laptop sayisi yariya duserse hata verir", () => {
   assert.ok(validateLaptopCatalog([laptop()], { previousCount: 10 }).errors.length > 0);
 });
 
-// Ayni kuralin iki kopyasi (index.html <-> lib) sessizce ayrismasin: sitedeki
+// Ayni kuralin iki kopyasi (site kodu js/app.<hash>.js <-> lib) sessizce ayrismasin: sitedeki
 // isNonProductRow/productSlug, gercek katalogdaki her satirda lib ile ayni sonucu vermeli.
-test("isNonProductRow ve productSlug index.html'deki kopyayla birebir ayni", () => {
+test("isNonProductRow ve productSlug site kodundaki kopyayla birebir ayni", () => {
   const fs = require("fs");
   const path = require("path");
   const vm = require("vm");
   const root = path.join(__dirname, "..", "..");
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  const html = require("../asset-version").readAppSource(root);
   const between = (a, b) => {
     const i = html.indexOf(a);
     const j = html.indexOf(b, i);
-    assert.ok(i >= 0 && j > i, `index.html'de bolum bulunamadi: ${a}`);
+    assert.ok(i >= 0 && j > i, `site kodunda bolum bulunamadi: ${a}`);
     return html.slice(i, j);
   };
   const source = between("function normalizeTR(", "function computeSearchScore(") +

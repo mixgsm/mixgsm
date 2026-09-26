@@ -6,11 +6,10 @@ const assert = require("node:assert/strict");
 const path = require("path");
 const { loadSiteImageMatcher, checkPhoneImages, checkLaptopImages } = require("../check-images");
 
-const INDEX = path.join(__dirname, "..", "..", "index.html");
-const matcher = loadSiteImageMatcher(INDEX);
+const matcher = loadSiteImageMatcher(path.join(__dirname, "..", ".."));
 const phone = (b, m, over) => ({ b, m, s: "", p: 1000, stock: "IN", img: "", ...over });
 
-test("index.html'deki gercek eslestirme mantigi yuklenir", () => {
+test("site kodundaki (js/app.<hash>.js) gercek eslestirme mantigi yuklenir", () => {
   assert.equal(typeof matcher.candidates, "function");
   assert.ok(matcher.staticFiles.length > 50);
 });

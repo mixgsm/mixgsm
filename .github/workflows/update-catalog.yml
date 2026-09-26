@@ -13,6 +13,7 @@ on:
       - "scripts/generate-price-page.js"
       - "scripts/generate-price-assets.js"
       - "scripts/check-images.js"
+      - "scripts/asset-version.js"
       - "scripts/lib/**"
       - "scripts/tests/**"
       - "package.json"
@@ -38,7 +39,7 @@ jobs:
 
       # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
       - name: Katalog dogrulama testleri
-        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js
+        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js

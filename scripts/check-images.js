@@ -3,9 +3,9 @@
 //   node scripts/check-images.js            -> ozet + GitHub Actions ::warning:: satirlari
 //   node scripts/check-images.js --strict   -> kirik gorsel varsa cikis kodu 1
 //
-// Telefon gorselleri tarayicida, index.html icindeki eslestirme mantigiyla
+// Telefon gorselleri tarayicida, site kodundaki (js/app.<hash>.js) eslestirme mantigiyla
 // (imageCandidatesForProduct) secilir. Bu script o mantigi KOPYALAMAZ:
-// index.html'deki ilgili bolumu okuyup aynen calistirir, boylece rapor ile
+// site kodundaki ilgili bolumu okuyup aynen calistirir, boylece rapor ile
 // sitenin gosterdigi gorsel hicbir zaman ayrismaz. Depodaki dosya listesi,
 // tarayicinin GitHub API'den aldigi listenin yerine gecer.
 //
@@ -18,6 +18,7 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const schema = require("./lib/catalog-schema");
+const { readAppSource } = require("./asset-version");
 
 const ROOT = path.join(__dirname, "..");
 const PHONE_BASE = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/";
@@ -25,23 +26,23 @@ const LAPTOP_BASE = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop
 const PHONE_FALLBACK = "gorsel-yok.jpg";
 const IMAGE_EXT = /\.(jpe?g|png|webp)$/i;
 const LAPTOP_IMAGE_FIELDS = ["img", "img2", "img3", "img4", "img5", "img6"];
-// index.html'de telefon gorsel eslestirme bolumunun sinirlari. Bolum bos bir
+// Site kodunda telefon gorsel eslestirme bolumunun sinirlari. Bolum bos bir
 // vm baglaminda calisir: burada yalnizca imageCandidatesForProduct ve sabit
 // liste kullanilir. Bolumdeki tarayici bagimli fonksiyonlar (fetch,
 // sessionStorage, isNonProductRow kullananlar) burada CAGRILMAMALIDIR.
 const MATCHER_START = "function normalizeGithubImageUrl(";
 const MATCHER_END = "function tryNextProductImage(";
 
-function loadSiteImageMatcher(indexPath) {
-  const html = fs.readFileSync(indexPath, "utf8");
+function loadSiteImageMatcher(siteRoot) {
+  const html = readAppSource(siteRoot);
   const start = html.indexOf(MATCHER_START);
   const end = html.indexOf(MATCHER_END);
   if (start < 0 || end < 0 || end < start) {
-    throw new Error("index.html'de gorsel eslestirme bolumu bulunamadi (" + MATCHER_START + " ... " + MATCHER_END + ")");
+    throw new Error("site kodunda gorsel eslestirme bolumu bulunamadi (" + MATCHER_START + " ... " + MATCHER_END + ")");
   }
   const source = html.slice(start, end) +
     "\n;({ imageCandidatesForProduct, staticFiles: GITHUB_PHOTO_FILES, setExtra: (f) => { EXTRA_PHOTO_FILES = f; } })";
-  const api = vm.runInNewContext(source, {}, { filename: "index.html#image-matcher" });
+  const api = vm.runInNewContext(source, {}, { filename: "js/app.js#image-matcher" });
   const staticFiles = Array.from(api.staticFiles);
   const staticLower = new Set(staticFiles.map((f) => f.toLowerCase()));
 
@@ -131,7 +132,7 @@ function readProducts(file) {
 }
 
 function main() {
-  const matcher = loadSiteImageMatcher(path.join(ROOT, "index.html"));
+  const matcher = loadSiteImageMatcher(ROOT);
   const photoFiles = listFiles(path.join(ROOT, "photos"), "");
   const phone = checkPhoneImages(readProducts("catalog.json"), matcher, photoFiles);
   const laptop = checkLaptopImages(readProducts("catalog-laptop.json"), listFiles(path.join(ROOT, "laptop-photos"), ""));
@@ -141,7 +142,7 @@ function main() {
   console.log("GORSEL SAGLIK RAPORU");
   console.log(`Telefon: ${phone.total} urun | Gorsel OK: ${phone.ok.length} | Fallback (gorsel yok): ${phone.fallback.length} | Kirik: ${phone.broken.length}`);
   console.log(`Laptop:  ${laptop.total} urun | Gorsel OK: ${laptop.imagesOk} | Gorselsiz urun: ${laptop.noImage.length} | Kirik: ${laptop.broken.length} | Paylasilan gorsel: ${laptop.shared.length}`);
-  console.log(`index.html sabit foto listesi: depoda olmayan ${staleStatic.length} | listede olmayan (GitHub API'ye kalan) ${extraCount}`);
+  console.log(`Site kodundaki sabit foto listesi: depoda olmayan ${staleStatic.length} | listede olmayan (GitHub API'ye kalan) ${extraCount}`);
 
   const warn = (msg) => console.log(`::warning::${msg}`);
   phone.fallback.forEach((x) => warn(`Telefon gorseli yok (fallback): ${x}`));
@@ -150,7 +151,7 @@ function main() {
   laptop.noImage.forEach((x) => warn(`Laptop gorseli yok: ${x}`));
   laptop.broken.forEach((x) => warn(`Laptop gorseli kirik: ${x}`));
   laptop.shared.forEach((x) => warn(`Ayni laptop gorseli birden fazla urunde: ${x}`));
-  staleStatic.forEach((x) => warn(`index.html foto listesinde var, depoda yok: ${x}`));
+  staleStatic.forEach((x) => warn(`Site kodundaki foto listesinde var, depoda yok: ${x}`));
 
   const brokenCount = phone.broken.length + laptop.broken.length;
   if (process.argv.includes("--strict") && brokenCount) process.exitCode = 1;
