@@ -14,6 +14,7 @@ on:
       - "scripts/generate-price-assets.js"
       - "scripts/check-images.js"
       - "scripts/asset-version.js"
+      - "scripts/generate-sitemap.js"
       - "scripts/lib/**"
       - "scripts/tests/**"
       - "package.json"
@@ -39,7 +40,7 @@ jobs:
 
       # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
       - name: Katalog dogrulama testleri
-        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js
+        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js scripts/tests/sitemap.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js
@@ -60,6 +61,11 @@ jobs:
 
       - name: Katalog, besleme ve fiyat sayfasi tutarliligini dogrula
         run: node scripts/generate-price-page.js --verify
+
+      # sitemap.xml lastmod = katalog gunu; uretilemezse yayin engellenmez.
+      - name: sitemap.xml guncelle
+        continue-on-error: true
+        run: node scripts/generate-sitemap.js
 
       # Gorsel saglik raporu: eksik/kirik gorselleri Actions ozetinde UYARI
       # olarak gosterir; yayini engellemez (site kirik gorselde yedek gosterir).
@@ -88,7 +94,7 @@ jobs:
 
       - name: Degisiklik varsa commit + push et
         run: |
-          git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html
+          git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html sitemap.xml
           # price-assets AYRI ve GUVENLI eklenir: yukaridaki FAZ 4 adimlari
           # (continue-on-error) herhangi bir nedenle calisip price-assets/
           # klasorunu hic olusturamamis olabilir. "git add price-assets"
