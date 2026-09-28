@@ -260,7 +260,11 @@ function updateProductSchema() {
 // gorseli KULLANILMAZ, sadece katalogdaki gercek urun gorseli). Stokta uygun
 // urun yoksa gorsel alani sessizce gizlenir, hicbir urun "satista" gibi
 // gosterilmez.
-function renderHeroProduct() {
+// waitForPhotoDiscovery: hero ürününün görseli sabit listede yoksa ve arka
+// planda GitHub fotoğraf araması yapılacaksa, hero (LCP) önce "görsel yok"
+// resmiyle açılıp sonra değişmesin; mevcut "yükleniyor" hali korunur. Arama
+// bitince (başarılı/başarısız) discoverExtraPhotosInBackground hero'yu yeniden çizer.
+function renderHeroProduct(waitForPhotoDiscovery) {
   const img = document.getElementById('heroProductImg');
   const empty = document.getElementById('heroVisualEmpty');
   if (!img || !empty) return;
@@ -268,7 +272,9 @@ function renderHeroProduct() {
   candidates.sort((a, b) => b.p - a.p);
   const pick = candidates[0];
   if (!pick) { img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Güncel katalog için ürünleri inceleyin.'; return; }
-  img.src = imageCandidatesForProduct(pick)[0];
+  const heroSrc = imageCandidatesForProduct(pick)[0];
+  if (waitForPhotoDiscovery && /gorsel-yok\.jpg$/.test(heroSrc)) return;
+  img.src = heroSrc;
   img.alt = `${pick.b} ${pick.m}`;
   img.style.display = 'block';
   empty.style.display = 'none';
@@ -577,12 +583,14 @@ async function fetchExtraPhotoFiles() {
 function discoverExtraPhotosInBackground() {
   if (extraPhotosResolved || !hasUnmatchedProducts(products)) return;
   fetchExtraPhotoFiles().then(found => {
-    if (!found) return;
-    render();
-    updateProductSchema();
+    if (found) {
+      render();
+      updateProductSchema();
+    }
     renderHeroProduct();
   }).catch(() => {
     // GitHub API yok/limit/zaman aşımı: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
+    renderHeroProduct();
   });
 }
 
@@ -737,7 +745,7 @@ async function showPhoneCatalog(list, fromCache) {
   // kataloğun tamamı çizilmeden ÖNCE atanır ve tarayıcıya kısa bir ara
   // verilir: görsel isteği ancak çalışan görev bitince gönderildiği için ara
   // olmadan indirme, ~100 kartlık render bitene kadar başlamazdı.
-  renderHeroProduct();
+  renderHeroProduct(!fromCache && !extraPhotosResolved && hasUnmatchedProducts(products));
   await new Promise(resolve => setTimeout(resolve, 0));
   renderRamFilterOptions();
   render();
