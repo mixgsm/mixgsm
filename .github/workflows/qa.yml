@@ -1,0 +1,33 @@
+name: QA (testler + yayin oncesi kontroller)
+
+# main'e her push'ta ve PR'larda calisir. Hata varsa is kirmizi olur.
+# NOT: GitHub Pages "branch'ten yayin" modunda oldugu icin bu kontrol yayini
+# kendiliginden durduramaz; PR + branch korumasi (zorunlu status check) ile
+# birlikte kullanildiginda bozuk surum main'e hic giremez.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Birim testleri
+        run: npm test
+
+      - name: Yayin oncesi QA (HTML, JS, CSP, linkler, veri, gorseller)
+        run: npm run qa
