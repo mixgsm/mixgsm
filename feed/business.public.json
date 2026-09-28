@@ -1,7 +1,7 @@
 {
   "contract": "mixgsm.business.public",
   "contract_version": "1.0.0",
-  "source_updated": "2026-09-20",
+  "source_updated": "2026-09-28",
   "note": "Otomatik üretilir; elle düzenlemeyin. Yalnızca herkese açık işletme bilgilerini içerir.",
   "identity": {
     "brand_name": "MİX GSM",
@@ -26,7 +26,8 @@
     "display": {
       "full": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep",
       "street_line": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D"
-    }
+    },
+    "map_url": "https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6"
   },
   "contact": {
     "status": "confirmed",
@@ -45,6 +46,29 @@
     "instagram": "https://www.instagram.com/mixgsm/",
     "facebook_group": "https://www.facebook.com/groups/xiaomiredmidestek/",
     "telegram": "https://t.me/xiaomiredmidestek"
+  },
+  "hours": {
+    "status": "confirmed",
+    "confirmed_by": "owner",
+    "confirmed_on": "2026-09-28",
+    "weekly": [
+      {
+        "days": [
+          "MON",
+          "TUE",
+          "WED",
+          "THU",
+          "FRI",
+          "SAT"
+        ],
+        "open": "09:00",
+        "close": "20:00"
+      }
+    ],
+    "closed_days": [
+      "SUN"
+    ],
+    "display_tr": "Pazartesi - Cumartesi: 09:00 - 20:00, Pazar: Kapalı"
   },
   "policies": {
     "returns": {
