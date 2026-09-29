@@ -815,6 +815,29 @@ function uniqueImageUrls(urls) {
   });
 }
 
+// VARYANT FOTOĞRAFI: aynı modelin (marka + model) RAM/hafıza varyantları
+// katalog sırasıyla 0, 1, 2… numaralanır (photoVariant). Liste değiştirilmez,
+// numaralı kopyası döner.
+function withPhotoVariantIndex(list) {
+  const seen = new Map();
+  return list.map(p => {
+    const key = imageMatchKey(`${p.b || ''} ${p.m || ''}`);
+    const photoVariant = seen.get(key) || 0;
+    seen.set(key, photoVariant + 1);
+    return { ...p, photoVariant };
+  });
+}
+
+// Aynı adlı .jpg / .webp tek fotoğraf sayılır. shift. fotoğraf (az ise başa
+// dönerek) öne alınır, diğerleri sırasını korur.
+function rotatePhotosForVariant(files, shift) {
+  const stemOf = f => String(f).replace(/\.[^.]+$/, '').toLowerCase();
+  const stems = [...new Set(files.map(stemOf))];
+  if (!shift || stems.length < 2) return files;
+  const lead = stems[shift % stems.length];
+  return files.filter(f => stemOf(f) === lead).concat(files.filter(f => stemOf(f) !== lead));
+}
+
 // Dönen liste hem kartın/ana görselin yedek zinciri (ilk öğe gösterilir)
 // hem de ürün penceresindeki galeridir.
 function imageCandidatesForProduct(p) {
@@ -842,8 +865,13 @@ function imageCandidatesForProduct(p) {
   // alındığı için başka modelle karışamaz; RAM dikkate alınmaz).
   const variantFile = storageVariantFile(winner, p.s, allPhotoFiles);
 
-  const files = [variantFile, winner]
-    .concat(sameModelPhotos(p, winner, allPhotoFiles), nearTop)
+  // VARYANT FOTOĞRAFI: Sheet görseli ya da hafıza dosyası yoksa modelin
+  // fotoğrafları bu varyantın sırasından başlar (galeri hepsini tutar).
+  const shift = sheetImage || variantFile ? 0 : (p.photoVariant || 0);
+  const modelFiles = rotatePhotosForVariant([winner].concat(sameModelPhotos(p, winner, allPhotoFiles)), shift);
+
+  const files = [variantFile]
+    .concat(modelFiles, nearTop)
     .filter(Boolean);
   const urls = uniqueImageUrls([sheetImage].concat(files.map(githubPhotoUrl)));
   return urls.slice(0, MAX_PRODUCT_IMAGES);
@@ -966,7 +994,7 @@ function openProductFromHash() {
 // adımları - eskiden üç yerde birebir kopyaydı. fromCache: bağlantı sorunu
 // nedeniyle son bilinen katalog gösteriliyor ("güncel olmayabilir" uyarısı).
 async function showPhoneCatalog(list, fromCache) {
-  products = list;
+  products = withPhotoVariantIndex(list);
   if (!fromCache) saveCatalogCache(products);
   const cacheNoticeEl = document.getElementById('cacheNotice');
   if (cacheNoticeEl) cacheNoticeEl.style.display = fromCache ? 'block' : 'none';

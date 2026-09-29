@@ -41,7 +41,7 @@ function loadSiteImageMatcher(siteRoot) {
     throw new Error("site kodunda gorsel eslestirme bolumu bulunamadi (" + MATCHER_START + " ... " + MATCHER_END + ")");
   }
   const source = html.slice(start, end) +
-    "\n;({ imageCandidatesForProduct, staticFiles: GITHUB_PHOTO_FILES, setExtra: (f) => { EXTRA_PHOTO_FILES = f; } })";
+    "\n;({ imageCandidatesForProduct, withPhotoVariantIndex, staticFiles: GITHUB_PHOTO_FILES, setExtra: (f) => { EXTRA_PHOTO_FILES = f; } })";
   const api = vm.runInNewContext(source, {}, { filename: "js/app.js#image-matcher" });
   const staticFiles = Array.from(api.staticFiles);
   const staticLower = new Set(staticFiles.map((f) => f.toLowerCase()));
@@ -52,7 +52,8 @@ function loadSiteImageMatcher(siteRoot) {
     api.setExtra(repoFiles.filter((f) => IMAGE_EXT.test(f) && !staticLower.has(f.toLowerCase())));
     return Array.from(api.imageCandidatesForProduct(product));
   }
-  return { candidates, staticFiles };
+  const withPhotoVariantIndex = (list) => Array.from(api.withPhotoVariantIndex(list));
+  return { candidates, withPhotoVariantIndex, staticFiles };
 }
 
 function fileFromUrl(url, base) {

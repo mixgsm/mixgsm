@@ -108,6 +108,42 @@ test("galeri: Sheet görseli ilk sırada, alternatifler susmaz, tekrar yok", () 
   assert.equal(new Set(got).size, got.length);
 });
 
+// --- Varyant fotoğrafı: aynı modelin RAM/hafıza varyantları farklı fotoğrafla başlar ---
+const NOTE14 = ["REDMI-NOTE-14-PRO-PLUS-5G.jpg", "REDMI-NOTE-14-PRO-PLUS-5G-2.jpg", "REDMI-NOTE-14-PRO-PLUS-5G-3.jpg"];
+const note14 = (s, over) => phone("XIAOMI", "REDMI NOTE 14 PRO PLUS 5G", { s, ...over });
+
+test("varyant: katalog sırasıyla modele göre numaralanır, liste değiştirilmez", () => {
+  const list = [note14("12 GB / 256 GB"), phone("XIAOMI", "MI 17"), note14("12 GB / 512 GB"), note14("16 GB / 512 GB")];
+  const got = matcher.withPhotoVariantIndex(list);
+  assert.deepEqual(got.map((p) => p.photoVariant), [0, 0, 1, 2]);
+  assert.equal(list[2].photoVariant, undefined);
+});
+
+test("varyant: 1., 2., 3. varyant kartta sırayla 1., 2., 3. fotoğrafı gösterir; galeri hepsini tutar", () => {
+  const list = matcher.withPhotoVariantIndex([note14("12 GB / 256 GB"), note14("12 GB / 512 GB"), note14("16 GB / 512 GB")]);
+  const galleries = list.map((p) => files(matcher.candidates(p, NOTE14)));
+  assert.deepEqual(galleries.map((g) => g[0]), NOTE14);
+  galleries.forEach((g) => assert.deepEqual([...g].sort(), [...NOTE14].sort()));
+});
+
+test("varyant: fotoğraf varyanttan azsa başa döner; aynı adlı .jpg/.webp tek fotoğraf sayılır", () => {
+  const repo = ["MI-17.jpg", "MI-17.webp", "xiaomi-17-2.jpg"];
+  const mi17 = (s) => phone("XIAOMI", "MI 17", { s });
+  const list = matcher.withPhotoVariantIndex([mi17("12 GB / 256 GB"), mi17("12 GB / 512 GB"), mi17("16 GB / 512 GB")]);
+  const firsts = list.map((p) => files(matcher.candidates(p, repo))[0]);
+  assert.deepEqual(firsts, ["MI-17.jpg", "xiaomi-17-2.jpg", "MI-17.jpg"]);
+});
+
+test("varyant: Sheet görseli ve hafıza dosyası (-512GB) varsa sıra değişmez", () => {
+  const img = PH + "REDMI-NOTE-14-PRO-PLUS-5G-3.jpg";
+  const withSheet = note14("12 GB / 512 GB", { img, photoVariant: 1 });
+  assert.equal(files(matcher.candidates(withSheet, NOTE14))[0], "REDMI-NOTE-14-PRO-PLUS-5G-3.jpg");
+
+  const repo = NOTE14.concat("REDMI-NOTE-14-PRO-PLUS-5G-512GB.jpg");
+  const withStorage = note14("12 GB / 512 GB", { photoVariant: 1 });
+  assert.equal(files(matcher.candidates(withStorage, repo))[0], "REDMI-NOTE-14-PRO-PLUS-5G-512GB.jpg");
+});
+
 test("laptop: eksik, buyuk/kucuk harf farkli ve paylasilan gorseller yakalanir", () => {
   const base = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/images/";
   const repoFiles = ["images/PC-001-01.jpg", "images/PC-002-01.jpg"];
