@@ -2312,6 +2312,16 @@ function renderLaptopFilteredEmptyState() {
     + '<br><br><button type="button" class="laptop-adv-clear" data-action="laptop-reset" style="width:auto;display:inline-block;padding:10px 18px;">Filtreleri Temizle</button></div>';
 }
 
+// Sheet değerleri bazen birimiyle gelir ("512 GB NVMe", "144 Hz", "140W"),
+// bazen yalın ("16"). Birim yalnızca eksikse eklenir; "-" boş sayılır.
+// Böylece "512 GB NVMe GB" / "60 Hz Hz" gibi tekrarlar oluşmaz.
+function laptopUnit(value, unit) {
+  const v = String(value == null ? '' : value).trim();
+  if (!v || v === '-') return '';
+  const hasUnit = unit === 'GB' ? /\d\s*(GB|TB)\b/i : new RegExp('\\d\\s*' + unit + '\\b', 'i');
+  return hasUnit.test(v) ? v : v + ' ' + unit;
+}
+
 function laptopCardMarkup(p) {
   const idx = LaptopStore.products.indexOf(p);
   const title = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
@@ -2337,8 +2347,11 @@ function laptopCardMarkup(p) {
   // ZAMAN hemen altında, üst üste binme yapısal olarak mümkün değil.
   const condBadge = condText ? '<span class="laptop-card-tag">' + escapeHtml(condText) + '</span>' : '';
   const leftBadges = '<div class="laptop-card-left-badges">' + condBadge + badge + '</div>';
-  const memText = [p.ramGB && (p.ramGB + ' GB RAM'), p.ssdGB && (p.ssdGB + ' GB SSD')].filter(Boolean).join(' · ');
-  const screenText = [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · ');
+  const ram = laptopUnit(p.ramGB, 'GB');
+  const ssd = laptopUnit(p.ssdGB, 'GB');
+  const ssdText = ssd && (/ssd|nvme|hdd|emmc/i.test(ssd) ? ssd : ssd + ' SSD');
+  const memText = [ram && (ram + ' RAM'), ssdText].filter(Boolean).join(' · ');
+  const screenText = [p.screen, laptopUnit(p.hz, 'Hz')].filter(Boolean).join(' · ');
   const specsText = [condText, p.cpu, memText, p.gpu, screenText].filter(Boolean).slice(0, 4).join(' • ');
 
   // ERİŞİLEBİLİRLİK: kartın tamamı fareyle tıklanır (grid click dinleyicisi);
@@ -2549,13 +2562,13 @@ function renderLaptopModal(p) {
   setLaptopModalRow('condition', p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '');
   setLaptopModalRow('cpu', p.cpu);
   setLaptopModalRow('cpugen', p.cpuGen);
-  setLaptopModalRow('ram', p.ramGB ? (p.ramGB + ' GB') : '');
+  setLaptopModalRow('ram', laptopUnit(p.ramGB, 'GB'));
   setLaptopModalRow('ramtype', p.ramType);
-  setLaptopModalRow('ssd', p.ssdGB ? (p.ssdGB + ' GB') : '');
+  setLaptopModalRow('ssd', laptopUnit(p.ssdGB, 'GB'));
   setLaptopModalRow('gpu', p.gpu);
-  setLaptopModalRow('vram', p.gpuVramGB ? (p.gpuVramGB + ' GB') : '');
-  setLaptopModalRow('tgp', p.gpuTgpW ? (p.gpuTgpW + ' W') : '');
-  setLaptopModalRow('screen', [p.screen, p.hz && (p.hz + ' Hz')].filter(Boolean).join(' · '));
+  setLaptopModalRow('vram', laptopUnit(p.gpuVramGB, 'GB'));
+  setLaptopModalRow('tgp', laptopUnit(p.gpuTgpW, 'W'));
+  setLaptopModalRow('screen', [p.screen, laptopUnit(p.hz, 'Hz')].filter(Boolean).join(' · '));
   setLaptopModalRow('kb', p.kbLight);
   setLaptopModalRow('cosmetic', p.cosmetic);
   setLaptopModalRow('battery', p.batteryHealth);

@@ -41,7 +41,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.69eec64c3f.js" defer></script>
+<script src="js/app.afa532ad51.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -535,10 +535,14 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .gsmarena-link:hover { background: var(--surface); }
 
 @media(max-width: 768px) {
-  .modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; max-height: 92vh; width: 100%; margin: 0; }
+  /* dvh: mobil tarayıcıda adres çubuğu görünürken de gerçek görünür alan
+     (vh = çubuk gizliyken ölçülür, alt kısım ekran dışında kalabiliyordu).
+     vh satırı dvh desteklemeyen eski tarayıcılar için yedek. */
+  .modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; top: 8dvh; max-height: 92vh; max-height: 92dvh; width: 100%; margin: 0; overscroll-behavior: contain; }
   .modal { padding: 0; align-items: flex-end; }
   .modalvisual { padding: 24px; height: 220px; }
-  .modalinfo { padding: 22px; }
+  /* Son öğe (WhatsApp düğmesi) sistem hareket çubuğunun üstünde kalsın. */
+  .modalinfo { padding: 22px 22px calc(22px + env(safe-area-inset-bottom)); }
 }
 
 /* Fav bar / Compare tray */
@@ -907,7 +911,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
      icerik zaten 92vh'yi asiyor, o yuzden gorsel sonuc (ekranin altina
      kadar uzanan sheet) AYNI kaliyor, ama ic satirlar artik dogru
      olculuyor. */
-  #laptop-section .laptop-modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; top: 8vh; max-height: 92vh; width: 100%; margin: 0; }
+  /* dvh (vh yedekli): top + max-height artık GÖRÜNÜR alanın altında biter;
+     92vh adres çubuğu açıkken ekranın altına taşıyor, son düğme yarım
+     kalıyordu. Alt çentik payı içerikte (modalinfo / form kutusu). */
+  #laptop-section .laptop-modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; top: 8vh; top: 8dvh; max-height: 92vh; max-height: 92dvh; width: 100%; margin: 0; overscroll-behavior: contain; }
+  #laptop-section .laptop-modalinfo { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
   #laptop-section .laptop-modal { padding: 0; align-items: flex-end; }
   /* MOBIL DUZELTME: grid/flex ogeleri varsayilan olarak min-width:auto
      kullanir, yani icerik (buyuk urun gorseli / genis tablo) konteyneri
@@ -929,6 +937,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 /* --- "Bana Laptop Bul" formu --- */
 #laptop-section .laptop-form-box { grid-template-columns: 1fr; max-width: 560px; padding: 28px; }
+/* Mobil: gönder düğmesi sistem hareket çubuğunun üstünde kalsın. Temel
+   kuraldan SONRA gelmeli (aynı özgüllük; önce gelirse ezilir). */
+@media (max-width: 720px) { #laptop-section .laptop-form-box { padding: 24px 20px calc(28px + env(safe-area-inset-bottom)); } }
 #laptop-section .laptop-form-title { margin: 0 0 6px; font-size: 21px; }
 #laptop-section .laptop-form-sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
 #laptop-section .laptop-form-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
