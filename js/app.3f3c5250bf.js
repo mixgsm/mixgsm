@@ -321,10 +321,13 @@ function showHeroItem(i, animate) {
     img.style.display = 'block';
     if (pickBtn) {
       pickBtn.dataset.i = String(products.indexOf(p));
-      pickBtn.setAttribute('aria-label', `${productLabel(p)} ürününü incele`);
       // Dar sahnede marka adı etiketi kesiyordu; etikette yalnız model adı.
-      document.getElementById('heroPickName').textContent = String(p.m || '').trim();
-      document.getElementById('heroPickPrice').textContent = p.p === null ? '' : `${fmt(p.p)} TL`;
+      const pickName = String(p.m || '').trim();
+      const pickPrice = p.p === null ? '' : `${fmt(p.p)} TL`;
+      // WCAG 2.5.3: aria-label yok; erişilebilir ad görünen içerikten
+      // (ad + fiyat + gizli ", ürünü incele") türetilir.
+      document.getElementById('heroPickName').textContent = pickName;
+      document.getElementById('heroPickPrice').textContent = pickPrice;
       pickBtn.hidden = false;
     }
     if (stage) { stage.classList.add('has-pick'); stage.classList.remove('is-fading'); }
