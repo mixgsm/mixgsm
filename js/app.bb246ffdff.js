@@ -1237,6 +1237,61 @@ function phoneCardHtml(p, extraAttrs) {
     </article>`;
 }
 
+// PARÇALI YÜKLEME (chunked / incremental DOM rendering): uzun sonuç
+// listesinde yalnız ilk CATALOG_FIRST_CHUNK kart DOM'a yazılır; "Daha Fazla
+// Göster" sonraki CATALOG_NEXT_CHUNK kartı MEVCUT kartların sonuna ekler
+// (öncekiler yeniden çizilmez). Sonuç listesi değişince (arama/filtre/
+// sıralama) baştan başlar; favori/karşılaştırma gibi AYNI listeyi yeniden
+// çizen işlemlerde açılan miktar korunur. Kart tıklamaları grid üzerindeki
+// mevcut tek (delegasyon) dinleyiciyle yakalanır; kartlara dinleyici eklenmez.
+const CATALOG_FIRST_CHUNK = 12;
+const CATALOG_NEXT_CHUNK = 24;
+
+function createChunkedGrid(gridId, moreId, noun) {
+  const gridEl = document.getElementById(gridId);
+  const more = document.getElementById(moreId);
+  const btn = more && more.querySelector('button');
+  let items = [], toHtml = null, shown = 0, lastSig = null;
+
+  function updateMore() {
+    if (!more) return;
+    const rest = items.length - shown;
+    more.hidden = rest <= 0;
+    if (btn && rest > 0) btn.textContent = `Daha Fazla Göster (${rest} ${noun})`;
+  }
+  function reset() { items = []; shown = 0; lastSig = null; updateMore(); }
+
+  function renderList(list, markup, keyOf) {
+    const sig = list.map(keyOf).join('|');
+    if (sig !== lastSig) { shown = CATALOG_FIRST_CHUNK; lastSig = sig; }
+    items = list;
+    toHtml = markup;
+    shown = Math.min(Math.max(shown, CATALOG_FIRST_CHUNK), list.length);
+    gridEl.innerHTML = list.slice(0, shown).map(markup).join('');
+    updateMore();
+  }
+
+  if (btn) btn.addEventListener('click', () => {
+    const from = shown;
+    shown = Math.min(shown + CATALOG_NEXT_CHUNK, items.length);
+    gridEl.insertAdjacentHTML('beforeend', items.slice(from, shown).map(toHtml).join(''));
+    updateMore();
+    const first = gridEl.children[from];
+    const target = first && (first.querySelector('.card-open') || first);
+    if (target) target.focus({ preventScroll: true });          // klavyede kalınan yerden devam
+  });
+
+  // Grid'e başka kod yazarsa (yükleniyor/boş/hata durumu) liste sıfırlanır,
+  // düğme gizlenir.
+  if (gridEl && 'MutationObserver' in window) new MutationObserver(() => {
+    if (gridEl.children.length !== shown) reset();
+  }).observe(gridEl, { childList: true });
+
+  return { renderList, reset };
+}
+
+let phoneChunks = null;
+
 function render() {
   let filtered = products.filter(p => !isNonProductRow(p) &&
     (cat === "ALL" || p.cat === cat) &&
@@ -1261,7 +1316,12 @@ function render() {
 
   count.textContent = `${filtered.length} ürün listeleniyor`;
   
-  grid.innerHTML = filtered.length ? filtered.map(p => phoneCardHtml(p  )).join("") : '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+    return;
+  }
+  phoneChunks = phoneChunks || createChunkedGrid('grid', 'catalogMore', 'ürün');
+  phoneChunks.renderList(filtered, p => phoneCardHtml(p), p => products.indexOf(p));
 }
 
 // Arama debounce: kullanici her harfe bastiginda degil, yazmayi ~300ms
@@ -1624,26 +1684,39 @@ function renderProductModal(p) {
 
 function openProduct(i) {
   const p = products[i];
+  const alreadyOpen = document.getElementById("modal").classList.contains("open") && location.hash.startsWith('#urun/');
   renderProductModal(p);
 
   // Urun linki: adres cubugunu bu urune ozel, paylasilabilir bir linke
-  // gunceller (sayfayi yeniden yuklemeden, history.pushState ile).
+  // gunceller (sayfayi yeniden yuklemeden).
   try {
     const newUrl = location.pathname + location.search + '#urun/' + productSlug(p);
-    history.pushState({ productSlug: productSlug(p) }, '', newUrl);
+    enterProductHistory({ productSlug: productSlug(p) }, newUrl, alreadyOpen);
+  } catch (e) {}
+}
+
+// GERİ TUŞU: ürün açılınca tek geçmiş kaydı eklenir ("pushed"); pencere
+// açıkken başka ürüne geçişte (benzer ürünler) kayıt eklenmez, değiştirilir.
+// Kapatınca yeni kayıt EKLENMEZ: kaydı biz eklediysek bir adım geri gidilir
+// (popstate pencereyi kapalı bırakır), böylece "Geri" kapatılan ürünü yeniden
+// açmaz. Doğrudan ürün linkiyle gelindiyse yalnız adres temizlenir.
+function enterProductHistory(state, url, replace) {
+  if (replace) history.replaceState({ ...state, pushed: !!(history.state && history.state.pushed) }, '', url);
+  else history.pushState({ ...state, pushed: true }, '', url);
+}
+function leaveProductHistory(hashPrefix) {
+  try {
+    if (history.state && history.state.pushed) history.back();
+    else if (location.hash.startsWith(hashPrefix)) history.replaceState({}, '', location.pathname + location.search);
   } catch (e) {}
 }
 
 function closeProduct() {
-  document.getElementById("modal").classList.remove("open");
+  const modal = document.getElementById("modal");
+  const wasOpen = modal.classList.contains("open");
+  modal.classList.remove("open");
   if (!anyModalOpen()) unlockBodyScroll();
-
-  // Urun kapatilinca linki temiz ana sayfa adresine geri al.
-  try {
-    if (location.hash.startsWith('#urun/')) {
-      history.pushState({}, '', location.pathname + location.search);
-    }
-  } catch (e) {}
+  if (wasOpen) leaveProductHistory('#urun/');
 }
 
 function copyProductLink() {
@@ -2195,7 +2268,7 @@ if (window.matchMedia) {
   on('.close', closeFilterDrawer, document.getElementById('filterPanel'));
   on('.btn-finder', openFinderModal, document.getElementById('filterPanel'));
   on('#filterToggleBtn', openFilterDrawer);
-  onAll('.store-gallery img', function() { openLightbox(this.src); });
+  onAll('.store-gallery .store-photo', function() { openLightbox(this.querySelector('img').src); });
   on('.footer-line a[href="#"]', e => { e.preventDefault(); openLegalModal(); });
 
   onBackdropClick('modal', closeProduct);
@@ -2702,6 +2775,8 @@ function laptopCardMarkup(p) {
     + '</div></article>';
 }
 
+let laptopChunks = null;   // parçalı yükleme (createChunkedGrid), ilk çizimde kurulur
+
 function renderLaptopCatalog() {
   const el = getLaptopGridEl();
   if (!el) return;
@@ -2736,7 +2811,8 @@ function renderLaptopCatalog() {
     return;
   }
 
-  el.innerHTML = filtered.map(laptopCardMarkup).join('');
+  laptopChunks = laptopChunks || createChunkedGrid('laptopGrid', 'laptopCatalogMore', 'laptop');
+  laptopChunks.renderList(filtered, laptopCardMarkup, p => LaptopStore.products.indexOf(p));
 }
 
 // --- Laptop modalı: telefonun #modal / renderProductModal() /
@@ -2929,10 +3005,12 @@ function renderLaptopModal(p) {
 function openLaptopProduct(i) {
   const p = LaptopStore.products[i];
   if (!p) return;
+  const modal = document.getElementById('laptopModal');
+  const alreadyOpen = !!(modal && modal.classList.contains('open')) && location.hash.startsWith('#laptop/');
   renderLaptopModal(p);
   try {
     const newUrl = location.pathname + location.search + '#laptop/' + laptopSlugOf(p);
-    history.pushState({ laptopSlug: laptopSlugOf(p) }, '', newUrl);
+    enterProductHistory({ laptopSlug: laptopSlugOf(p) }, newUrl, alreadyOpen);
   } catch (e) {}
 }
 
@@ -2949,13 +3027,10 @@ function openLaptopProductFromCard(cardEl) {
 
 function closeLaptopProduct() {
   const modal = document.getElementById('laptopModal');
+  const wasOpen = !!(modal && modal.classList.contains('open'));
   if (modal) modal.classList.remove('open');
   if (!anyLaptopOverlayOpen()) unlockBodyScroll();
-  try {
-    if (location.hash.startsWith('#laptop/')) {
-      history.pushState({}, '', location.pathname + location.search);
-    }
-  } catch (e) {}
+  if (wasOpen) leaveProductHistory('#laptop/');
   restoreLaptopFocus();
 }
 
@@ -3622,6 +3697,9 @@ async function loadLaptopCatalog() {
     btnLaptop.classList.toggle('active', showLaptop);
     btnPhone.setAttribute('aria-selected', String(!showLaptop));
     btnLaptop.setAttribute('aria-selected', String(showLaptop));
+    // ARIA sekme deseni: yalnız seçili sekme Tab sırasında (diğerine oklarla).
+    btnPhone.tabIndex = showLaptop ? -1 : 0;
+    btnLaptop.tabIndex = showLaptop ? 0 : -1;
 
     // FAZ 3: laptop verisini İLK kez laptop'a geçildiğinde, tembel (lazy)
     // olarak yükle - telefon ziyaretçileri için gereksiz ağ isteği yok.
@@ -3633,6 +3711,18 @@ async function loadLaptopCatalog() {
 
   btnPhone.addEventListener('click', () => activateStorefront('phone'));
   btnLaptop.addEventListener('click', () => activateStorefront('laptop'));
+
+  // Klavye: Sol/Sağ ok iki sekme arasında, Home ilk, End son sekmeye geçer
+  // (seçim + odak birlikte; tıklama davranışının aynısı).
+  const tabs = [btnPhone, btnLaptop];
+  tabs.forEach((tab, i) => tab.addEventListener('keydown', e => {
+    const moves = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: tabs.length - 1 };
+    if (!(e.key in moves)) return;
+    e.preventDefault();
+    const next = tabs[(moves[e.key] + tabs.length) % tabs.length];
+    next.click();
+    next.focus();
+  }));
 
   // FAZ 4: sayfa doğrudan bir #laptop/slug derin linkiyle açıldıysa,
   // kullanıcı toggle'a tıklamadan laptop storefront'unu otomatik aktif et
@@ -4087,10 +4177,8 @@ async function loadLaptopCatalog() {
 // Bağımsız blok; mevcut fonksiyonlar/veri DEĞİŞMEZ.
 // 1) Alt bilgideki Telefonlar/Laptoplar: header'daki mevcut mağaza
 //    bağlantısını tetikler (aynı geçiş + kaydırma + lazy-load davranışı).
-// 2) Katalog: uzun listede ilk 12 kart görünür, kalanı "Tümünü Göster" ile.
-//    Arama/filtre/sıralama sonucu değişince tekrar ilk 12'ye döner; favori/
-//    karşılaştırma gibi aynı listeyi yeniden çizen işlemlerde açık kalır.
-//    Kartlar silinmez/değişmez, sadece fazlası CSS ile gizlenir.
+// (Katalogdaki "Daha Fazla Göster" artık parçalı yüklemedir: bkz.
+//  createChunkedGrid — kartlar DOM'a parça parça yazılır.)
 // ================================================================
 (function initHomeBottom() {
   document.querySelectorAll('[data-footer-store]').forEach(a => {
@@ -4101,35 +4189,6 @@ async function loadLaptopCatalog() {
       link.click();
     });
   });
-
-  const LIMIT = 12;
-  function limiter(gridId, moreId, cardSel, keyOf) {
-    const grid = document.getElementById(gridId);
-    const more = document.getElementById(moreId);
-    if (!grid || !more) return;
-    const btn = more.querySelector('button');
-    let expanded = false, lastSig = '';
-    function apply() {
-      const cards = [...grid.children].filter(c => c.matches(cardSel));
-      const sig = cards.map(keyOf).join('|');
-      if (sig !== lastSig) { expanded = false; lastSig = sig; }   // yeni sonuç listesi
-      cards.forEach((c, i) => { if (i >= LIMIT) c.setAttribute('data-more', ''); else c.removeAttribute('data-more'); });
-      const limited = !expanded && cards.length > LIMIT;
-      grid.classList.toggle('is-limited', limited);
-      more.hidden = !limited;
-    }
-    btn.addEventListener('click', () => {
-      expanded = true;
-      apply();
-      const next = grid.querySelector('[data-more]');
-      const nextBtn = next && (next.querySelector('.card-open') || next);
-      if (nextBtn) nextBtn.focus({ preventScroll: true });        // klavyede kalınan yerden devam
-    });
-    new MutationObserver(apply).observe(grid, { childList: true });  // sadece kart listesi; öznitelikler izlenmez
-    apply();
-  }
-  limiter('grid', 'catalogMore', '.card', c => c.dataset.i || '');
-  limiter('laptopGrid', 'laptopCatalogMore', '.laptop-card', c => c.dataset.laptopIndex || '');
 })();
 
 // ================================================================
@@ -4141,7 +4200,8 @@ async function loadLaptopCatalog() {
 // yönetimi zaten var (dahil edilmedi).
 // ================================================================
 (function initDialogA11y() {
-  const DIALOGS = [['modal', 'open'], ['favmodal', 'open'], ['findermodal', 'open'], ['comparemodal', 'open'], ['legalmodal', 'open'], ['lightbox', 'active']];
+  // filterPanel: mobil filtre çekmecesi (masaüstünde yan panel, "open" almaz).
+  const DIALOGS = [['modal', 'open'], ['favmodal', 'open'], ['findermodal', 'open'], ['comparemodal', 'open'], ['legalmodal', 'open'], ['lightbox', 'active'], ['filterPanel', 'open']];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
   const stack = [];                      // { el, opener }
   let lastOutside = null;

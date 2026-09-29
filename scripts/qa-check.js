@@ -76,7 +76,18 @@ function checkHtml(root, rel, { requireCanonical, waNumber = DEFAULT_WA_NUMBER }
   const seen = new Set();
   ids.forEach((id) => { if (seen.has(id)) err(`duplicate id: ${id}`); seen.add(id); });
 
-  [...markup.matchAll(/<img\b[^>]*>/gi)].forEach((m) => { if (!/\salt=/i.test(m[0])) err(`alt eksik: ${m[0].slice(0, 80)}`); });
+  [...markup.matchAll(/<img\b[^>]*>/gi)].forEach((m) => {
+    if (!/\salt=/i.test(m[0])) err(`alt eksik: ${m[0].slice(0, 80)}`);
+    if (/\srole=["']button["']/i.test(m[0])) err(`img role=button (gercek <button> kullanin): ${m[0].slice(0, 80)}`);
+  });
+  if (attrValues(markup, "src").some((v) => !v.trim())) err("bos src=\"\" (JS atayacaksa ozniteligi hic yazmayin)");
+  if (attrValues(markup, "href").some((v) => !v.trim())) err("bos href=\"\"");
+
+  // Meta CSP yalnizca kendisinden SONRA gelen icerige uygulanir: satir ici
+  // script'lerden once durmali.
+  const cspAt = html.search(/<meta http-equiv="Content-Security-Policy"/i);
+  const inlineScriptAt = html.search(/<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")[^>]*>/i);
+  if (cspAt > -1 && inlineScriptAt > -1 && inlineScriptAt < cspAt) err("CSP meta satir ici script'ten sonra geliyor (en uste tasiyin)");
 
   const refs = attrValues(markup, "src").concat(attrValues(markup, "href"));
   refs.forEach((u) => {

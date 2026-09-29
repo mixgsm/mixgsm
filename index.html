@@ -2,6 +2,19 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
+<!-- GÜVENLİK: CSP (Content Security Policy). GitHub Pages özel HTTP başlığı
+     gönderemediği için meta etiketiyle uygulanıyor; meta ile "frame-ancestors",
+     "report-uri" gibi yönergeler desteklenmez. Tema script'inden ÖNCE durmalı:
+     meta CSP yalnızca kendisinden sonra gelen içeriğe uygulanır. Sayfada satır içi olay
+     (onclick/onerror…) YOK. script-src: 'unsafe-inline' YOK; uygulama kodu
+     js/app.<hash>.js dosyasında, satır içi tek script (tema) sha256 ile izinli.
+     Tema script'i veya js/ değişirse: node scripts/asset-version.js (hash'leri
+     yeniler; CI testi unutulursa yakalar). style-src'de 'unsafe-inline' satır
+     içi style="" öznitelikleri için gerekli. connect-src'deki
+     *.googleusercontent.com: Sheets dışa aktarma adresi oraya 307 ile
+     yönlendiriyor; olmadan catalog.json yokken Sheets yedeği hiç çalışmıyordu. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <!-- TEMA: sayfa ilk boyanmadan ÖNCE (senkron, en tepede) doğru tema
      data-theme attribute'unu <html>'e yazıyoruz ki kullanıcı önce koyu
      sonra açık temaya geçiş gibi bir "sıçrama/flash" görmesin. Kayıtlı
@@ -22,17 +35,6 @@
 </script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080808">
-<!-- GÜVENLİK: CSP (Content Security Policy). GitHub Pages özel HTTP başlığı
-     gönderemediği için meta etiketiyle uygulanıyor; meta ile "frame-ancestors",
-     "report-uri" gibi yönergeler desteklenmez. Sayfada satır içi olay
-     (onclick/onerror…) YOK. script-src: 'unsafe-inline' YOK; uygulama kodu
-     js/app.<hash>.js dosyasında, satır içi tek script (tema) sha256 ile izinli.
-     Tema script'i veya js/ değişirse: node scripts/asset-version.js (hash'leri
-     yeniler; CI testi unutulursa yakalar). style-src'de 'unsafe-inline' satır
-     içi style="" öznitelikleri için gerekli. connect-src'deki
-     *.googleusercontent.com: Sheets dışa aktarma adresi oraya 307 ile
-     yönlendiriyor; olmadan catalog.json yokken Sheets yedeği hiç çalışmıyordu. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <link rel="icon" href="mix-gsm-logo.jpg" type="image/jpeg">
 <!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
      ağırlık 400-800, ~26 KB). CSP font-src 'self' olduğu için harici font
@@ -41,7 +43,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.596081ab87.js" defer></script>
+<script src="js/app.bb246ffdff.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -454,8 +456,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .filter-drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: var(--z-drawer-backdrop); display: none; }
 .filter-drawer-backdrop.open { display: block; }
 @media(max-width: 900px) {
-  .filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
-  .filter-panel.open { transform: translateY(0); }
+  .filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; max-height: 82dvh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
+  .filter-panel { visibility: hidden; transition: transform .28s ease, visibility 0s linear .28s; }
+  .filter-panel.open { transform: translateY(0); visibility: visible; transition: transform .28s ease; }
   .filter-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .filter-panel-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
 }
@@ -519,7 +522,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* Modal */
 .modal { position: fixed; inset: 0; z-index: var(--z-modal); background: rgba(0,0,0,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.25s ease; }
 .modal.open { display: flex; opacity: 1; }
-.modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(0.97); transition: transform 0.25s ease; display: grid; grid-template-columns: 1fr 1fr; }
+.modalbox { width: min(880px, 100%); max-height: 90vh; max-height: 90dvh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(0.97); transition: transform 0.25s ease; display: grid; grid-template-columns: 1fr 1fr; }
 .modal.open .modalbox { transform: scale(1); }
 .close { position: absolute; right: 14px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: var(--z-modal-control); display: flex; align-items: center; justify-content: center; }
 .close svg.icon { font-size: 16px; }
@@ -617,7 +620,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 .comparemodal { position: fixed; inset: 0; z-index: var(--z-compare-modal); background: rgba(0,0,0,0.88); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 20px; }
 .comparemodal.open { display: flex; }
-.comparebox { background: var(--surface-2); border: 1px solid var(--line); border-radius: 20px; max-width: 1000px; width: 100%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; position: relative; padding: 28px; }
+.comparebox { background: var(--surface-2); border: 1px solid var(--line); border-radius: 20px; max-width: 1000px; width: 100%; max-height: 90vh; max-height: 90dvh; overflow-y: auto; overflow-x: hidden; position: relative; padding: 28px; }
 .comparetable { width: 100%; border-collapse: collapse; }
 .comparetable th, .comparetable td { padding: 10px; border-bottom: 1px solid var(--line); font-size: 13px; text-align: center; vertical-align: top; }
 .comparetable th { color: var(--text); font-weight: 600; }
@@ -631,14 +634,15 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 /* Store Section */
 .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; }
-.store-gallery img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; cursor: pointer; transition: filter .15s; }
-.store-gallery img:hover { filter: brightness(1.08); }
-.store-gallery img:first-child { grid-row: 1 / span 2; }
+.store-gallery .store-photo { display: block; width: 100%; height: 100%; min-height: 0; padding: 0; border: 0; background: none; border-radius: 14px; overflow: hidden; cursor: pointer; }
+.store-gallery .store-photo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; transition: filter .15s; }
+.store-gallery .store-photo:hover img { filter: brightness(1.08); }
+.store-gallery .store-photo:first-child { grid-row: 1 / span 2; }
 
 /* Lightbox */
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: var(--z-lightbox); display: none; align-items: center; justify-content: center; }
 .lightbox.active { display: flex; }
-.lightbox img { max-width: 90%; max-height: 90vh; border-radius: 10px; }
+.lightbox img { max-width: 90%; max-height: 90vh; max-height: 90dvh; border-radius: 10px; }
 .lightbox-close { position: absolute; top: 20px; right: 20px; color: var(--text); cursor: pointer; background: rgba(255,255,255,0.08); border: 1px solid var(--line); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .lightbox-close svg.icon { font-size: 18px; }
 
@@ -684,7 +688,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .bottom-nav { display: none; }
 @media(max-width: 720px) {
   /* Yükseklik = menü + alt çentik payı (payı menü yüksekliğinden yemesin). */
-  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: var(--z-bottom-nav); }
+  .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: var(--z-bottom-nav); }
   /* Okunurluk: soluk gri yerine metin renginin %78'i, 11.5px yarı kalın. */
   .bottom-nav button, .bottom-nav a { min-width: 0; background: transparent; border: 0; color: color-mix(in srgb, var(--text) 78%, transparent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11.5px; font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; position: relative; }
   .bottom-nav svg.icon { font-size: 23px; box-sizing: content-box; padding: 4px 14px; border-radius: 99px; transition: background-color .2s var(--ease-out); }
@@ -704,7 +708,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 @media(max-width: 768px) {
   .store-gallery { grid-template-columns: 1fr 1fr; }
-  .store-gallery img:first-child { grid-row: auto; grid-column: 1 / span 2; }
+  .store-gallery .store-photo:first-child { grid-row: auto; grid-column: 1 / span 2; }
 }
 @media(max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
@@ -819,8 +823,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   #laptop-section .laptop-filter-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
   #laptop-section .laptop-filter-panel-head h3 { margin: 0; font-size: 16px; }
   #laptop-section .laptop-filter-close { background: none; border: none; color: var(--text); cursor: pointer; padding: 4px; }
-  #laptop-section .laptop-filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
-  #laptop-section .laptop-filter-panel.open { transform: translateY(0); }
+  #laptop-section .laptop-filter-panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-height: 82vh; max-height: 82dvh; background: var(--bg); border-top: 1px solid var(--line); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); z-index: var(--z-drawer-panel); transform: translateY(100%); transition: transform .28s ease; overflow-y: auto; }
+  #laptop-section .laptop-filter-panel { visibility: hidden; transition: transform .28s ease, visibility 0s linear .28s; }
+  #laptop-section .laptop-filter-panel.open { transform: translateY(0); visibility: visible; transition: transform .28s ease; }
 }
 @media (min-width: 900px) {
   #laptop-section .laptop-catalog-layout { grid-template-columns: 240px 1fr; align-items: start; }
@@ -891,7 +896,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    "grid-template-columns: 1fr 1fr" duzeni gorseli dar bir yan sutuna
    sikistiriyordu. Tek sutunda gorsel ustte BUYUK ve ORTALANMIS, bilgiler
    altinda akar - mobil ile ayni akis, farkli boyutlandirma. */
-#laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr; }
+#laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; max-height: 90dvh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr; }
 #laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(1); }
 /* Kapat düğmesi tam genişlikte, üste yapışık ince bir şeritte: kaydırılan
    içerik yuvarlak düğmenin altına değil şeridin yumuşak zemininin altına
@@ -905,7 +910,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    (onceden 440px'lik yarim sutuna sikisiyordu); yukseklik de vh-tabanli
    oldugu icin kisa ekranlarda tasma yapmadan otomatik kuculuyor. object-fit:
    contain AYNI KALDI - oran bozulmaz, kirpma olmaz. */
-#laptop-section .laptop-modalvisual img { max-width: 100%; max-height: min(50vh, 480px); object-fit: contain; }
+#laptop-section .laptop-modalvisual img { max-width: 100%; max-height: min(50vh, 480px); max-height: min(50dvh, 480px); object-fit: contain; }
 /* FAZ 5: Foto galerisi - Public Sheet bugün TEK "Fotoğraf" alanı sunuyor,
    bu yüzden çoğu üründe galeri tek görselden oluşur ve küçük resim şeridi
    otomatik gizlenir (bkz. renderLaptopGallery). Mimari, Sheet'e ileride
@@ -1218,10 +1223,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .store .store-layout { display: grid; gap: 24px; }
 .store .store-layout > * { min-width: 0; }
 .store .store-gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; aspect-ratio: 4 / 3; }
-.store .store-gallery img { width: 100%; height: 100%; min-height: 0; object-fit: cover; border-radius: var(--radius-md); }
-.store .store-gallery img:first-child { grid-row: 1 / span 2; grid-column: auto; }
-.store .store-gallery img { cursor: zoom-in; }
-.store .store-gallery img:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.store .store-gallery .store-photo { width: 100%; height: 100%; min-height: 0; border-radius: var(--radius-md); cursor: zoom-in; }
+.store .store-gallery .store-photo:first-child { grid-row: 1 / span 2; grid-column: auto; }
+.store .store-gallery .store-photo:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .store-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 22px 0 0; }
 .store-fact--wide { grid-column: 1 / -1; }
 .store-fact dt { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
@@ -1280,10 +1284,12 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 }
 
 /* Katalog: uzun listede ilk 12 kart, "Tümünü Göster" ile kalanı */
+.noscript-note { box-sizing: border-box; width: min(560px, calc(100% - 32px)); margin: 16px auto; padding: 20px; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-lg); font-family: var(--font-sans); text-align: center; }
+.noscript-note p { margin: 8px 0 14px; }
+.noscript-note a { display: inline-block; padding: 12px 18px; border-radius: var(--radius-md); background: var(--whatsapp); color: #0A0A0A; font-weight: 700; text-decoration: none; }
 .catalog-more { display: flex; justify-content: center; margin: 24px 0 8px; }
 .catalog-more[hidden] { display: none; }
 .catalog-more .cta-btn { min-width: 220px; }
-#grid.is-limited > [data-more], #laptopGrid.is-limited > [data-more] { display: none; }
 
 /* Son dokunuş: mobilde katalog başlıkları üstünde daha dengeli boşluk */
 @media (max-width: 720px) {
@@ -1355,6 +1361,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 </style>
 </head>
 <body>
+<noscript><div class="noscript-note"><strong>MİX GSM</strong><p>Bu kataloğu görüntülemek için JavaScript'in etkin olması gerekiyor.</p><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp'tan stok ve fiyat sorun</a></div></noscript>
 
 <svg style="display:none" aria-hidden="true">
   <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></symbol>
@@ -1434,7 +1441,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       </div>
     </div>
     <div class="home-hero-stage" id="heroStage">
-      <img id="heroProductImg" src="" alt="" style="display:none;" fetchpriority="high" decoding="async">
+      <img id="heroProductImg" alt="" style="display:none;" fetchpriority="high" decoding="async">
       <div class="home-hero-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
       <!-- Açılış ürünü etiketi: Sheet "Ana Sayfa" seçimleri sırayla döner;
            basınca ürün penceresi açılır (merkezi data-action="open-product"). -->
@@ -1589,14 +1596,14 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   <h2 class="catalog-entry-label" id="catalogEntryTitle">Ürünler</h2>
 <div class="storefront-toggle" id="storefrontToggle" role="tablist" aria-label="Ürün kategorisi seçimi">
   <button type="button" class="storefront-toggle-btn active" id="toggleBtnPhone" role="tab" aria-selected="true" aria-controls="phone-section" data-storefront="phone"><svg class="icon" aria-hidden="true"><use href="#ic-smartphone"></use></svg><span>Telefon &amp; Kişisel Bakım</span></button>
-  <button type="button" class="storefront-toggle-btn" id="toggleBtnLaptop" role="tab" aria-selected="false" aria-controls="laptop-section" data-storefront="laptop"><svg class="icon" aria-hidden="true"><use href="#ic-laptop"></use></svg><span>Laptop &amp; PC</span></button>
+  <button type="button" class="storefront-toggle-btn" id="toggleBtnLaptop" role="tab" aria-selected="false" tabindex="-1" aria-controls="laptop-section" data-storefront="laptop"><svg class="icon" aria-hidden="true"><use href="#ic-laptop"></use></svg><span>Laptop &amp; PC</span></button>
 </div>
 </section>
 
 <!-- FAZ 2: DOM izolasyonu - mevcut telefon/kişisel bakım storefront'u
      (hero, trust-strip, öne çıkanlar, katalog) hiçbir yapısal değişiklik
      yapılmadan #phone-section içine alındı. -->
-<div id="phone-section">
+<div id="phone-section" role="tabpanel" aria-labelledby="toggleBtnPhone">
 <!-- REDESIGN ADIM 3: Eski hero ve eski güven bandı buradan kaldırıldı; yeni
      sürümleri #home-vitrin içinde (mağaza geçişinin üstünde, her iki modda
      görünür). #heroProductImg / #heroVisualEmpty ID'leri oraya taşındı,
@@ -1711,7 +1718,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     </div>
     <section class="grid" id="grid"></section>
     <!-- REDESIGN ADIM 10: uzun listede ilk 12 kart; kalanı tek dokunuşla. -->
-    <div class="catalog-more" id="catalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="grid">Tümünü Göster</button></div>
+    <div class="catalog-more" id="catalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="grid">Daha Fazla Göster</button></div>
   </main>
 </div>
 </div><!-- /#phone-section -->
@@ -1721,7 +1728,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
      bölüm hiçbir şekilde render/etkileşim almaz). Tüm state/DOM/event
      mantığı telefon tarafından TAMAMEN İZOLE (bkz. aşağıdaki JS bloklarındaki
      "KIRMIZI ÇİZGİ" notları). -->
-<div id="laptop-section" hidden aria-hidden="true" inert>
+<div id="laptop-section" role="tabpanel" aria-labelledby="toggleBtnLaptop" hidden aria-hidden="true" inert>
   <section class="laptop-hero">
     <p class="laptop-hero-eyebrow">MİX GSM · LAPTOP &amp; PC</p>
     <h2 class="laptop-hero-title">Aradığın Laptopu Birlikte Bulalım</h2>
@@ -1858,7 +1865,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
         </select>
       </div>
       <section class="laptop-grid" id="laptopGrid" aria-busy="false"></section>
-      <div class="catalog-more" id="laptopCatalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="laptopGrid">Tümünü Göster</button></div>
+      <div class="catalog-more" id="laptopCatalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="laptopGrid">Daha Fazla Göster</button></div>
     </main>
   </div>
 
@@ -1870,7 +1877,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
       <div class="laptop-modalvisual">
         <div class="laptop-gallery-main" id="laptopGalleryMain">
           <button type="button" class="laptop-gallery-arrow prev" id="laptopGalleryPrevBtn" aria-label="Önceki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
-          <img id="lmi" src="" alt="Laptop Görseli" loading="lazy" decoding="async">
+          <img id="lmi" alt="Laptop Görseli" loading="lazy" decoding="async">
           <button type="button" class="laptop-gallery-arrow next" id="laptopGalleryNextBtn" aria-label="Sonraki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
         </div>
         <div class="laptop-gallery-thumbs" id="laptopGalleryThumbs"></div>
@@ -2035,9 +2042,9 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 <section class="home-sec store zone-light" id="store" aria-labelledby="storeTitle">
   <div class="home-wrap store-layout">
     <div class="store-gallery">
-      <img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza Dış Görünüş — büyüt">
-      <img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza İç Görünüş — büyüt">
-      <img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async" tabindex="0" role="button" aria-label="Mağaza Vitrin — büyüt">
+      <button type="button" class="store-photo" aria-label="Mağaza Dış Görünüş — büyüt"><img src="store-front-1.jpg" alt="Mağaza Dış Görünüş" loading="lazy" decoding="async"></button>
+      <button type="button" class="store-photo" aria-label="Mağaza İç Görünüş — büyüt"><img src="store-interior.jpg" alt="Mağaza İç Görünüş" loading="lazy" decoding="async"></button>
+      <button type="button" class="store-photo" aria-label="Mağaza Vitrin — büyüt"><img src="store-front-2.jpg" alt="Mağaza Vitrin" loading="lazy" decoding="async"></button>
     </div>
     <div class="store-panel">
       <p class="home-eyebrow">Fiziksel Mağaza</p>
@@ -2155,7 +2162,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <div class="modalvisual">
       <div class="pgal-main" id="miMain">
         <button type="button" class="pgal-arrow prev" id="miPrev" aria-label="Önceki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
-        <img id="mi" src="" alt="Ürün Görseli">
+        <img id="mi" alt="Ürün Görseli">
         <button type="button" class="pgal-arrow next" id="miNext" aria-label="Sonraki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
       </div>
       <div class="pgal-thumbs" id="miThumbs" role="group" aria-label="Ürün görselleri" hidden></div>
@@ -2286,7 +2293,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Mağaza fotoğrafı">
   <button class="lightbox-close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-  <img id="lightbox-img" src="" alt="Mağaza fotoğrafı (büyük görünüm)">
+  <img id="lightbox-img" alt="Mağaza fotoğrafı (büyük görünüm)">
 </div>
 
 </body>

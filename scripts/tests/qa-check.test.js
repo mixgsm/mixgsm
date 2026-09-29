@@ -46,6 +46,21 @@ test("HTML hatalari yakalanir: lang, duplicate id, alt, kirik dosya, noopener, h
   }
 });
 
+test("HTML: CSP meta satir ici script'ten sonra, bos src/href ve img role=button yakalanir", () => {
+  const csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'">';
+  const lateCsp = GOOD.replace("<title>T</title>", "<title>T</title><script>1</script>" + csp);
+  const early = GOOD.replace("<title>T</title>", csp + "<title>T</title><script>1</script>");
+  const bad = GOOD.replace('<img src="logo.jpg" alt="Logo">', '<img src="" alt="x"><a href="">y</a><img src="logo.jpg" alt="L" role="button" tabindex="0">');
+  const dir = tmpSite({ "late.html": lateCsp, "early.html": early, "bad.html": bad, "logo.jpg": "x" });
+
+  assert.ok(checkHtml(dir, "late.html").errors.some((e) => /CSP meta/.test(e)));
+  assert.deepEqual(checkHtml(dir, "early.html").errors, []);
+  const errs = checkHtml(dir, "bad.html").errors.join("\n");
+  assert.match(errs, /bos src/);
+  assert.match(errs, /bos href/);
+  assert.match(errs, /img role=button/);
+});
+
 test("JS kontrolleri: eval, document.write, debugger, console.log, satir ici handler, sozdizimi", () => {
   const r = checkJs("app.js", "eval('1'); document.write('x'); debugger; console.log(1); el.innerHTML = '<img onerror=\"x()\">';");
   const e = r.errors.join("\n");
