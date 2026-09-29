@@ -288,18 +288,109 @@ function heroProducts() {
   return available.filter(p => p.group === 'PHONE').sort((a, b) => b.p - a.p).slice(0, 1);
 }
 
+// "IPHONE" + "IPHONE 18 PRO" -> "IPHONE 18 PRO" (marka tekrarlanmasın).
+function productLabel(p) {
+  const label = normalizeTR(p.m).startsWith(normalizeTR(p.b)) ? p.m : `${p.b} ${p.m}`;
+  return label.trim();
+}
+
+// --- DÖNEN AÇILIŞ -------------------------------------------------------
+// Birden çok seçim varsa HERO_ROTATE_MS'de bir yumuşak geçişle sıradakine
+// geçer. Hareket azaltma tercihinde, sekme gizliyken, açılış ekranda değilken
+// ya da kullanıcı üzerindeyken (dokunma/fare/odak) durur. Görsel önceden
+// yüklenir; yüklenemeyen ürün atlanır.
+const HERO_ROTATE_MS = 4000;
+const HERO_NO_PHOTO = /gorsel-yok\.jpg(?:[?#]|$)/i;
+const hero = { list: [], i: 0, timer: null, visible: true, paused: false, bound: false };
+
+function heroReduceMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function showHeroItem(i, animate) {
+  const img = document.getElementById('heroProductImg');
+  const stage = document.getElementById('heroStage');
+  const pickBtn = document.getElementById('heroPick');
+  const p = hero.list[i];
+  if (!img || !p) return;
+  const src = imageCandidatesForProduct(p)[0];
+  const apply = () => {
+    hero.i = i;
+    img.src = src;
+    img.alt = productLabel(p);
+    img.style.display = 'block';
+    if (pickBtn) {
+      pickBtn.dataset.i = String(products.indexOf(p));
+      pickBtn.setAttribute('aria-label', `${productLabel(p)} ürününü incele`);
+      // Dar sahnede marka adı etiketi kesiyordu; etikette yalnız model adı.
+      document.getElementById('heroPickName').textContent = String(p.m || '').trim();
+      document.getElementById('heroPickPrice').textContent = p.p === null ? '' : `${fmt(p.p)} TL`;
+      pickBtn.hidden = false;
+    }
+    if (stage) { stage.classList.add('has-pick'); stage.classList.remove('is-fading'); }
+    img.classList.remove('is-fading');
+  };
+  if (!animate) return apply();
+  const pre = new Image();
+  pre.onload = () => {
+    img.classList.add('is-fading');
+    if (stage) stage.classList.add('is-fading');
+    setTimeout(apply, 300);
+  };
+  pre.onerror = () => {                                   // yüklenemeyen ürün dönüşten çıkar
+    hero.list = hero.list.filter(x => x !== p);
+    if (hero.list.length < 2) stopHeroRotation();
+  };
+  pre.src = src;
+}
+
+function stopHeroRotation() {
+  if (hero.timer) { clearInterval(hero.timer); hero.timer = null; }
+}
+
+function startHeroRotation() {
+  stopHeroRotation();
+  if (hero.list.length < 2 || heroReduceMotion()) return;
+  hero.timer = setInterval(() => {
+    if (document.hidden || !hero.visible || hero.paused || hero.list.length < 2) return;
+    showHeroItem((hero.i + 1) % hero.list.length, true);
+  }, HERO_ROTATE_MS);
+}
+
+function bindHeroPauseOnce() {
+  const stage = document.getElementById('heroStage');
+  if (hero.bound || !stage) return;
+  hero.bound = true;
+  const pause = v => () => { hero.paused = v; };
+  stage.addEventListener('pointerenter', pause(true));
+  stage.addEventListener('pointerleave', pause(false));
+  stage.addEventListener('focusin', pause(true));
+  stage.addEventListener('focusout', pause(false));
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => { hero.visible = entries[0].isIntersecting; }).observe(stage);
+  }
+}
+
 function renderHeroProduct(waitForPhotoDiscovery) {
   const img = document.getElementById('heroProductImg');
   const empty = document.getElementById('heroVisualEmpty');
   if (!img || !empty) return;
-  const pick = heroProducts()[0];
-  if (!pick) { img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Güncel katalog için ürünleri inceleyin.'; return; }
-  const heroSrc = imageCandidatesForProduct(pick)[0];
-  if (waitForPhotoDiscovery && /gorsel-yok\.jpg$/.test(heroSrc)) return;
-  img.src = heroSrc;
-  img.alt = `${pick.b} ${pick.m}`;
-  img.style.display = 'block';
+  const list = heroProducts();
+  if (!list.length) {
+    stopHeroRotation();
+    img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Güncel katalog için ürünleri inceleyin.';
+    return;
+  }
+  if (waitForPhotoDiscovery && HERO_NO_PHOTO.test(imageCandidatesForProduct(list[0])[0])) return;
+  // Görseli olan seçimler döner; hiçbirinin görseli yoksa ilk seçim gösterilir.
+  const withPhoto = list.filter(p => !HERO_NO_PHOTO.test(imageCandidatesForProduct(p)[0]));
+  const current = hero.list[hero.i];
+  hero.list = withPhoto.length ? withPhoto : list.slice(0, 1);
+  const keep = hero.list.indexOf(current);                // yeniden çizimde sıra baştan başlamasın
+  showHeroItem(keep > -1 ? keep : 0, false);
   empty.style.display = 'none';
+  bindHeroPauseOnce();
+  startHeroRotation();
 }
 
 function isNonProductRow(p) {
@@ -1401,9 +1492,7 @@ function dropPhoneGalleryImage(i) {
 
 function renderPhoneGallery(p) {
   const images = imageCandidatesForProduct(p).filter(u => u !== PHONE_NO_PHOTO_URL);
-  // "IPHONE" + "IPHONE 18 PRO" -> "IPHONE 18 PRO" (marka tekrarlanmasın).
-  const label = normalizeTR(p.m).startsWith(normalizeTR(p.b)) ? p.m : `${p.b} ${p.m}`;
-  phoneGallery = { images, index: 0, label: label.trim(), gen: phoneGallery.gen + 1 };
+  phoneGallery = { images, index: 0, label: productLabel(p), gen: phoneGallery.gen + 1 };
   const img = document.getElementById('mi');
   // Yedek zinciri artık galeri yönetir; merkezi 'error' dinleyicisi karışmasın.
   if (img) { img.removeAttribute('data-image-sources'); img.onerror = null; }
@@ -3568,6 +3657,8 @@ async function loadLaptopCatalog() {
       if (!btn) return; // düğme yoksa normal bağlantı gibi davran
       e.preventDefault();
       if (!btn.classList.contains('active')) btn.click();
+      // "Telefonlar": müşteri markayı hemen görsün diye telefon marka paneli açılır.
+      if (!wantLaptop && typeof window.mixgsmOpenBrandPanel === 'function' && window.mixgsmOpenBrandPanel('phone')) return;
       const target = document.getElementById(wantLaptop ? 'laptopCatalogTitle' : 'catalog');
       if (target) {
         requestAnimationFrame(function () {
@@ -3599,14 +3690,47 @@ async function loadLaptopCatalog() {
   const select = el => links.forEach(a => a.setAttribute('aria-pressed', String(a === el)));
   const setInput = (el, v) => { if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
 
-  links.forEach(a => a.addEventListener('click', () => {
-    select(a);
-    if (a.dataset.brandTerm) {                                   // telefon
-      if (!$('toggleBtnPhone').classList.contains('active')) $('toggleBtnPhone').click();
-      $('advClearBtn').click();
-      setInput($('q'), a.dataset.brandTerm);
-      return scrollTo('catalog');
-    }
+  // --- Açılır paneller (aynı anda tek panel açık) ---
+  const toggles = document.querySelectorAll('.brand-panel-toggle');
+  function setPanel(toggle, open) {
+    const body = $(toggle.getAttribute('aria-controls'));
+    toggle.setAttribute('aria-expanded', String(open));
+    if (body) body.classList.toggle('is-open', open);
+  }
+  function openBrandPanel(key) {
+    toggles.forEach(t => setPanel(t, t.id === 'brandToggle-' + key));
+  }
+  toggles.forEach(t => t.addEventListener('click', () => {
+    const open = t.getAttribute('aria-expanded') !== 'true';
+    toggles.forEach(o => setPanel(o, o === t ? open : false));
+  }));
+  // Panel içindeyken Escape: paneli kapat, odağı başlık düğmesine geri ver.
+  document.querySelectorAll('.brand-panel-body').forEach(body => body.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const t = document.querySelector('.brand-panel-toggle[aria-controls="' + body.id + '"]');
+    if (t) { setPanel(t, false); t.focus(); }
+  }));
+  // Alt menü / header "Telefonlar": telefon markaları panelini açar (initRedesignHeader).
+  window.mixgsmOpenBrandPanel = key => {
+    const strip = $('brandStrip');
+    if (!strip) return false;
+    openBrandPanel(key);
+    strip.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    return true;
+  };
+
+  // Telefon/bakım: önce arama yazılır (arama kategoriyi "Tümü"ye sıfırlar),
+  // SONRA kategori seçilir; sıra tersine olursa kategori filtresi kaybolur.
+  function showPhoneGroup(group, term) {
+    if (!$('toggleBtnPhone').classList.contains('active')) $('toggleBtnPhone').click();
+    $('advClearBtn').click();
+    setInput($('q'), term);
+    const cat = document.querySelector('#categoryFilters button[data-group="' + group + '"]');
+    if (cat) cat.click();
+    scrollTo('catalog');
+  }
+
+  function showLaptops(brandVal) {
     if (!$('toggleBtnLaptop').classList.contains('active')) $('toggleBtnLaptop').click();   // laptop (lazy-load burada başlar)
     const started = Date.now();
     (function apply() {
@@ -3617,11 +3741,20 @@ async function loadLaptopCatalog() {
       if (!busy && LaptopStore.loaded) {
         setInput($('laptopQ'), '');
         $('laptopFilterClearBtn').click();
-        const b = document.querySelector('#laptopBrandGroup button[data-val="' + a.dataset.brandVal + '"]');
+        const b = brandVal && document.querySelector('#laptopBrandGroup button[data-val="' + brandVal + '"]');
         if (b) b.click();                                        // yoksa: tüm laptoplar (güvenli yedek)
       }
       scrollTo('laptopCatalogTitle');
     })();
+  }
+
+  links.forEach(a => a.addEventListener('click', () => {
+    select(a);
+    const all = a.dataset.brandAll;
+    if (all === 'LAPTOP') return showLaptops('');
+    if (all) return showPhoneGroup(all, '');
+    if (a.dataset.brandTerm) return showPhoneGroup(a.dataset.brandGroup || 'ALL', a.dataset.brandTerm);
+    showLaptops(a.dataset.brandVal);
   }));
 
   // Kullanıcı aramayı/filtreleri kendisi değiştirirse seçim kalkar.

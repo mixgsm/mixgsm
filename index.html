@@ -41,7 +41,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.6337a0c60f.js" defer></script>
+<script src="js/app.3ff9d673fb.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -184,7 +184,7 @@
   --line: rgba(255,255,255,0.055);
   --text-invert: #0a0a0a;
   --nav-h: 60px;
-  --bottomnav-h: 60px;
+  --bottomnav-h: 64px;
   /* Z-INDEX KATMANLARI: mevcut sayisal degerler AYNEN korunarak
      adlandirildi (gorsel/stacking davranisinda hicbir degisiklik yok,
      sadece bakim kolayligi icin isimlendirme). Kucukten buyuge: */
@@ -301,7 +301,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .nav-links a[aria-current="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; border-radius: 2px; background: currentColor; opacity: .75; }
 @media (min-width: 721px) and (max-width: 900px) { .nav-links { gap: 16px; } }
 /* Header bağlantılarıyla gidilen bölüm başlıkları sabit header'ın altında kalmasın. */
-#catalog, #laptopCatalogTitle, #store, #referanslar, #sss { scroll-margin-top: calc(var(--nav-h) + 16px); }
+#catalog, #laptopCatalogTitle, #store, #referanslar, #sss, #brandStrip { scroll-margin-top: calc(var(--nav-h) + 16px); }
 
 /* REDESIGN ADIM 3 — HERO + GÜVEN BANDI (#home-vitrin)
    Hero her iki temada koyu (.zone-dark + lacivert→siyah ışık). Ürün görseli
@@ -329,7 +329,23 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .home-hero-cta:focus-visible, .home-hero-wa:focus-visible { outline: 2px solid #F5F5F7; outline-offset: 3px; }
 .home-hero-stage { position: relative; width: 100%; max-width: 340px; margin: 0 auto; aspect-ratio: 4 / 5; border-radius: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 42%, #F5F5F7 0%, #F5F5F7 52%, #E7E9EE 100%); box-shadow: 0 40px 70px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06); }
 .home-hero-stage::after { content: ""; position: absolute; left: 50%; bottom: 7%; width: 56%; height: 5%; transform: translateX(-50%); border-radius: 50%; background: rgba(15,20,35,0.16); filter: blur(10px); }
-.home-hero-stage img { position: relative; z-index: 1; width: auto; height: auto; max-width: 72%; max-height: 80%; object-fit: contain; }
+.home-hero-stage img { position: relative; z-index: 1; width: auto; height: auto; max-width: 72%; max-height: 80%; object-fit: contain; transition: opacity .35s var(--ease-out); }
+/* Dönen açılış: görsel değişirken yumuşak geçiş; ürün etiketi (sahne her
+   iki temada da açık renkli olduğu için koyu etiket her zaman okunur). */
+.home-hero-stage img.is-fading { opacity: 0; }
+.home-hero-stage.has-pick img { max-height: 68%; margin-bottom: 30px; }
+.home-hero-pick { position: absolute; left: 50%; bottom: 12px; z-index: 2; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 20px); min-height: 36px; padding: 6px 14px; border: 0; border-radius: 99px; background: rgba(12,12,14,0.84); color: #fff; font: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; cursor: pointer; transition: opacity .35s var(--ease-out); }
+.home-hero-pick[hidden] { display: none; }
+.home-hero-pick-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.home-hero-pick-price { flex: 0 0 auto; color: #FFB3B9; }
+.home-hero-pick:focus-visible { outline: 2px solid #0A0A0A; outline-offset: 2px; }
+.home-hero-stage.is-fading .home-hero-pick { opacity: 0; }
+/* Mobil sahne dar (~208px): ad ve fiyat iki satır, uzun adlar sığsın. */
+@media (max-width: 767px) {
+  .home-hero-pick { flex-direction: column; gap: 0; border-radius: 14px; padding: 5px 12px; font-size: 12px; }
+  .home-hero-stage.has-pick img { max-height: 60%; margin-bottom: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .home-hero-stage img, .home-hero-pick { transition: none; } }
 .home-hero-empty { position: relative; z-index: 1; padding: 20px; text-align: center; font-size: 13px; color: #5B5F66; }
 @media (min-width: 481px) { .home-hero-actions { flex-direction: row; flex-wrap: wrap; } }
 /* REDESIGN ADIM 3 (düzeltme) — Mobilde (<=767px) görsel kartı kompakt: kare
@@ -362,8 +378,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
      aşağıda olduğu için, özgüllük artırılarak geçerli olması sağlanır. */
   nav.bottom-nav { grid-template-columns: repeat(5, 1fr); }
   nav.bottom-nav a, nav.bottom-nav button { position: relative; white-space: nowrap; }
-  nav.bottom-nav a[aria-current="true"] { color: var(--text); }
-  nav.bottom-nav a[aria-current="true"]::before { content: ""; position: absolute; top: 0; left: 50%; width: 18px; height: 2px; margin-left: -9px; border-radius: 0 0 2px 2px; background: currentColor; }
+  /* Seçili sekme: ikonun arkasında marka renginde yuvarlak zemin + kalın
+     yazı. Durum aria-current'tan okunur (ekran okuyucu ile aynı kaynak). */
+  nav.bottom-nav a[aria-current="true"] { color: var(--text); font-weight: 700; }
+  nav.bottom-nav a[aria-current="true"] svg.icon { background: color-mix(in srgb, var(--accent) 24%, transparent); }
 }
 
 /* Hero */
@@ -665,13 +683,21 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* Mobile bottom navigation */
 .bottom-nav { display: none; }
 @media(max-width: 720px) {
-  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: var(--bottomnav-h); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: var(--z-bottom-nav); }
-  .bottom-nav button, .bottom-nav a { background: transparent; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 500; cursor: pointer; font-family: inherit; position: relative; }
-  .bottom-nav svg.icon { font-size: 20px; }
+  /* Yükseklik = menü + alt çentik payı (payı menü yüksekliğinden yemesin). */
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); z-index: var(--z-bottom-nav); }
+  /* Okunurluk: soluk gri yerine metin renginin %78'i, 11.5px yarı kalın. */
+  .bottom-nav button, .bottom-nav a { min-width: 0; background: transparent; border: 0; color: color-mix(in srgb, var(--text) 78%, transparent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11.5px; font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; position: relative; }
+  .bottom-nav svg.icon { font-size: 23px; box-sizing: content-box; padding: 4px 14px; border-radius: 99px; transition: background-color .2s var(--ease-out); }
+  .bottom-nav a:focus-visible, .bottom-nav button:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; border-radius: 12px; }
   .bottom-nav .active { color: var(--text); }
   .bottom-nav .bn-badge { position: absolute; top: 4px; right: calc(50% - 18px); min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 9px; font-weight: 700; display: none; align-items: center; justify-content: center; }
   .bottom-nav .bn-badge.show { display: flex; }
   .bottom-nav .bn-wa { color: var(--whatsapp); }
+  /* 320-359px: beş sekme ~64px'e düşer; "Karşılaştır" taşmasın. */
+  @media (max-width: 359px) {
+    .bottom-nav button, .bottom-nav a { font-size: 10.5px; }
+    .bottom-nav svg.icon { padding: 4px 10px; }
+  }
   body { padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); }
 }
 
@@ -867,7 +893,11 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    altinda akar - mobil ile ayni akis, farkli boyutlandirma. */
 #laptop-section .laptop-modalbox { width: min(880px, 100%); max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 20px; position: relative; transform: scale(.97); transition: transform .25s ease; display: grid; grid-template-columns: 1fr; }
 #laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(1); }
-#laptop-section .laptop-modal-close { position: sticky; top: 14px; margin: 14px 14px 0 auto; float: right; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: var(--z-badge); }
+/* Kapat düğmesi tam genişlikte, üste yapışık ince bir şeritte: kaydırılan
+   içerik yuvarlak düğmenin altına değil şeridin yumuşak zemininin altına
+   girer (önceden X, sağa yaslı değerlerin - "16 GB" - üstüne biniyordu). */
+#laptop-section .laptop-modal-bar { position: sticky; top: 0; z-index: var(--z-badge); display: flex; justify-content: flex-end; padding: 12px 12px 6px; background: linear-gradient(to bottom, var(--bg) 70%, color-mix(in srgb, var(--bg) 0%, transparent)); }
+#laptop-section .laptop-modal-close { position: static; margin: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: var(--z-badge); }
 #laptop-section .laptop-modal-close .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 #laptop-section .laptop-modalvisual { background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; min-height: 240px; }
 /* GORSEL DUZELTME: max-height 360px -> min(50vh, 480px). Tek sutunlu
@@ -991,25 +1021,38 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    daralabilmesine izin veriliyor (telefon arama kutusunda sorun yok). */
 #laptop-section .laptop-search { min-width: 0; }
 
-/* REDESIGN ADIM 5 — MARKA ŞERİDİ
-   İnce ve sakin: kart/çerçeve/gölge yok; sade yazı, düşük kontrast. Seçili
-   markada ince alt çizgi. <1100px tek satır, sadece şerit içinde yatay
-   kaydırma (scrollbar gizli, sağda çok hafif solma). >=1100px iki satır
-   (telefon / laptop), ortalı. */
-.brand-strip { padding: 26px 0 22px; }
-.brand-strip-label { margin: 0 0 6px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-.brand-strip-scroller { display: flex; align-items: center; gap: 28px; padding: 0 20px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
-.brand-strip-scroller::-webkit-scrollbar { display: none; }
-.brand-group { flex: 0 0 auto; display: flex; align-items: center; }
-.brand-group[hidden] { display: none; }
-.brand-group-label { margin-right: 6px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: var(--muted); }
-.brand-link { position: relative; min-height: 44px; padding: 0 10px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 500; line-height: 1; white-space: nowrap; color: var(--muted); cursor: pointer; transition: color .2s var(--ease-out); }
-.brand-link:hover, .brand-link[aria-pressed="true"] { color: var(--text); }
-.brand-link[aria-pressed="true"]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 9px; height: 1.5px; border-radius: 2px; background: currentColor; }
-.brand-link:focus-visible { outline: 2px solid var(--text); outline-offset: -3px; border-radius: 8px; }
-@media (min-width: 1100px) {
-  .brand-strip-scroller { flex-direction: column; gap: 0; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-  .brand-group { flex-wrap: wrap; justify-content: center; }
+/* MARKA PANELİ — üç açılır dikey liste (Telefon / Kişisel Bakım / Laptop).
+   Açılma: grid-template-rows 0fr -> 1fr (ölçüm gerektirmeyen yükseklik
+   animasyonu). Kapalıyken visibility:hidden -> düğmeler tab sırasından ve
+   ekran okuyucudan çıkar; visibility geçişi animasyon bitince uygulanır.
+   Mobil: alt alta; >=900px: yan yana üç sütun. Hareket azaltmada anında. */
+.brand-strip { padding: 26px 20px 22px; }
+.brand-strip-label { margin: 0 0 12px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.brand-panels { display: grid; gap: 10px; max-width: 560px; margin: 0 auto; align-items: start; }
+.brand-panel { border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; }
+.brand-panel-h { margin: 0; font: inherit; }
+.brand-panel-toggle { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 0 16px; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; }
+.brand-panel-toggle > .icon { font-size: 20px; flex: 0 0 auto; }
+.brand-panel-toggle > span { flex: 1 1 auto; }
+.brand-panel-chev { font-size: 16px; color: var(--muted); transform: rotate(-90deg); transition: transform .28s var(--ease-out); }
+.brand-panel-toggle[aria-expanded="true"] .brand-panel-chev { transform: rotate(90deg); }
+.brand-panel-toggle:focus-visible { outline: 2px solid var(--text); outline-offset: -3px; border-radius: var(--radius-md); }
+.brand-panel-body { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows .28s var(--ease-out), visibility 0s linear .28s; }
+.brand-panel-inner { min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 0 8px; }
+.brand-panel-body.is-open { grid-template-rows: 1fr; visibility: visible; transition: grid-template-rows .28s var(--ease-out), visibility 0s; }
+.brand-panel-body.is-open .brand-panel-inner { padding-bottom: 8px; }
+.brand-link { position: relative; display: flex; align-items: center; width: 100%; min-height: 46px; padding: 0 12px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-size: 15px; font-weight: 500; line-height: 1.2; text-align: left; color: var(--text); cursor: pointer; transition: background-color .2s var(--ease-out); }
+.brand-link[hidden] { display: none; }
+.brand-link::after { content: "›"; margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 18px; }
+.brand-link--all { font-weight: 600; }
+.brand-link:hover { background: var(--surface-2); }
+.brand-link[aria-pressed="true"] { color: var(--accent); font-weight: 600; }
+.brand-link:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 8px; }
+@media (min-width: 900px) {
+  .brand-panels { max-width: 1040px; grid-template-columns: repeat(3, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-panel-chev, .brand-panel-body, .brand-panel-body.is-open { transition: none; }
 }
 
 /* REDESIGN ADIM 6 — İHTİYACA GÖRE (BENTO)
@@ -1114,10 +1157,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
    cihazlarda (hover + ince imleç) şeritlerin kaydırılabildiği ince, temaya
    uyumlu bir çubukla belli olur. JS yok, kaydırma/snap davranışı aynı. */
 @media (hover: hover) and (pointer: fine) {
-  .vitrin-track, .reviews-track, .brand-strip-scroller { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text) 24%, transparent) transparent; }
-  .vitrin-track::-webkit-scrollbar, .reviews-track::-webkit-scrollbar, .brand-strip-scroller::-webkit-scrollbar { display: block; height: 6px; }
-  .vitrin-track::-webkit-scrollbar-thumb, .reviews-track::-webkit-scrollbar-thumb, .brand-strip-scroller::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--text) 24%, transparent); border-radius: 3px; }
-  .vitrin-track::-webkit-scrollbar-track, .reviews-track::-webkit-scrollbar-track, .brand-strip-scroller::-webkit-scrollbar-track { background: transparent; }
+  .vitrin-track, .reviews-track { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text) 24%, transparent) transparent; }
+  .vitrin-track::-webkit-scrollbar, .reviews-track::-webkit-scrollbar { display: block; height: 6px; }
+  .vitrin-track::-webkit-scrollbar-thumb, .reviews-track::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--text) 24%, transparent); border-radius: 3px; }
+  .vitrin-track::-webkit-scrollbar-track, .reviews-track::-webkit-scrollbar-track { background: transparent; }
 }
 
 /* REDESIGN SAĞLAMLAŞTIRMA — OKUNABİLİRLİK (WCAG AA 4.5:1). Renk paleti
@@ -1390,9 +1433,12 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
         <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="home-hero-wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
       </div>
     </div>
-    <div class="home-hero-stage">
+    <div class="home-hero-stage" id="heroStage">
       <img id="heroProductImg" src="" alt="" style="display:none;" fetchpriority="high" decoding="async">
       <div class="home-hero-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
+      <!-- Açılış ürünü etiketi: Sheet "Ana Sayfa" seçimleri sırayla döner;
+           basınca ürün penceresi açılır (merkezi data-action="open-product"). -->
+      <button type="button" class="home-hero-pick" id="heroPick" data-action="open-product" data-i="-1" hidden><span class="home-hero-pick-name" id="heroPickName"></span><span class="home-hero-pick-price" id="heroPickPrice"></span></button>
     </div>
   </div>
 </header>
@@ -1404,37 +1450,71 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg></span>WhatsApp'tan Hızlı Destek</li>
   </ul>
 </div>
-<!-- REDESIGN ADIM 5: Marka şeridi. Sadece katalogdaki GERÇEK markalar, logo
-     yok (sade yazı). Telefon markaları mevcut arama kutusunu (#q), laptop
-     markaları mevcut laptop marka filtresini tetikler (bkz. initBrandStrip). -->
-<section class="brand-strip zone-light" aria-labelledby="brandStripTitle">
+<!-- MARKA PANELİ: yatay kaydırmalı şerit yerine üç açılır dikey liste
+     (Telefon / Kişisel Bakım / Laptop & PC). Başlık düğmesi aria-expanded ile
+     duyurulur; kapalı panel görünmez ve tab sırasından çıkar. Telefon/bakım
+     markaları mevcut arama (#q) + kategori filtresini, laptop markaları mevcut
+     laptop marka filtresini tetikler (bkz. initBrandStrip). Alt menüdeki
+     "Telefonlar" da Telefon panelini açar. -->
+<section class="brand-strip zone-light" id="brandStrip" aria-labelledby="brandStripTitle">
   <h2 class="brand-strip-label" id="brandStripTitle">Markalar</h2>
-  <div class="brand-strip-scroller">
-    <div class="brand-group" role="group" aria-label="Telefon ve kişisel bakım markaları">
-      <span class="brand-group-label" aria-hidden="true">Telefon &amp; Kişisel Bakım</span>
-      <button type="button" class="brand-link" data-brand-term="xiaomi" aria-pressed="false">Xiaomi</button>
-      <button type="button" class="brand-link" data-brand-term="infinix" aria-pressed="false">Infinix</button>
-      <button type="button" class="brand-link" data-brand-term="tecno" aria-pressed="false">Tecno</button>
-      <button type="button" class="brand-link" data-brand-term="samsung" aria-pressed="false">Samsung</button>
-      <button type="button" class="brand-link" data-brand-term="iphone" aria-pressed="false">Apple</button>
-      <button type="button" class="brand-link" data-brand-term="oneplus" aria-pressed="false">OnePlus</button>
-      <button type="button" class="brand-link" data-brand-term="redmagic" aria-pressed="false">Red Magic</button>
-      <button type="button" class="brand-link" data-brand-term="google" aria-pressed="false">Google</button>
-      <button type="button" class="brand-link" data-brand-term="dyson" aria-pressed="false">Dyson</button>
-      <button type="button" class="brand-link" data-brand-term="braun" aria-pressed="false">Braun</button>
-      <button type="button" class="brand-link" data-brand-term="philips" aria-pressed="false">Philips</button>
+  <div class="brand-panels">
+    <div class="brand-panel">
+      <h3 class="brand-panel-h">
+        <button type="button" class="brand-panel-toggle" id="brandToggle-phone" aria-expanded="false" aria-controls="brandList-phone">
+          <svg class="icon" aria-hidden="true"><use href="#ic-smartphone"></use></svg><span>Telefon</span><svg class="icon brand-panel-chev" aria-hidden="true"><use href="#ic-chevron"></use></svg>
+        </button>
+      </h3>
+      <div class="brand-panel-body" id="brandList-phone" role="group" aria-labelledby="brandToggle-phone">
+        <div class="brand-panel-inner">
+          <button type="button" class="brand-link brand-link--all" data-brand-all="PHONE" aria-pressed="false">Tüm Telefonlar</button>
+          <button type="button" class="brand-link" data-brand-term="xiaomi" data-brand-group="PHONE" aria-pressed="false">Xiaomi</button>
+          <button type="button" class="brand-link" data-brand-term="iphone" data-brand-group="PHONE" aria-pressed="false">Apple</button>
+          <button type="button" class="brand-link" data-brand-term="samsung" data-brand-group="PHONE" aria-pressed="false">Samsung</button>
+          <button type="button" class="brand-link" data-brand-term="infinix" data-brand-group="PHONE" aria-pressed="false">Infinix</button>
+          <button type="button" class="brand-link" data-brand-term="tecno" data-brand-group="PHONE" aria-pressed="false">Tecno</button>
+          <button type="button" class="brand-link" data-brand-term="oneplus" data-brand-group="PHONE" aria-pressed="false">OnePlus</button>
+          <button type="button" class="brand-link" data-brand-term="redmagic" data-brand-group="PHONE" aria-pressed="false">Red Magic</button>
+          <button type="button" class="brand-link" data-brand-term="google" data-brand-group="PHONE" aria-pressed="false">Google</button>
+        </div>
+      </div>
     </div>
-    <div class="brand-group" role="group" aria-label="Laptop ve PC markaları">
-      <span class="brand-group-label" aria-hidden="true">Laptop &amp; PC</span>
-      <button type="button" class="brand-link" data-brand-val="ACER" aria-pressed="false">Acer</button>
-      <button type="button" class="brand-link" data-brand-val="DELL" aria-pressed="false">Dell</button>
-      <button type="button" class="brand-link" data-brand-val="APPLE" aria-pressed="false">Apple</button>
-      <button type="button" class="brand-link" data-brand-val="MONSTER" aria-pressed="false">Monster</button>
-      <button type="button" class="brand-link" data-brand-val="HUAWEI" aria-pressed="false">Huawei</button>
-      <button type="button" class="brand-link" data-brand-val="LENOVO" aria-pressed="false">Lenovo</button>
-      <button type="button" class="brand-link" data-brand-val="CASPER" aria-pressed="false">Casper</button>
-      <button type="button" class="brand-link" data-brand-val="HP" aria-pressed="false">HP</button>
-      <button type="button" class="brand-link" data-brand-val="ASUS" aria-pressed="false">Asus</button>
+    <div class="brand-panel">
+      <h3 class="brand-panel-h">
+        <button type="button" class="brand-panel-toggle" id="brandToggle-care" aria-expanded="false" aria-controls="brandList-care">
+          <svg class="icon" aria-hidden="true"><use href="#ic-star"></use></svg><span>Kişisel Bakım</span><svg class="icon brand-panel-chev" aria-hidden="true"><use href="#ic-chevron"></use></svg>
+        </button>
+      </h3>
+      <div class="brand-panel-body" id="brandList-care" role="group" aria-labelledby="brandToggle-care">
+        <div class="brand-panel-inner">
+          <button type="button" class="brand-link brand-link--all" data-brand-all="PERSONAL_CARE" aria-pressed="false">Tüm Kişisel Bakım</button>
+          <button type="button" class="brand-link" data-brand-term="dyson" data-brand-group="PERSONAL_CARE" aria-pressed="false">Dyson</button>
+          <button type="button" class="brand-link" data-brand-term="braun" data-brand-group="PERSONAL_CARE" aria-pressed="false">Braun</button>
+          <button type="button" class="brand-link" data-brand-term="philips" data-brand-group="PERSONAL_CARE" aria-pressed="false">Philips</button>
+        </div>
+      </div>
+    </div>
+    <div class="brand-panel">
+      <h3 class="brand-panel-h">
+        <button type="button" class="brand-panel-toggle" id="brandToggle-laptop" aria-expanded="false" aria-controls="brandList-laptop">
+          <svg class="icon" aria-hidden="true"><use href="#ic-laptop"></use></svg><span>Laptop &amp; PC</span><svg class="icon brand-panel-chev" aria-hidden="true"><use href="#ic-chevron"></use></svg>
+        </button>
+      </h3>
+      <div class="brand-panel-body" id="brandList-laptop" role="group" aria-labelledby="brandToggle-laptop">
+        <div class="brand-panel-inner">
+          <button type="button" class="brand-link brand-link--all" data-brand-all="LAPTOP" aria-pressed="false">Tüm Laptoplar</button>
+          <button type="button" class="brand-link" data-brand-val="ACER" aria-pressed="false">Acer</button>
+          <button type="button" class="brand-link" data-brand-val="APPLE" aria-pressed="false">Apple</button>
+          <button type="button" class="brand-link" data-brand-val="ASUS" aria-pressed="false">Asus</button>
+          <button type="button" class="brand-link" data-brand-val="CASPER" aria-pressed="false">Casper</button>
+          <button type="button" class="brand-link" data-brand-val="DELL" aria-pressed="false">Dell</button>
+          <button type="button" class="brand-link" data-brand-val="HP" aria-pressed="false">HP</button>
+          <button type="button" class="brand-link" data-brand-val="HUAWEI" aria-pressed="false">Huawei</button>
+          <button type="button" class="brand-link" data-brand-val="LENOVO" aria-pressed="false">Lenovo</button>
+          <button type="button" class="brand-link" data-brand-val="MONSTER" aria-pressed="false">Monster</button>
+          <button type="button" class="brand-link" data-brand-val="MSI" aria-pressed="false">MSI</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1786,7 +1866,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
        yapı/id/state. role=dialog + aria-modal + Focus Trap ile birlikte. -->
   <div class="laptop-modal" id="laptopModal" role="dialog" aria-modal="true" aria-labelledby="lmn" tabindex="-1">
     <div class="laptop-modalbox">
-      <button type="button" class="laptop-modal-close" id="laptopModalCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      <div class="laptop-modal-bar"><button type="button" class="laptop-modal-close" id="laptopModalCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button></div>
       <div class="laptop-modalvisual">
         <div class="laptop-gallery-main" id="laptopGalleryMain">
           <button type="button" class="laptop-gallery-arrow prev" id="laptopGalleryPrevBtn" aria-label="Önceki görsel" hidden><svg class="icon"><use href="#ic-chevron"></use></svg></button>
@@ -1839,7 +1919,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
        taslağı, 3sn buton cooldown'u ve dinamik WhatsApp mesajı ile. -->
   <div class="laptop-modal laptop-form-modal" id="laptopFinderModal" role="dialog" aria-modal="true" aria-labelledby="lfTitle" tabindex="-1">
     <div class="laptop-modalbox laptop-form-box">
-      <button type="button" class="laptop-modal-close" id="laptopFinderCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
+      <div class="laptop-modal-bar"><button type="button" class="laptop-modal-close" id="laptopFinderCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button></div>
       <h2 id="lfTitle" class="laptop-form-title">Bana Laptop Bul</h2>
       <p class="laptop-form-sub">Aşağıdaki bilgileri doldurun, size en uygun laptopu WhatsApp üzerinden birlikte bulalım.</p>
 
