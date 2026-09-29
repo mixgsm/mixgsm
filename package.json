@@ -3,7 +3,7 @@
   "private": true,
   "description": "MIX GSM sitesi icin katalog/fiyat listesi ureten yardimci script'lerin bagimliliklari (GitHub Actions tarafindan kullanilir).",
   "scripts": {
-    "test": "node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js scripts/tests/sitemap.test.js scripts/tests/qa-check.test.js scripts/tests/photo-list.test.js scripts/tests/sheet-selection.test.js",
+    "test": "node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/asset-version.test.js scripts/tests/sitemap.test.js scripts/tests/qa-check.test.js scripts/tests/photo-list.test.js scripts/tests/sheet-selection.test.js scripts/tests/laptop-photos.test.js",
     "qa": "node scripts/qa-check.js",
     "asset-version": "node scripts/asset-version.js"
   },

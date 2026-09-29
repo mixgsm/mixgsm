@@ -16,8 +16,10 @@ on:
       - "scripts/asset-version.js"
       - "scripts/generate-sitemap.js"
       - "scripts/generate-photo-list.js"
-      # Yeni telefon fotografi yuklenince liste hemen yenilensin (20 dk beklemeden).
+      # Yeni telefon/laptop fotografi yuklenince liste ve laptop katalogu
+      # (otomatik fotograf) hemen yenilensin (20 dk beklemeden).
       - "photos/**"
+      - "laptop-photos/**"
       - "scripts/lib/**"
       - "scripts/tests/**"
       - "package.json"

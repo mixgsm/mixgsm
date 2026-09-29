@@ -204,6 +204,53 @@ function parseTsvToLaptopProducts(tsv) {
   return products;
 }
 
+// OTOMATİK FOTOĞRAF: Sheet'te "Fotoğraf 1-6" sütunları BOŞ olan laptop için
+// depodaki laptop-photos/images/ klasöründe "<ID>-<sıra no>.<jpg|jpeg|webp|png>"
+// dosyaları (örn. PC-035-01.jpg, PC-035-005.webp) sıra numarasına göre en
+// fazla 6 tane eklenir. Sheet'te fotoğraf yazılıysa HİÇ dokunulmaz. Dosya adı
+// yalnız güvenli karakterlerse kabul edilir (sitedeki URL kuralıyla aynı).
+const LAPTOP_PHOTO_DIR = path.join(__dirname, "..", "laptop-photos", "images");
+const LAPTOP_PHOTO_BASE = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/images/";
+const LAPTOP_IMAGE_FIELDS = ["img", "img2", "img3", "img4", "img5", "img6"];
+const SAFE_PHOTO_NAME = /^[A-Za-z0-9._-]+$/;
+
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function autoLaptopPhotos(id, files) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId) return [];
+  const pattern = new RegExp("^" + escapeRegExp(cleanId) + "-(\\d{1,3})\\.(?:jpe?g|webp|png)$", "i");
+  return files
+    .filter((f) => SAFE_PHOTO_NAME.test(f))
+    .map((f) => ({ f, m: f.match(pattern) }))
+    .filter((x) => x.m)
+    .sort((a, b) => Number(a.m[1]) - Number(b.m[1]) || a.f.localeCompare(b.f))
+    .slice(0, LAPTOP_IMAGE_FIELDS.length)
+    .map((x) => LAPTOP_PHOTO_BASE + x.f);
+}
+
+// Liste değiştirilmez; fotoğrafı doldurulan ürünün kopyası döner.
+function withAutoPhotos(products, files) {
+  return products.map((p) => {
+    if (LAPTOP_IMAGE_FIELDS.some((k) => p[k])) return p;
+    const urls = autoLaptopPhotos(p.id, files);
+    if (!urls.length) return p;
+    const images = Object.fromEntries(LAPTOP_IMAGE_FIELDS.map((k, i) => [k, urls[i] || ""]));
+    return { ...p, ...images };
+  });
+}
+
+function listLaptopPhotoFiles() {
+  try {
+    return fs.readdirSync(LAPTOP_PHOTO_DIR);
+  } catch (err) {
+    console.log("laptop-photos/images okunamadi (" + err.message + "); otomatik fotograf eklenmedi.");
+    return [];
+  }
+}
+
 async function main() {
   if (!isConfigured(LAPTOP_SHEETS_URL)) {
     writeEmptyCatalog("Public Laptop Sheet henuz baglanmadi (placeholder URL).");
@@ -231,7 +278,7 @@ async function main() {
   // urun kaybi varsa mevcut catalog-laptop.json KORUNUR. process.exitCode=1
   // adimi Actions'ta kirmizi gosterir; continue-on-error sayesinde telefon
   // akisi etkilenmez.
-  const products = parseTsvToLaptopProducts(tsv);
+  const products = withAutoPhotos(parseTsvToLaptopProducts(tsv), listLaptopPhotoFiles());
   const headerErrors = schema.validateHeader(schema.findHeaderLine(tsv), schema.LAPTOP_COLUMNS);
   const previousCount = schema.readPreviousCount(OUTPUT_PATH, (list) => list.length);
   const result = schema.validateLaptopCatalog(products, { previousCount });
@@ -267,4 +314,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseTsvToLaptopProducts };
+module.exports = { parseTsvToLaptopProducts, autoLaptopPhotos, withAutoPhotos };
