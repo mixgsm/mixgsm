@@ -164,6 +164,13 @@ function normalizeTR(v) {
     .replace(/[^a-z0-9]+/g," ").trim();
 }
 
+// İşletme sahibinin seçim sütunları (telefon "Ana Sayfa", laptop "Vitrin"):
+// yalnız açık "Evet" seçim sayılır. scripts/lib/catalog-schema.js isYes ile aynı.
+const YES_VALUES = new Set(['evet', 'yes', 'true', '1']);
+function isYes(v) {
+  return YES_VALUES.has(normalizeTR(v == null ? '' : String(v)));
+}
+
 // Urun paylasim linki icin okunabilir "slug" uretir (orn. "xiaomi-poco-x8-pro-256-8").
 // Marka+model tabanina, varsa RAM/hafiza varyant bilgisindeki sayilar eklenir,
 // boylece ayni modelin farkli varyantlari BIRBIRINDEN FARKLI link uretir.
@@ -264,13 +271,28 @@ function updateProductSchema() {
 // planda GitHub fotoğraf araması yapılacaksa, hero (LCP) önce "görsel yok"
 // resmiyle açılıp sonra değişmesin; mevcut "yükleniyor" hali korunur. Arama
 // bitince (başarılı/başarısız) discoverExtraPhotosInBackground hero'yu yeniden çizer.
+// Açılış ürünleri: Sheet'te "Ana Sayfa = Evet" olanlar (Sheet sırasıyla,
+// telefon ya da kişisel bakım; aynı model bir kez). Seçim yoksa ya da seçilenlerin
+// hiçbiri stokta/fiyatlı değilse eski otomatik kural: stoktaki en pahalı telefon.
+function heroProducts() {
+  const available = products.filter(p => !isNonProductRow(p) && p.stock === 'IN' && p.p !== null);
+  const seen = new Set();
+  const chosen = available.filter(p => {
+    if (!p.home) return false;
+    const key = normalizeTR(`${p.b} ${p.m}`);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (chosen.length) return chosen;
+  return available.filter(p => p.group === 'PHONE').sort((a, b) => b.p - a.p).slice(0, 1);
+}
+
 function renderHeroProduct(waitForPhotoDiscovery) {
   const img = document.getElementById('heroProductImg');
   const empty = document.getElementById('heroVisualEmpty');
   if (!img || !empty) return;
-  const candidates = products.filter(p => !isNonProductRow(p) && p.group === 'PHONE' && p.stock === 'IN' && p.p !== null);
-  candidates.sort((a, b) => b.p - a.p);
-  const pick = candidates[0];
+  const pick = heroProducts()[0];
   if (!pick) { img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Güncel katalog için ürünleri inceleyin.'; return; }
   const heroSrc = imageCandidatesForProduct(pick)[0];
   if (waitForPhotoDiscovery && /gorsel-yok\.jpg$/.test(heroSrc)) return;
@@ -824,6 +846,7 @@ function sanitizePhoneProduct(raw) {
   const tagClass = PHONE_TAGS[raw.tagLabel] || '';
   p.tagLabel = tagClass ? raw.tagLabel : '';
   p.tagClass = tagClass;
+  p.home = raw.home === true;          // Sheet "Ana Sayfa" seçimi (JSON/önbellek/yedek)
   return p;
 }
 
@@ -1023,7 +1046,8 @@ async function loadFromGoogleSheets() {
         battery: cols[7] || '', screen: cols[8] || '',
         processor: cols[9] || '', camera: cols[10] || '',
         connectivity: cols[11] || '', registration: cols[12] || '',
-        warranty: warrantyText, tagLabel: tagLabel, tagClass: tagClass
+        warranty: warrantyText, tagLabel: tagLabel, tagClass: tagClass,
+        home: isYes(cols[15])            // P sütunu "Ana Sayfa" (isteğe bağlı)
       });
     }
     
@@ -2221,6 +2245,7 @@ function sanitizeLaptopProduct(raw) {
   p.stock = toStock(raw.stock);
   p.deal = raw.deal === true;
   p.newArrival = raw.newArrival === true;
+  p.showcase = raw.showcase === true;  // Sheet "Vitrin" seçimi (JSON/önbellek/yedek)
   return p;
 }
 
@@ -3328,7 +3353,8 @@ function parseLaptopTsvToProducts(tsv) {
       img3: normalizeLaptopGithubImageUrl(cols[32] || ''),
       img4: normalizeLaptopGithubImageUrl(cols[33] || ''),
       img5: normalizeLaptopGithubImageUrl(cols[34] || ''),
-      img6: normalizeLaptopGithubImageUrl(cols[35] || '')
+      img6: normalizeLaptopGithubImageUrl(cols[35] || ''),
+      showcase: isYes(cols[36])          // AK sütunu "Vitrin" (isteğe bağlı)
     });
   }
   return products;
@@ -3789,18 +3815,43 @@ async function loadLaptopCatalog() {
   // laptop kataloğuna giden bir bağlantıya bastıysa (veri henüz yüklenirken
   // başlamış kaydırma), hedef kaymasın diye başlığa yeniden hizalanır.
   let lastLaptopNav = 0;
+  let laptopShowcaseMode = false;
   document.addEventListener('click', e => {
     const el = e.target.closest && e.target.closest('a[href="#laptopCatalogTitle"]:not([data-bento-form]), [data-brand-val], #laptopStockBtn');
     if (el) lastLaptopNav = Date.now();
   }, true);
+  // Sheet "Vitrin" sütununda en az bir "Evet" varsa vitrin YALNIZ seçilen
+  // modellerdir (Sheet sırası, marka karıştırma yok, Fırsat işareti seçimin
+  // yerine geçmez). Hiç seçim yoksa eski "Laptop Fırsatları" davranışı sürer.
+  function showcaseList(all) {
+    const seen = new Set(), out = [];
+    all.forEach(p => {
+      const k = laptopKey(p);
+      if (out.length >= MAX || seen.has(k) || failed.has(k)) return;
+      if (!(p.showcase && p.stock === 'IN' && p.price !== null && String(p.img || '').trim())) return;
+      seen.add(k);
+      out.push(p);
+    });
+    return out;
+  }
+  function setLaptopVitrinMode(showcase) {
+    laptopShowcaseMode = showcase;
+    const title = $('vitrinLaptopDealsTitle');
+    const more = $('vitrinLaptopMore');
+    if (title) title.textContent = showcase ? 'Öne Çıkan Laptoplar' : 'Laptop Fırsatları';
+    if (more && more.firstChild) more.firstChild.nodeValue = showcase ? 'Tüm Laptoplar ' : 'Fırsatları Gör ';
+  }
   function updateLaptop() {
     if (!secLaptop || typeof LaptopStore === 'undefined' || !LaptopStore.products || !LaptopStore.products.length) return;
-    const list = pick(LaptopStore.products.filter(laptopOk), laptopKey, p => p.brand);
-    const sig = list.map(p => [LaptopStore.products.indexOf(p), laptopKey(p), p.price].join('~')).join('|');
+    const showcase = LaptopStore.products.some(p => p.showcase);
+    const list = showcase ? showcaseList(LaptopStore.products)
+      : pick(LaptopStore.products.filter(laptopOk), laptopKey, p => p.brand);
+    const sig = (showcase ? 'v|' : 'f|') + list.map(p => [LaptopStore.products.indexOf(p), laptopKey(p), p.price].join('~')).join('|');
     const before = trackLaptop.dataset.sig;
     const wasHidden = secLaptop.hidden;
+    setLaptopVitrinMode(showcase);
     fill(secLaptop, trackLaptop, list, sig, laptopCard);
-    if (trackLaptop.dataset.sig !== before) singleLaptopBadge(trackLaptop);
+    if (!showcase && trackLaptop.dataset.sig !== before) singleLaptopBadge(trackLaptop);
     if (wasHidden && !secLaptop.hidden && Date.now() - lastLaptopNav < 5000) {
       const t = $('laptopCatalogTitle');
       if (t) requestAnimationFrame(() => t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' }));
@@ -3853,7 +3904,8 @@ async function loadLaptopCatalog() {
       const clr = $('laptopFilterClearBtn');
       if (clr) clr.click();
       const sort = $('laptopSort');
-      if (sort) { sort.value = 'deal'; sort.dispatchEvent(new Event('change', { bubbles: true })); }   // mevcut "Fırsatlar" sıralaması
+      // Fırsat modunda mevcut "Fırsatlar" sıralaması; Vitrin modunda sıralama değişmez.
+      if (sort && !laptopShowcaseMode) { sort.value = 'deal'; sort.dispatchEvent(new Event('change', { bubbles: true })); }
       const t = $('laptopCatalogTitle');
       if (t) t.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
     });

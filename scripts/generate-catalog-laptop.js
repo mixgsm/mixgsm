@@ -195,6 +195,9 @@ function parseTsvToLaptopProducts(tsv) {
       img4: normalizeLaptopGithubImageUrl(cols[33] || ""),
       img5: normalizeLaptopGithubImageUrl(cols[34] || ""),
       img6: normalizeLaptopGithubImageUrl(cols[35] || ""),
+      // AK sütunu "Vitrin" (isteğe bağlı; fotoğraflardan SONRA, eski
+      // indeksler kaymaz): laptop vitrininde gösterilecek model.
+      showcase: schema.isYes(cols[36]),
     });
   }
 
@@ -250,12 +253,18 @@ async function main() {
   console.log("catalog-laptop.json uretildi. Urun sayisi: " + products.length);
 }
 
-main().catch((err) => {
-  // Son care: beklenmeyen bir hata bile olsa GitHub Actions job'unu
-  // KIRMAMAK icin process'i basarisiz koda cikarmiyoruz - sadece logluyoruz
-  // ve (varsa) mevcut dosyayi koruyoruz / yoksa bos yaziyoruz.
-  console.error("Beklenmeyen hata:", err);
-  if (!fs.existsSync(OUTPUT_PATH)) {
-    writeEmptyCatalog("Beklenmeyen hata: " + err.message);
-  }
-});
+// Testlerden require edilince Sheet'e istek atilmasin diye yalniz dogrudan
+// calistirildiginda (node scripts/generate-catalog-laptop.js) main() calisir.
+if (require.main === module) {
+  main().catch((err) => {
+    // Son care: beklenmeyen bir hata bile olsa GitHub Actions job'unu
+    // KIRMAMAK icin process'i basarisiz koda cikarmiyoruz - sadece logluyoruz
+    // ve (varsa) mevcut dosyayi koruyoruz / yoksa bos yaziyoruz.
+    console.error("Beklenmeyen hata:", err);
+    if (!fs.existsSync(OUTPUT_PATH)) {
+      writeEmptyCatalog("Beklenmeyen hata: " + err.message);
+    }
+  });
+}
+
+module.exports = { parseTsvToLaptopProducts };

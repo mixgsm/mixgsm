@@ -139,6 +139,8 @@ function parseTsvToProducts(tsv) {
       warranty: warrantyText,
       tagLabel: tagLabel,
       tagClass: tagClass,
+      // P sütunu "Ana Sayfa" (isteğe bağlı; yoksa false): açılış görseli seçimi.
+      home: schema.isYes(cols[15]),
     });
   }
 

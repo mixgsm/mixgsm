@@ -43,6 +43,15 @@ function normalizeTR(v) {
     .trim();
 }
 
+// İşletme sahibinin seçim sütunları (telefon "Ana Sayfa", laptop "Vitrin"):
+// yalnız açık "Evet" seçim sayılır; boş/"Hayır"/başka her şey = seçilmedi.
+// (Fırsat sütununun "var" da kabul eden gevşek kuralı burada BİLEREK yok.)
+// Aynı kural istemcideki Sheet yedeğinde de (js/app.*.js isYes) kullanılır.
+const YES_VALUES = new Set(["evet", "yes", "true", "1"]);
+function isYes(v) {
+  return YES_VALUES.has(normalizeTR(v == null ? "" : String(v)));
+}
+
 function findHeaderLine(tsv) {
   const first = String(tsv || "").split("\n")[0];
   return first ? first.replace(/\r/g, "") : null;
@@ -153,6 +162,7 @@ module.exports = {
   PHONE_COLUMNS,
   LAPTOP_COLUMNS,
   normalizeTR,
+  isYes,
   findHeaderLine,
   validateHeader,
   productSlug,
