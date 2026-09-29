@@ -41,7 +41,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.afa532ad51.js" defer></script>
+<script src="js/app.93927fdd6f.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -508,8 +508,22 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .share-btn { position: absolute; right: 56px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line); color: var(--text); cursor: pointer; z-index: var(--z-modal-control); display: flex; align-items: center; justify-content: center; }
 .share-btn svg.icon { font-size: 15px; }
 .share-btn:hover, .close:hover { border-color: color-mix(in srgb, var(--text) 24%, transparent); }
-.modalvisual { background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 40px; min-width: 0; min-height: 300px; }
+.modalvisual { background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 40px; min-width: 0; min-height: 300px; }
 .modalvisual img { max-width: 100%; max-height: min(380px, 100%); object-fit: contain; }
+/* Telefon galerisi: aynı modelin ek fotoğrafları (laptop galerisiyle aynı
+   dil). Tek görselde oklar/küçük resimler gizli kalır. */
+.pgal-main { position: relative; width: 100%; min-width: 0; display: flex; align-items: center; justify-content: center; touch-action: pan-y; }
+.pgal-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 72%, transparent); color: var(--text); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; z-index: var(--z-badge); }
+.pgal-arrow.prev { left: 0; }
+.pgal-arrow.next { right: 0; }
+.pgal-arrow.next .icon { transform: scaleX(-1); }
+.pgal-arrow[hidden], .pgal-thumbs[hidden] { display: none; }
+.pgal-thumbs { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; padding: 2px; scrollbar-width: none; }
+.pgal-thumbs::-webkit-scrollbar { display: none; }
+.pgal-thumb { flex: 0 0 auto; width: 52px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: var(--surface-2); cursor: pointer; }
+.modalvisual .pgal-thumb img { width: 100%; height: 100%; max-height: none; object-fit: cover; display: block; }
+.pgal-thumb[aria-current="true"] { border-color: var(--accent); }
+.pgal-arrow:focus-visible, .pgal-thumb:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .modalinfo { padding: 36px 30px; min-width: 0; }
 .modalbrand { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 .modalname { font-size: 25px; font-weight: 600; margin: 4px 0 14px; line-height: 1.15; letter-spacing: -0.3px; }
@@ -538,9 +552,15 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   /* dvh: mobil tarayıcıda adres çubuğu görünürken de gerçek görünür alan
      (vh = çubuk gizliyken ölçülür, alt kısım ekran dışında kalabiliyordu).
      vh satırı dvh desteklemeyen eski tarayıcılar için yedek. */
-  .modalbox { grid-template-columns: 1fr; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; top: 8dvh; max-height: 92vh; max-height: 92dvh; width: 100%; margin: 0; overscroll-behavior: contain; }
+  /* grid-auto-rows: max-content — kutunun yüksekliği kesin (top+bottom)
+     olduğundan tarayıcı satırları min-height'e kadar sıkıştırıyordu
+     (galeri şeridi görselin altında kırpılıyordu); satırlar içerik boyunda
+     kalır, taşan kısım kutunun içinde kayar. */
+  .modalbox { grid-template-columns: 1fr; grid-auto-rows: max-content; align-content: start; border-radius: 20px 20px 0 0; position: fixed; left: 0; right: 0; bottom: 0; top: 8vh; top: 8dvh; max-height: 92vh; max-height: 92dvh; width: 100%; margin: 0; overscroll-behavior: contain; }
   .modal { padding: 0; align-items: flex-end; }
-  .modalvisual { padding: 24px; height: 220px; }
+  /* Sabit 220px yerine en az 220px: küçük resim şeridi görselin altına sığar. */
+  .modalvisual { padding: 20px 16px 14px; min-height: 220px; }
+  .modalvisual .pgal-main img { max-height: 190px; }
   /* Son öğe (WhatsApp düğmesi) sistem hareket çubuğunun üstünde kalsın. */
   .modalinfo { padding: 22px 22px calc(22px + env(safe-area-inset-bottom)); }
 }
@@ -2053,7 +2073,12 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
     <button class="close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
     <button class="share-btn" aria-label="Ürün Linkini Kopyala"><svg class="icon"><use href="#ic-share"></use></svg></button>
     <div class="modalvisual">
-      <img id="mi" src="" alt="Ürün Görseli">
+      <div class="pgal-main" id="miMain">
+        <button type="button" class="pgal-arrow prev" id="miPrev" aria-label="Önceki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+        <img id="mi" src="" alt="Ürün Görseli">
+        <button type="button" class="pgal-arrow next" id="miNext" aria-label="Sonraki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+      </div>
+      <div class="pgal-thumbs" id="miThumbs" role="group" aria-label="Ürün görselleri" hidden></div>
     </div>
     <div class="modalinfo">
       <div class="modalbrand" id="mb"></div>

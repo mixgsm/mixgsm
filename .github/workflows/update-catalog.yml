@@ -15,6 +15,9 @@ on:
       - "scripts/check-images.js"
       - "scripts/asset-version.js"
       - "scripts/generate-sitemap.js"
+      - "scripts/generate-photo-list.js"
+      # Yeni telefon fotografi yuklenince liste hemen yenilensin (20 dk beklemeden).
+      - "photos/**"
       - "scripts/lib/**"
       - "scripts/tests/**"
       - "package.json"
@@ -69,6 +72,12 @@ jobs:
         continue-on-error: true
         run: node scripts/generate-sitemap.js
 
+      # Telefon fotograf listesi (site galeri/eslestirme icin okur). Uretilemezse
+      # site sabit liste + GitHub API yedegiyle calismaya devam eder.
+      - name: feed/photos.json guncelle
+        continue-on-error: true
+        run: node scripts/generate-photo-list.js
+
       # Gorsel saglik raporu: eksik/kirik gorselleri Actions ozetinde UYARI
       # olarak gosterir; yayini engellemez (site kirik gorselde yedek gosterir).
       - name: Gorsel saglik kontrolu
@@ -97,6 +106,9 @@ jobs:
       - name: Degisiklik varsa commit + push et
         run: |
           git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html sitemap.xml
+          if [ -f feed/photos.json ]; then
+            git add feed/photos.json
+          fi
           # price-assets AYRI ve GUVENLI eklenir: yukaridaki FAZ 4 adimlari
           # (continue-on-error) herhangi bir nedenle calisip price-assets/
           # klasorunu hic olusturamamis olabilir. "git add price-assets"

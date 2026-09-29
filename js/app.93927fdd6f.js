@@ -384,10 +384,12 @@ function imageMatchKey(value) {
     .replace(/^B-/, '')
     .replace(/^K-/, '')
     .replace(/^APPLE-IPHONE-/, 'IPHONE-')
+    .replace(/^APPLE-(?=\d)/, 'IPHONE-')          // "APPLE-18-PRO-1.jpg" = iPhone 18 Pro
     .replace(/^GOOGLE-PIXEL-/, 'PIXEL-')
     .replace(/^SAMSUNG-GALAXY-/, 'SAMSUNG-')
     .replace(/^NUBIA-RED-/, 'RED-')
     .replace(/^REDMAGIC-/, 'RED-')
+    .replace(/^XIAOMI-(?=(REDMI|POCO)-)/, '')      // "xiaomi-redmi-note-17-2.jpg" = Redmi Note 17
     .replace(/^XIAOMI-/, 'MI-');
 }
 
@@ -470,7 +472,8 @@ function imageFileScore(p, file) {
   if (brand === 'GOOGLE' && !fileKey.includes('PIXEL')) return -999;
   if (brand === 'REDMI' && !fileKey.includes('REDMI')) return -999;
   if (brand === 'POCO' && !fileKey.includes('POCO')) return -999;
-  if (brand === 'XIAOMI' && !/^(MI|REDMI|POCO)-/.test(fileKey)) return -999;
+  // "xiaomi-17-2.jpg" gibi yüklemeler de Xiaomi sayılır (anahtar MI-17-2 olur).
+  if (brand === 'XIAOMI' && !/^(MI|REDMI|POCO)-/.test(imageMatchKey(fileKey))) return -999;
 
   const ignored = new Set([
     'GB','TB','G','RAM','ROM','BLACK','WHITE','BLUE','GREEN','GRAY','GREY',
@@ -540,7 +543,9 @@ function withTimeout(taskFn, timeoutMs) {
 // Katalog İLK render'ı bu isteği BEKLEMEZ: oturum önbelleği varsa render'dan
 // önce senkron okunur; yoksa istek arka planda yapılır ve yeni dosya
 // bulunursa katalog bir kez yeniden çizilir.
-const EXTRA_PHOTOS_SESSION_KEY = 'mixgsm-extra-photos-v1';
+// v2: liste artık önce CI'ın ürettiği feed/photos.json'dan gelir; v1
+// önbelleği (yalnız API) yeni ek fotoğrafları gizleyebileceği için okunmaz.
+const EXTRA_PHOTOS_SESSION_KEY = 'mixgsm-extra-photos-v2';
 const EXTRA_PHOTOS_TIMEOUT_MS = 6000;
 const PHOTO_FILE_NAME = /^[A-Za-z0-9._%-]+\.(jpg|jpeg|png|webp)$/i;
 let extraPhotosResolved = false;
@@ -565,8 +570,18 @@ function loadCachedExtraPhotoFiles() {
   } catch (e) { /* bozuk/erişilemeyen önbellek: ağdan denenecek */ }
 }
 
-// Yeni (sabit listede olmayan) dosya bulunursa true döner.
-async function fetchExtraPhotoFiles() {
+// Fotoğraf adları: 1) CI'ın ürettiği aynı-kaynak feed/photos.json (limitsiz,
+// her yeni yüklemede yenilenir), 2) yalnız gerekirse GitHub API (saatte 60).
+async function fetchPhotoNames(allowApi) {
+  try {
+    const manifest = await withTimeout(async (signal) => {
+      const res = await fetch('feed/photos.json', { cache: 'no-cache', signal });
+      if (!res.ok) return null;
+      return res.json();
+    }, EXTRA_PHOTOS_TIMEOUT_MS);
+    if (manifest && Array.isArray(manifest.files)) return manifest.files;
+  } catch (e) { /* liste yok/erişilemedi: API yedeği */ }
+  if (!allowApi) return null;
   const data = await withTimeout(async (signal) => {
     const res = await fetch('https://api.github.com/repos/mixgsm/mixgsm/contents/photos', {
       headers: { 'Accept': 'application/vnd.github+json' }, signal
@@ -574,20 +589,27 @@ async function fetchExtraPhotoFiles() {
     if (!res.ok) return null;
     return res.json();
   }, EXTRA_PHOTOS_TIMEOUT_MS);
-  if (!Array.isArray(data)) return false;
+  return Array.isArray(data) ? data.map(item => item && item.name) : null;
+}
+
+// Yeni (sabit listede olmayan) dosya bulunursa true döner.
+async function fetchExtraPhotoFiles(allowApi) {
+  const names = await fetchPhotoNames(allowApi);
+  if (!names) return false;
 
   const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
-  EXTRA_PHOTO_FILES = data
-    .map(item => item && item.name)
+  EXTRA_PHOTO_FILES = names
     .filter(name => typeof name === 'string' && PHOTO_FILE_NAME.test(name) && !known.has(name.toLowerCase()));
   extraPhotosResolved = true;
   try { sessionStorage.setItem(EXTRA_PHOTOS_SESSION_KEY, JSON.stringify(EXTRA_PHOTO_FILES)); } catch (e) { /* kota/gizli mod */ }
   return EXTRA_PHOTO_FILES.length > 0;
 }
 
+// Ek fotoğraflar (galeri) için liste her oturumda bir kez okunur; GitHub
+// API yedeği yalnız hiç görseli eşleşmeyen ürün varsa kullanılır.
 function discoverExtraPhotosInBackground() {
-  if (extraPhotosResolved || !hasUnmatchedProducts(products)) return;
-  fetchExtraPhotoFiles().then(found => {
+  if (extraPhotosResolved) return;
+  fetchExtraPhotoFiles(hasUnmatchedProducts(products)).then(found => {
     if (found) {
       render();
       updateProductSchema();
@@ -617,37 +639,98 @@ function storageVariantFile(baseFile, s, files) {
   return files.find(f => f.replace(/\.[^.]+$/, '').toUpperCase() === want) || '';
 }
 
-function imageCandidatesForProduct(p) {
-  // 1) G sütunundaki GitHub URL'si her zaman önceliklidir.
-  const githubImage = normalizeGithubImageUrl(p.img);
-  if (githubImage) return [githubImage];
+// GALERİ: aynı modelin ek fotoğrafları dosya adının sonundaki sıra
+// numarasıyla ayrılır ("MODEL-2.jpg", "MODEL_3.webp"). Sıra numarası
+// yalnızca SONDAKİ 1-2 haneli parçadır ve yalnız kazanan dosyanın model
+// anahtarından sonra geliyorsa kabul edilir; böylece "NOTE-14" gibi model
+// numaraları sıra numarası sanılmaz, "PRO-MAX-1" de "PRO"ya eklenmez.
+const MAX_PRODUCT_IMAGES = 8;
+const PHOTO_SEQ_SUFFIX = /-(\d{1,2})$/;
 
-  // 2) G boşsa yalnızca gerçekten mevcut olduğu ekran görüntülerinde görülen
-  //    GitHub photos dosyalarından eşleştir. Sabit listede yoksa, sayfa
-  //    yüklenirken tespit edilmişse EXTRA_PHOTO_FILES'taki yeni dosyalar da denenir.
+// Depolama etiketi ("-256GB", "-1TB") aynı telefonun görünümünü değiştirmez.
+function photoModelKey(file) {
+  return imageMatchKey(String(file).replace(/\.[^.]+$/, ''))
+    .replace(/-\d+(GB|TB)(?=-|$)/g, '');
+}
+
+function photoSeqOf(key, base) {
+  if (key === base) return 0;
+  if (!key.startsWith(base + '-')) return -1;
+  const rest = key.slice(base.length + 1);
+  return /^\d{1,2}$/.test(rest) ? Number(rest) : -1;
+}
+
+function sameModelPhotos(p, winnerFile, files) {
+  const winnerKey = photoModelKey(winnerFile);
+  const bases = [winnerKey];
+  // Kazanan dosya kendisi sıra numaralıysa ("APPLE-18-PRO-1") numarasız
+  // hali de taban olur; ama yalnız model hâlâ eşleşiyorsa ("REDMI-NOTE-14"
+  // -> "REDMI-NOTE" model numarasını kaybettiği için reddedilir).
+  const stripped = winnerKey.replace(PHOTO_SEQ_SUFFIX, '');
+  if (stripped !== winnerKey && imageFileScore(p, stripped + '.jpg') > 0) bases.push(stripped);
+  // Ürün adının kendisi de tabandır: ana görsel "REDMI-NOTE-14-PRO.webp"
+  // iken "REDMI-NOTE-14-PRO-5G-2.jpg" (ürün: REDMI NOTE 14 PRO 5G) eklenir;
+  // "REDMI-NOTE-15-PRO.jpg" ise "REDMI NOTE 15 PRO 5G" ürününe eklenmez.
+  const productKey = photoModelKey(String(p.m || '') + '.x');
+  if (productKey && !bases.includes(productKey)) bases.push(productKey);
+
+  return files
+    .filter(f => f !== winnerFile && imageFileScore(p, f) > -999)
+    .map(f => {
+      const key = photoModelKey(f);
+      const seq = Math.max(...bases.map(b => photoSeqOf(key, b)));
+      return { f, seq };
+    })
+    .filter(x => x.seq >= 0)
+    .sort((a, b) => a.seq - b.seq || a.f.localeCompare(b.f))
+    .map(x => x.f);
+}
+
+function uniqueImageUrls(urls) {
+  const seen = new Set();
+  return urls.filter(u => {
+    if (!u) return false;
+    let k = u;
+    try { k = decodeURIComponent(u); } catch (e) { /* bozuk kodlama: ham hali */ }
+    k = k.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+// Dönen liste hem kartın/ana görselin yedek zinciri (ilk öğe gösterilir)
+// hem de ürün penceresindeki galeridir.
+function imageCandidatesForProduct(p) {
+  // 1) G sütunundaki GitHub URL'si (işletme sahibinin seçimi) HER ZAMAN ilk.
+  //    Artık tek başına dönmez: aynı modelin depodaki fotoğrafları galeride
+  //    ve Sheet görseli yüklenemezse yedek olarak kalır.
+  const sheetImage = normalizeGithubImageUrl(p.img);
+
+  // 2) Sabit liste + (varsa) CI'ın ürettiği / API'den bulunan yeni dosyalar.
   const allPhotoFiles = GITHUB_PHOTO_FILES.concat(EXTRA_PHOTO_FILES);
   const ranked = allPhotoFiles
     .map(file => ({ file, score: imageFileScore(p, file) }))
     .filter(x => x.score > 0)
     .sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
 
-  if (!ranked.length) return [githubPhotoUrl('gorsel-yok.jpg')];
+  if (!ranked.length) return [sheetImage || githubPhotoUrl('gorsel-yok.jpg')];
 
-  // Aynı ürün için yalnızca en güçlü birkaç gerçek dosyayı dene.
+  // Aynı ürün için en güçlü birkaç gerçek dosya (eşit puanlı biçimler vb.).
   const topScore = ranked[0].score;
-  const candidates = ranked
-    .filter(x => x.score >= topScore - 2)
-    .slice(0, 4)
-    .map(x => githubPhotoUrl(x.file));
+  const winner = ranked[0].file;
+  const nearTop = ranked.filter(x => x.score >= topScore - 2).slice(0, 4).map(x => x.file);
 
-  // DEPOLAMA VARYANTI: model görseli seçildikten SONRA, aynı dosya adının
-  // "-256GB / -512GB / -1TB" uzantılı hali varsa o öne alınır. Yoksa model
-  // görseli (fallback) aynen kullanılır. Yalnız kazanan model dosyasının adı
-  // temel alındığı için başka modelle karışamaz; RAM dikkate alınmaz.
-  const variantFile = storageVariantFile(ranked[0].file, p.s, allPhotoFiles);
-  if (variantFile) candidates.unshift(githubPhotoUrl(variantFile));
+  // DEPOLAMA VARYANTI: kazanan model dosyasının "-256GB / -512GB / -1TB"
+  // uzantılı hali varsa öne alınır (yalnız kazanan dosyanın adı temel
+  // alındığı için başka modelle karışamaz; RAM dikkate alınmaz).
+  const variantFile = storageVariantFile(winner, p.s, allPhotoFiles);
 
-  return candidates.length ? candidates : [githubPhotoUrl('gorsel-yok.jpg')];
+  const files = [variantFile, winner]
+    .concat(sameModelPhotos(p, winner, allPhotoFiles), nearTop)
+    .filter(Boolean);
+  const urls = uniqueImageUrls([sheetImage].concat(files.map(githubPhotoUrl)));
+  return urls.slice(0, MAX_PRODUCT_IMAGES);
 }
 
 function tryNextProductImage(img) {
@@ -1225,17 +1308,123 @@ function renderSimilarProducts(p) {
   }).join('');
 }
 
+// --- TELEFON GALERİSİ -------------------------------------------------
+// Kaynak: imageCandidatesForProduct (Sheet görseli ilk, sonra aynı modelin
+// depodaki fotoğrafları). Yüklenemeyen görsel listeden düşer; hiç kalmazsa
+// "görsel yok" gösterilir. DOM yalnız createElement/setAttribute ile yazılır.
+const PHONE_NO_PHOTO_URL = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+const PHONE_SWIPE_MIN_PX = 40;
+let phoneGallery = { images: [], index: 0, label: '', gen: 0 };
+
+function setPhoneGalleryImage(idx) {
+  const n = phoneGallery.images.length;
+  if (!n) return;
+  phoneGallery.index = ((idx % n) + n) % n;
+  const img = document.getElementById('mi');
+  if (img) {
+    img.src = phoneGallery.images[phoneGallery.index];
+    img.alt = n > 1 ? `${phoneGallery.label} - görsel ${phoneGallery.index + 1} / ${n}` : phoneGallery.label;
+  }
+  const wrap = document.getElementById('miThumbs');
+  if (wrap) Array.prototype.forEach.call(wrap.children, (b, i) => {
+    if (i === phoneGallery.index) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+  });
+}
+
+function renderPhoneGalleryControls() {
+  const n = phoneGallery.images.length;
+  const prev = document.getElementById('miPrev');
+  const next = document.getElementById('miNext');
+  const wrap = document.getElementById('miThumbs');
+  if (prev) prev.hidden = n < 2;
+  if (next) next.hidden = n < 2;
+  if (!wrap) return;
+  wrap.textContent = '';
+  wrap.hidden = n < 2;
+  if (n < 2) return;
+  phoneGallery.images.forEach((url, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pgal-thumb';
+    b.dataset.idx = String(i);
+    b.dataset.gen = String(phoneGallery.gen);
+    b.setAttribute('aria-label', `Görsel ${i + 1} / ${n}`);
+    const im = document.createElement('img');
+    im.loading = 'lazy';
+    im.decoding = 'async';
+    im.alt = '';
+    im.src = url;
+    b.appendChild(im);
+    wrap.appendChild(b);
+  });
+}
+
+function dropPhoneGalleryImage(i) {
+  if (i < 0 || i >= phoneGallery.images.length) return;
+  const wasCurrent = i === phoneGallery.index;
+  phoneGallery = { ...phoneGallery, images: phoneGallery.images.filter((_, k) => k !== i), gen: phoneGallery.gen + 1 };
+  if (!phoneGallery.images.length) {
+    renderPhoneGalleryControls();
+    const img = document.getElementById('mi');
+    if (img) { img.src = PHONE_NO_PHOTO_URL; img.alt = phoneGallery.label; }
+    return;
+  }
+  const keep = wasCurrent ? Math.min(i, phoneGallery.images.length - 1)
+    : phoneGallery.index - (i < phoneGallery.index ? 1 : 0);
+  renderPhoneGalleryControls();
+  setPhoneGalleryImage(keep);
+}
+
+function renderPhoneGallery(p) {
+  const images = imageCandidatesForProduct(p).filter(u => u !== PHONE_NO_PHOTO_URL);
+  // "IPHONE" + "IPHONE 18 PRO" -> "IPHONE 18 PRO" (marka tekrarlanmasın).
+  const label = normalizeTR(p.m).startsWith(normalizeTR(p.b)) ? p.m : `${p.b} ${p.m}`;
+  phoneGallery = { images, index: 0, label: label.trim(), gen: phoneGallery.gen + 1 };
+  const img = document.getElementById('mi');
+  // Yedek zinciri artık galeri yönetir; merkezi 'error' dinleyicisi karışmasın.
+  if (img) { img.removeAttribute('data-image-sources'); img.onerror = null; }
+  renderPhoneGalleryControls();
+  if (images.length) setPhoneGalleryImage(0);
+  else if (img) { img.src = PHONE_NO_PHOTO_URL; img.alt = phoneGallery.label; }
+}
+
+(function initPhoneGallery() {
+  const img = document.getElementById('mi');
+  const main = document.getElementById('miMain');
+  const wrap = document.getElementById('miThumbs');
+  const prev = document.getElementById('miPrev');
+  const next = document.getElementById('miNext');
+  if (!img || !main || !wrap) return;
+  if (prev) prev.addEventListener('click', () => setPhoneGalleryImage(phoneGallery.index - 1));
+  if (next) next.addEventListener('click', () => setPhoneGalleryImage(phoneGallery.index + 1));
+  wrap.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.pgal-thumb');
+    if (b) setPhoneGalleryImage(Number(b.dataset.idx));
+  });
+  img.addEventListener('error', () => {
+    if (/gorsel-yok\.jpg(?:[?#]|$)/i.test(img.src)) return;
+    dropPhoneGalleryImage(phoneGallery.index);
+  });
+  // Küçük resim yüklenemezse o görsel galeriden çıkar (eski ürünün gecikmiş
+  // hatası yeni ürünün galerisini bozmasın diye "gen" kontrolü).
+  wrap.addEventListener('error', e => {
+    const b = e.target && e.target.closest ? e.target.closest('.pgal-thumb') : null;
+    if (b && Number(b.dataset.gen) === phoneGallery.gen) dropPhoneGalleryImage(Number(b.dataset.idx));
+  }, true);
+  let startX = null;
+  main.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  main.addEventListener('touchend', e => {
+    if (startX === null || phoneGallery.images.length < 2) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if (Math.abs(dx) >= PHONE_SWIPE_MIN_PX) setPhoneGalleryImage(phoneGallery.index + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+})();
+
 function renderProductModal(p) {
   const modal = document.getElementById("modal");
-  const modalImg = document.getElementById("mi");
-  
-  const sources = imageCandidatesForProduct(p);
-  modalImg.dataset.imageSources = JSON.stringify(sources);
-  modalImg.dataset.imageIndex = "0";
-  // Görsel hatası: merkezi 'error' dinleyicisi (initActionDelegation) yönetir.
-  modalImg.onerror = null;
-  modalImg.src = sources[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
-  
+  renderPhoneGallery(p);
+
   document.getElementById("mb").textContent = p.b;
   document.getElementById("mn").textContent = p.m;
   // GUVENLIK: innerHTML yerine DOM/textContent kullanarak yaziliyor - fiyat
