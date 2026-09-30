@@ -1359,6 +1359,52 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   #laptop-section .laptop-hero-actions > button { width: 100%; }
 }
 </style>
+<!-- TASARIM DÜZELTMESİ (2026-09-29) — 4 madde. Bu bloğun tamamı index.html'de
+</head> satırının HEMEN ÜSTÜNE yapıştırılır. Ana stil bloğundan SONRA geldiği
+için yalnızca aşağıdaki kuralları değiştirir; başka hiçbir şeye dokunmaz.
+Geri almak için bu bloğu silmek yeterli. -->
+<style>
+/* 1) Dokunmatik ekranlarda "yapışkan" hover'ı kapat: kartlar dokunduktan
+   sonra yukarıda takılı kalmasın. Fareli cihazlarda davranış aynen sürer.
+   Karşılaştırmaya eklenmiş kartın (.comparing) çerçevesi korunur. */
+@media (hover: none) {
+  .card:hover { transform: none; }
+  .card:not(.comparing):hover { border-color: var(--line); }
+  .card:hover .visual img { transform: none; }
+  #laptop-section .laptop-card:hover { transform: none; border-color: var(--line); }
+  .home-hero-cta:hover { transform: none; }
+}
+
+/* 2) Ürün penceresi (telefon + laptop) açılırken zaten tanımlı olan yumuşak
+   geçiş, display:none yüzünden hiç çalışmıyordu. @starting-style ile
+   başlangıç durumu verilir; destekleyen tarayıcılarda pencere 0,25 sn'de
+   yumuşakça açılır, desteklemeyenlerde bugünkü gibi anında açılır.
+   "Hareketi azalt" ayarı açıksa mevcut genel kural efekti yine kapatır. */
+@starting-style {
+  .modal.open { opacity: 0; }
+  .modal.open .modalbox { transform: scale(0.97); }
+  #laptop-section .laptop-modal.open { opacity: 0; }
+  #laptop-section .laptop-modal.open .laptop-modalbox { transform: scale(0.97); }
+}
+
+/* 3) Telefonda okunması zor olan çok küçük yazılar (9–10.5px) büyütüldü.
+   Yerleşimi bozmayacak ölçüde, en fazla 1–1.5px. */
+.price small { font-size: 11px; }
+.stock, .tagbadge { font-size: 11px; }
+.similar-item .similar-name { font-size: 11.5px; }
+.bottom-nav .bn-badge { font-size: 10px; min-width: 16px; height: 16px; }
+
+/* 4) Hero başlığının ikinci satırındaki renk geçişli yazı yerine düz, sakin
+   bir ton (Apple tarzı iki tonlu başlık). */
+.home-hero-l2 {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: #AEB8CC;
+}
+</style>
+
+
 </head>
 <body>
 <noscript><div class="noscript-note"><strong>MİX GSM</strong><p>Bu kataloğu görüntülemek için JavaScript'in etkin olması gerekiyor.</p><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp'tan stok ve fiyat sorun</a></div></noscript>
