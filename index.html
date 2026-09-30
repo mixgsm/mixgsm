@@ -43,12 +43,12 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.bb246ffdff.js" defer></script>
+<script src="js/app.f16cc9fd97.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <title>MİX GSM | Güvenilir Teknoloji, Doğru Cihaz</title>
-<meta name="description" content="MİX GSM — Gaziantep'te güncel telefon, tablet ve teknoloji ürünleri. 9+ yıllık tecrübe, güncel fiyatlar ve WhatsApp'tan hızlı destek.">
+<meta name="description" content="MİX GSM — Gaziantep'te güncel telefon, laptop ve kişisel bakım ürünleri. 9+ yıllık tecrübe, güncel fiyatlar ve WhatsApp'tan hızlı destek.">
 <link rel="canonical" href="https://mixgsm.tr/">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
@@ -1450,7 +1450,7 @@ Geri almak için bu bloğu silmek yeterli. -->
 <span class="nav-sentinel" id="navSentinel" aria-hidden="true"></span>
 <nav class="navbar" id="siteNavbar" aria-label="Ana menü">
   <div class="nav-brand">
-    <img src="mix-gsm-logo.jpg" alt="MİX GSM Logosu" width="28" height="28">
+    <img src="mix-gsm-logo.jpg" alt="MİX GSM Logosu" width="28" height="28" decoding="async">
     MİX GSM
   </div>
   <div class="nav-links">
@@ -1495,7 +1495,7 @@ Geri almak için bu bloğu silmek yeterli. -->
     </div>
   </div>
 </header>
-<div class="home-trust-wrap zone-light">
+<div class="home-trust-wrap zone-light" role="region" aria-label="Neden MİX GSM">
   <ul class="home-trust" aria-label="Güven unsurları">
     <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-shield"></use></svg></span>9+ Yıllık Tecrübe</li>
     <li><span class="home-trust-ic"><svg class="icon" aria-hidden="true"><use href="#ic-truck"></use></svg></span>Türkiye'nin 81 İline Kargo</li>
@@ -1658,8 +1658,8 @@ Geri almak için bu bloğu silmek yeterli. -->
 <!-- REDESIGN ADIM 7: "Bugün MİX GSM'de" bölümü kaldırıldı (yerini Öne Çıkan
      Fırsatlar aldı). renderFeatured() DOM yoksa sessizce çıkıyor. -->
 
-<div class="section-title" id="catalog">
-  <h2>Telefon Kataloğu</h2>
+<div class="section-title" id="catalog" role="region" aria-labelledby="catalogHeading">
+  <h2 id="catalogHeading">Telefon Kataloğu</h2>
   <p>Arayın, filtreleyin, size uygun cihazı bulun.</p>
 </div>
 
@@ -1727,6 +1727,14 @@ Geri almak için bu bloğu silmek yeterli. -->
             <label class="adv-checkbox"><input type="checkbox" id="only5GCheck"> Sadece 5G destekli modeller</label>
           </div>
           <div>
+            <div class="adv-row-label">Kayıt Durumu</div>
+            <select class="adv-select" id="registrationSelect" aria-label="Kayıt durumu">
+              <option value="">Farketmez</option>
+              <option value="kayitli">Kayıtlı</option>
+              <option value="kayitsiz">Kayıtsız</option>
+            </select>
+          </div>
+          <div>
             <div class="adv-row-label">Batarya</div>
             <select class="adv-select" id="minBatterySelect" aria-label="Minimum batarya kapasitesi">
               <option value="0">Farketmez</option>
@@ -1775,15 +1783,15 @@ Geri almak için bu bloğu silmek yeterli. -->
      mantığı telefon tarafından TAMAMEN İZOLE (bkz. aşağıdaki JS bloklarındaki
      "KIRMIZI ÇİZGİ" notları). -->
 <div id="laptop-section" role="tabpanel" aria-labelledby="toggleBtnLaptop" hidden aria-hidden="true" inert>
-  <section class="laptop-hero">
+  <section class="laptop-hero" aria-labelledby="laptopHeroTitle">
     <p class="laptop-hero-eyebrow">MİX GSM · LAPTOP &amp; PC</p>
-    <h2 class="laptop-hero-title">Aradığın Laptopu Birlikte Bulalım</h2>
+    <h2 class="laptop-hero-title" id="laptopHeroTitle">Aradığın Laptopu Birlikte Bulalım</h2>
     <p class="laptop-hero-sub">Bütçenizi ve kullanım amacınızı bize söyleyin. İhtiyacınıza uygun modelleri sizin için araştıralım.</p>
     <div class="laptop-hero-actions">
       <button type="button" class="laptop-btn-primary" id="laptopFindBtn">Bana Laptop Bul</button>
       <button type="button" class="laptop-btn-outline" id="laptopStockBtn">Stoktaki Laptoplar</button>
     </div>
-    <p class="laptop-hero-note">Laptop kataloğu yükleniyor…</p>
+    <p class="laptop-hero-note" role="status">Laptop kataloğu yükleniyor…</p>
   </section>
 
   <!-- REDESIGN ADIM 7: Laptop Fırsatları. Sadece laptop verisi (mevcut
@@ -1796,8 +1804,8 @@ Geri almak için bu bloğu silmek yeterli. -->
     <div class="vitrin-track" id="vitrinLaptopDealsTrack"></div>
   </section>
 
-  <div class="section-title" id="laptopCatalogTitle">
-    <h2>Laptop Kataloğu</h2>
+  <div class="section-title" id="laptopCatalogTitle" role="region" aria-labelledby="laptopCatalogHeading">
+    <h2 id="laptopCatalogHeading">Laptop Kataloğu</h2>
     <p>Arayın, filtreleyin, size uygun laptopu bulun.</p>
   </div>
 
@@ -2195,7 +2203,7 @@ Geri almak için bu bloğu silmek yeterli. -->
     </nav>
   </div>
   <div class="footer-line footer-bottom">
-    <span>© 2026 MİX GSM</span>
+    <span>© <span id="footerYear">2026</span> MİX GSM | İSA ASLAN</span>
     <a href="#">KVKK ve Gizlilik Politikası</a>
   </div>
 </footer>
@@ -2208,7 +2216,7 @@ Geri almak için bu bloğu silmek yeterli. -->
     <div class="modalvisual">
       <div class="pgal-main" id="miMain">
         <button type="button" class="pgal-arrow prev" id="miPrev" aria-label="Önceki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
-        <img id="mi" alt="Ürün Görseli">
+        <img id="mi" alt="Ürün Görseli" decoding="async">
         <button type="button" class="pgal-arrow next" id="miNext" aria-label="Sonraki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
       </div>
       <div class="pgal-thumbs" id="miThumbs" role="group" aria-label="Ürün görselleri" hidden></div>
@@ -2245,7 +2253,7 @@ Geri almak için bu bloğu silmek yeterli. -->
   </div>
 </div>
 
-<div class="comparebar" id="comparebar">
+<div class="comparebar" id="comparebar" role="region" aria-label="Favoriler">
   <span id="favcount">0 favori</span>
   <button class="btn-view-fav">Gör</button>
   <button>Temizle</button>
@@ -2290,7 +2298,7 @@ Geri almak için bu bloğu silmek yeterli. -->
   </div>
 </div>
 
-<div class="comparetraybar" id="comparetraybar">
+<div class="comparetraybar" id="comparetraybar" role="region" aria-label="Karşılaştırma listesi">
   <span id="comparecount">0 ürün seçildi</span>
   <button class="btn-view" id="compareViewBtn">Karşılaştır</button>
   <button class="btn-clear">Temizle</button>
@@ -2339,7 +2347,7 @@ Geri almak için bu bloğu silmek yeterli. -->
 
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Mağaza fotoğrafı">
   <button class="lightbox-close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-  <img id="lightbox-img" alt="Mağaza fotoğrafı (büyük görünüm)">
+  <img id="lightbox-img" alt="Mağaza fotoğrafı (büyük görünüm)" decoding="async">
 </div>
 
 </body>
