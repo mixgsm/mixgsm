@@ -16,6 +16,7 @@
 const fs = require("fs");
 const path = require("path");
 const schema = require("./lib/catalog-schema");
+const { parseTsvRows, cleanCell } = require("./lib/tsv");
 
 const SHEETS_URL =
   "https://docs.google.com/spreadsheets/d/1PN8gIIC4f57y9R0vy2p6SaLpeCwWWetM1Ga-Xkbrv6o/export?format=tsv&gid=121333260";
@@ -54,13 +55,14 @@ function normalizeGithubImageUrl(value) {
 }
 
 function parseTsvToProducts(tsv) {
-  const lines = tsv.split("\n");
+  // Tirnakli hucre / hucre ici satir sonu destekli ayristirma (lib/tsv.js).
+  const rows = parseTsvRows(tsv);
   const products = [];
-  const startIndex = lines[0] && lines[0].includes("MARKA") ? 1 : 0;
+  const startIndex = rows[0] && rows[0].join("\t").includes("MARKA") ? 1 : 0;
 
-  for (let i = startIndex; i < lines.length; i++) {
-    if (!lines[i] || !lines[i].trim()) continue;
-    const cols = lines[i].split("\t").map((c) => c.trim().replace(/\r/g, ""));
+  for (let i = startIndex; i < rows.length; i++) {
+    const cols = rows[i].map((c) => cleanCell(c));
+    if (!cols.some(Boolean)) continue;
 
     const marka = (cols[0] || "").toUpperCase();
     const model = (cols[1] || "").toUpperCase();

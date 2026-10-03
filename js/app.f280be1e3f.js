@@ -49,6 +49,22 @@ function unlockBodyScroll() {
   window.scrollTo({ top: bodyScrollLockY, left: 0, behavior: 'instant' });
 }
 
+// DENETİM 2026-10-03 — ORTAK PENCERE/ÇEKMECE DURUMU: telefon ve laptop
+// pencereleri eskiden kaydırma kilidini yalnız KENDİ listesine bakarak
+// açıyordu (ör. laptop formu açıkken KVKK penceresi kapanınca arka plan
+// kayabiliyordu). Artık tek liste: herhangi biri açıksa kilit kalır.
+const OVERLAYS = [
+  ['modal', 'open'], ['comparemodal', 'open'], ['favmodal', 'open'], ['findermodal', 'open'],
+  ['legalmodal', 'open'], ['lightbox', 'active'], ['filterPanel', 'open'],
+  ['laptopModal', 'open'], ['laptopFinderModal', 'open'], ['laptopFilterPanel', 'open']
+];
+function anyOverlayOpen() {
+  return OVERLAYS.some(([id, cls]) => { const el = document.getElementById(id); return !!(el && el.classList.contains(cls)); });
+}
+function unlockBodyScrollIfIdle() {
+  if (!anyOverlayOpen() && document.body.style.position === 'fixed') unlockBodyScroll();
+}
+
 let products = [];
 let cat = "ALL", group = "ALL", q = "", sort = "default";
 // Gelismis filtreler (Faz 11)
@@ -322,10 +338,33 @@ function productLabel(p) {
 // yüklenir; yüklenemeyen ürün atlanır.
 const HERO_ROTATE_MS = 4000;
 const HERO_NO_PHOTO = /gorsel-yok\.jpg(?:[?#]|$)/i;
-const hero = { list: [], i: 0, timer: null, visible: true, paused: false, bound: false };
+const hero = { list: [], i: 0, timer: null, visible: true, paused: false, userPaused: false, bound: false, interacted: false };
+// DENETİM 2026-10-03 — LCP: dönüş, ziyaretçinin İLK etkileşiminden (dokunma,
+// tıklama, tuş, kaydırma) sonra başlar. Ölçümde açılış görseli ~0,9 sn'de
+// boyanıyor, fakat 4 sn sonra dönüşle gelen ikinci görsel (alanı biraz daha
+// büyük) "en büyük boyama" sayılıp LCP'yi ~5,7 sn'ye taşıyordu. Tarayıcı
+// LCP'yi ilk etkileşimde kesinleştirdiği için bu sıra LCP'yi etkilemez; dönüş
+// özelliği ve durdur/başlat düğmesi aynen duruyor. Eski davranış için false.
+const HERO_ROTATE_AFTER_INTERACTION = true;
 
 function heroReduceMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+// Veri tasarrufu açıkken dönüş ek görsel indirmesin.
+function heroSaveData() {
+  return !!(navigator.connection && navigator.connection.saveData);
+}
+
+// DENETİM 2026-10-03: görünür durdur/başlat düğmesi (WCAG 2.2.2). Dönüş
+// yoksa (tek ürün, hareket azaltma, veri tasarrufu) düğme gizli.
+function updateHeroRotateBtn() {
+  const btn = document.getElementById('heroRotateBtn');
+  if (!btn) return;
+  // Düğme yalnız dönüş gerçekten çalışırken (ya da kullanıcı durdurmuşken) görünür.
+  const canRotate = hero.list.length > 1 && !heroReduceMotion() && !heroSaveData() && (!!hero.timer || hero.userPaused);
+  btn.hidden = !canRotate;
+  btn.setAttribute('aria-pressed', String(hero.userPaused));
+  btn.setAttribute('aria-label', hero.userPaused ? 'Ürün geçişini başlat' : 'Ürün geçişini durdur');
 }
 
 function showHeroItem(i, animate) {
@@ -374,11 +413,26 @@ function stopHeroRotation() {
 
 function startHeroRotation() {
   stopHeroRotation();
-  if (hero.list.length < 2 || heroReduceMotion()) return;
+  updateHeroRotateBtn();
+  if (hero.list.length < 2 || heroReduceMotion() || heroSaveData()) return;
+  if (HERO_ROTATE_AFTER_INTERACTION && !hero.interacted) {
+    if (!hero.waiting) {
+      hero.waiting = true;
+      const go = () => {
+        if (hero.interacted) return;
+        hero.interacted = true;
+        ['pointerdown', 'keydown', 'wheel', 'scroll'].forEach(t => window.removeEventListener(t, go, true));
+        startHeroRotation();
+      };
+      ['pointerdown', 'keydown', 'wheel', 'scroll'].forEach(t => window.addEventListener(t, go, { capture: true, passive: true }));
+    }
+    return;
+  }
   hero.timer = setInterval(() => {
-    if (document.hidden || !hero.visible || hero.paused || hero.list.length < 2) return;
+    if (document.hidden || !hero.visible || hero.paused || hero.userPaused || hero.list.length < 2) return;
     showHeroItem((hero.i + 1) % hero.list.length, true);
   }, HERO_ROTATE_MS);
+  updateHeroRotateBtn();
 }
 
 function bindHeroPauseOnce() {
@@ -393,6 +447,18 @@ function bindHeroPauseOnce() {
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(entries => { hero.visible = entries[0].isIntersecting; }).observe(stage);
   }
+  const btn = document.getElementById('heroRotateBtn');
+  if (btn) btn.addEventListener('click', () => {
+    hero.userPaused = !hero.userPaused;
+    updateHeroRotateBtn();
+  });
+  // "Hareketi azalt" sayfa açıkken değişirse dönüş anında durur/başlar.
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotion = () => startHeroRotation();
+    if (mq.addEventListener) mq.addEventListener('change', onMotion);
+    else if (mq.addListener) mq.addListener(onMotion);
+  }
 }
 
 function renderHeroProduct(waitForPhotoDiscovery) {
@@ -406,15 +472,26 @@ function renderHeroProduct(waitForPhotoDiscovery) {
     return;
   }
   if (waitForPhotoDiscovery && HERO_NO_PHOTO.test(imageCandidatesForProduct(list[0])[0])) return;
-  // Görseli olan seçimler döner; hiçbirinin görseli yoksa ilk seçim gösterilir.
-  const withPhoto = list.filter(p => !HERO_NO_PHOTO.test(imageCandidatesForProduct(p)[0]));
+  // PERFORMANS (LCP): önce yalnız İLK görselli seçim hesaplanıp gösterilir
+  // (find ilk eşleşmede durur); dönüş listesinin tamamı boşta hesaplanır.
+  const hasPhoto = p => !HERO_NO_PHOTO.test(imageCandidatesForProduct(p)[0]);
   const current = hero.list[hero.i];
-  hero.list = withPhoto.length ? withPhoto : list.slice(0, 1);
-  const keep = hero.list.indexOf(current);                // yeniden çizimde sıra baştan başlamasın
-  showHeroItem(keep > -1 ? keep : 0, false);
+  const target = current && list.includes(current) && hasPhoto(current) ? current : (list.find(hasPhoto) || list[0]);
+  hero.list = [target];
+  showHeroItem(0, false);                                  // aynı ürün: sıra baştan başlamaz
   empty.style.display = 'none';
   bindHeroPauseOnce();
-  startHeroRotation();
+  updateHeroRotateBtn();
+  // Dönüş: ilk görsel YÜKLENDİKTEN sonra ve tarayıcı boştayken kurulur.
+  const shown = hero.list[hero.i];
+  const finish = () => scheduleIdle(() => {
+    const withPhoto = list.filter(hasPhoto);
+    hero.list = withPhoto.length ? withPhoto : [shown];
+    hero.i = Math.max(0, hero.list.indexOf(shown));
+    startHeroRotation();
+  });
+  if (img.complete && img.naturalWidth) finish();
+  else { img.addEventListener('load', finish, { once: true }); img.addEventListener('error', finish, { once: true }); }
 }
 
 function isNonProductRow(p) {
@@ -769,11 +846,9 @@ async function fetchPhotoNames(allowApi) {
   return Array.isArray(data) ? data.map(item => item && item.name) : null;
 }
 
-// Yeni (sabit listede olmayan) dosya bulunursa true döner.
-async function fetchExtraPhotoFiles(allowApi) {
-  const names = await fetchPhotoNames(allowApi);
-  if (!names) return false;
-
+// Ad listesini (doğrulayarak) uygular; yeni dosya varsa true döner.
+function applyPhotoNames(names) {
+  if (!Array.isArray(names)) return false;
   const known = new Set(GITHUB_PHOTO_FILES.map(f => f.toLowerCase()));
   EXTRA_PHOTO_FILES = names
     .filter(name => typeof name === 'string' && PHOTO_FILE_NAME.test(name) && !known.has(name.toLowerCase()));
@@ -782,16 +857,35 @@ async function fetchExtraPhotoFiles(allowApi) {
   return EXTRA_PHOTO_FILES.length > 0;
 }
 
+// Yeni (sabit listede olmayan) dosya bulunursa true döner.
+async function fetchExtraPhotoFiles(allowApi) {
+  const names = await fetchPhotoNames(allowApi);
+  if (!names) return false;
+  return applyPhotoNames(names);
+}
+
+// DENETİM 2026-10-03 — PERFORMANS: feed/photos.json katalogla PARALEL
+// istenir ki açılış görseli doğru dosyayla İLK seferde istensin. Önceden liste
+// katalog çizildikten SONRA geliyor; açılış önce bir görseli indirip sonra
+// başka bir dosyaya geçiyordu (çift indirme + görsel değişimi). Yalnız aynı
+// kaynak listesi; GitHub API yedeği eskisi gibi arka planda.
+let earlyPhotoNames = null;
+function startEarlyPhotoNames() {
+  if (!earlyPhotoNames) earlyPhotoNames = fetchPhotoNames(false).catch(() => null);
+  return earlyPhotoNames;
+}
+const EARLY_PHOTO_WAIT_MS = 1500;
+
 // Ek fotoğraflar (galeri) için liste her oturumda bir kez okunur; GitHub
 // API yedeği yalnız hiç görseli eşleşmeyen ürün varsa kullanılır.
 function discoverExtraPhotosInBackground() {
   if (extraPhotosResolved) return;
   fetchExtraPhotoFiles(hasUnmatchedProducts(products)).then(found => {
+    renderHeroProduct();                 // açılış görseli ağır işlerden ÖNCE
     if (found) {
       render();
-      updateProductSchema();
+      scheduleIdle(updateProductSchema);
     }
-    renderHeroProduct();
   }).catch(() => {
     // GitHub API yok/limit/zaman aşımı: sabit liste + "görsel yok" yedeği çalışmaya devam eder.
     renderHeroProduct();
@@ -995,9 +1089,9 @@ function autoImageMarkup(p) {
 // Sheets veri kaynagini degistirmez, sadece baglanti hatasinda devreye girer.
 const catalogCacheKey = "mixgsm-catalog-cache-v1";
 
-function saveCatalogCache(list) {
+function saveCatalogCache(list, generatedAt) {
   try {
-    localStorage.setItem(catalogCacheKey, JSON.stringify({ ts: Date.now(), products: list }));
+    localStorage.setItem(catalogCacheKey, JSON.stringify({ ts: Date.now(), products: list, generatedAt: generatedAt || null }));
   } catch (e) { /* kota/gizli mod - sessizce yoksay, site calismaya devam eder */ }
 }
 
@@ -1005,7 +1099,7 @@ function loadCatalogCache() {
   try {
     const raw = JSON.parse(localStorage.getItem(catalogCacheKey) || "null");
     const list = raw ? sanitizePhoneList(raw.products) : [];
-    if (list.length) return list;
+    if (hasRealPhoneProduct(list)) return { list, generatedAt: toCatalogTime(raw.generatedAt) };
   } catch (e) { /* bozuk cache - yoksay */ }
   return null;
 }
@@ -1056,6 +1150,114 @@ function sanitizePhoneList(list) {
   return Array.isArray(list) ? list.map(sanitizePhoneProduct).filter(Boolean) : [];
 }
 
+// DENETİM 2026-10-03: yalnız başlık/banner satırlarından oluşan (ya da boş)
+// liste geçerli katalog SAYILMAZ; bir sonraki kaynağa (Sheets -> önbellek) geçilir.
+function hasRealPhoneProduct(list) {
+  return Array.isArray(list) && list.some(p => !isNonProductRow(p));
+}
+
+// Katalog üretim zamanı (catalog*.json "generatedAt", CI yazar). Yalnız geçerli
+// ve makul (gelecekte olmayan) bir ISO zaman kabul edilir; yoksa gösterilmez.
+// Sayfanın açılış saati ASLA ürün güncelleme zamanı gibi gösterilmez.
+function toCatalogTime(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return null;
+  const t = Date.parse(value);
+  if (!Number.isFinite(t) || t > Date.now() + 36e5 || t < Date.UTC(2024, 0, 1)) return null;
+  return new Date(t).toISOString();
+}
+function showCatalogTime(elId, iso, prefix) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = '';
+  if (!iso) { el.hidden = true; return; }
+  let label;
+  try {
+    label = new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  } catch (e) { label = iso.slice(0, 16).replace('T', ' '); }
+  el.appendChild(document.createTextNode(prefix + ': '));
+  const time = document.createElement('time');
+  time.dateTime = iso;
+  time.textContent = label;
+  el.appendChild(time);
+  el.hidden = false;
+}
+
+// --- PAYLAŞILABİLİR FİLTRELER (DENETİM 2026-10-03) -------------------------
+// Adres çubuğunun ?sorgu kısmı kullanılır; #urun/, #laptop/ ve bölüm
+// bağlantıları (hash) AYNEN çalışır, geri/ileri geçmişine kayıt EKLENMEZ
+// (replaceState). URL'den gelen her değer doğrulanır: izinli değer listeleri,
+// uzunluk ve sayı sınırları; geçersiz değer sessizce varsayılana döner.
+const URL_SORTS = ['default', 'low', 'high', 'name'];
+const URL_LAPTOP_SORTS = ['default', 'low', 'high', 'new', 'deal'];
+const URL_TEXT_MAX = 60;
+const URL_PRICE_MAX = 2000000;
+const URL_FILTER_KEYS = ['magaza', 'ara', 'marka', 'kategori', 'sira', 'min', 'max', 'lara', 'lmarka', 'ldurum', 'lsira', 'lmin', 'lmax'];
+function cleanUrlText(v) {
+  return String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, URL_TEXT_MAX);
+}
+function cleanUrlPrice(v) {
+  const t = String(v == null ? '' : v);
+  if (!/^\d{1,7}$/.test(t)) return null;
+  const n = parseInt(t, 10);
+  return n <= URL_PRICE_MAX ? n : null;
+}
+function readUrlFilterState(search) {
+  let params;
+  try { params = new URLSearchParams(String(search || '').slice(0, 1000)); } catch (e) { params = new URLSearchParams(''); }
+  const get = k => params.get(k);
+  const marka = get('marka'), kat = get('kategori'), sira = get('sira');
+  const lmarka = get('lmarka'), ldurum = get('ldurum'), lsira = get('lsira');
+  return {
+    store: get('magaza') === 'laptop' ? 'laptop' : 'phone',
+    q: cleanUrlText(get('ara')),
+    cat: PHONE_CAT_VALUES.includes(marka) ? marka : 'ALL',
+    group: kat === 'PHONE' || kat === 'PERSONAL_CARE' ? kat : 'ALL',
+    sort: URL_SORTS.includes(sira) ? sira : 'default',
+    priceMin: cleanUrlPrice(get('min')),
+    priceMax: cleanUrlPrice(get('max')),
+    lq: cleanUrlText(get('lara')),
+    // Laptop markası katalogdan gelir; burada yalnız biçim, veri gelince varlığı denetlenir.
+    lbrand: lmarka && /^[A-Z0-9ÇĞİÖŞÜ][A-Z0-9ÇĞİÖŞÜ .&-]{0,23}$/.test(lmarka) ? lmarka : 'ALL',
+    lcond: ldurum === 'NEW' || ldurum === 'USED' ? ldurum : 'ALL',
+    lsort: URL_LAPTOP_SORTS.includes(lsira) ? lsira : 'default',
+    lmin: cleanUrlPrice(get('lmin')),
+    lmax: cleanUrlPrice(get('lmax'))
+  };
+}
+const urlFilterState = readUrlFilterState(location.search);
+let activateStorefrontFn = null;     // initStorefrontToggle atar (popstate de kullanır)
+
+let filterUrlTimer = null;
+function syncFilterUrl() {
+  clearTimeout(filterUrlTimer);
+  filterUrlTimer = setTimeout(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      URL_FILTER_KEYS.forEach(k => params.delete(k));
+      const put = (k, v, def) => { if (v !== null && v !== undefined && v !== '' && v !== def) params.set(k, String(v)); };
+      const laptopBtn = document.getElementById('toggleBtnLaptop');
+      const laptopActive = !!(laptopBtn && laptopBtn.classList.contains('active'));
+      if (laptopActive) {
+        params.set('magaza', 'laptop');
+        put('lara', laptopQ.slice(0, URL_TEXT_MAX)); put('lmarka', LaptopFilters.brand, 'ALL');
+        put('ldurum', LaptopFilters.condition, 'ALL'); put('lsira', laptopSort, 'default');
+        put('lmin', LaptopFilters.priceMin); put('lmax', LaptopFilters.priceMax);
+      } else {
+        put('ara', q.slice(0, URL_TEXT_MAX)); put('marka', cat, 'ALL'); put('kategori', group, 'ALL');
+        put('sira', sort, 'default'); put('min', priceMin); put('max', priceMax);
+      }
+      const qs = params.toString();
+      const next = location.pathname + (qs ? '?' + qs : '') + location.hash;
+      if (next !== location.pathname + location.search + location.hash) history.replaceState(history.state, '', next);
+    } catch (e) { /* geçmiş API'si yok/engelli: filtreler yine çalışır */ }
+  }, 250);
+}
+
+function scheduleIdle(fn) {
+  if ('requestIdleCallback' in window) window.requestIdleCallback(() => fn(), { timeout: 2000 });
+  else setTimeout(fn, 200);
+}
+
 // Adres çubuğundaki slug'ı çözer; bozuk %-kodlamada hata fırlatmak yerine ''
 // döner (bulunamayan ürün gibi davranır, katalog yükleme akışı bozulmaz).
 function safeDecodeSlug(value) {
@@ -1073,12 +1275,17 @@ function openProductFromHash() {
 // Katalog verisi geldiğinde (catalog.json / Sheets / önbellek) ORTAK gösterim
 // adımları - eskiden üç yerde birebir kopyaydı. fromCache: bağlantı sorunu
 // nedeniyle son bilinen katalog gösteriliyor ("güncel olmayabilir" uyarısı).
-async function showPhoneCatalog(list, fromCache) {
+async function showPhoneCatalog(list, fromCache, generatedAt) {
   products = withPhotoVariantIndex(list);
-  if (!fromCache) saveCatalogCache(products);
+  if (!fromCache) saveCatalogCache(products, generatedAt);
   const cacheNoticeEl = document.getElementById('cacheNotice');
   if (cacheNoticeEl) cacheNoticeEl.style.display = fromCache ? 'block' : 'none';
+  showCatalogTime('catalogUpdated', generatedAt, 'Liste güncellemesi');
   loadCachedExtraPhotoFiles();
+  if (!extraPhotosResolved && !fromCache) {
+    const names = await Promise.race([startEarlyPhotoNames(), new Promise(r => setTimeout(() => r(null), EARLY_PHOTO_WAIT_MS))]);
+    if (names) applyPhotoNames(names);
+  }
   // PERFORMANS: hero (LCP) görseli yalnızca ürün listesine bağlı. src'si
   // kataloğun tamamı çizilmeden ÖNCE atanır ve tarayıcıya kısa bir ara
   // verilir: görsel isteği ancak çalışan görev bitince gönderildiği için ara
@@ -1087,9 +1294,9 @@ async function showPhoneCatalog(list, fromCache) {
   await new Promise(resolve => setTimeout(resolve, 0));
   renderRamFilterOptions();
   render();
-  updateProductSchema();
   computeBudgetThreshold();
   openProductFromHash();
+  scheduleIdle(updateProductSchema);       // arama motoru verisi: ilk boyamayı bekletmez
   if (!fromCache) discoverExtraPhotosInBackground();
 }
 
@@ -1115,10 +1322,10 @@ async function loadCatalogFromSameOrigin() {
     if (!res.ok) throw new Error('catalog.json yok/erişilemedi (HTTP ' + res.status + ')');
     const data = await res.json();
     const list = data ? sanitizePhoneList(data.products) : [];
-    if (!list.length) {
+    if (!hasRealPhoneProduct(list)) {
       throw new Error('catalog.json boş/geçersiz');
     }
-    return list;
+    return { list, generatedAt: toCatalogTime(data.generatedAt) };
   }, 5000);
 }
 
@@ -1131,6 +1338,7 @@ async function loadCatalogFromSameOrigin() {
 // denenecegi" degisir.
 async function loadCatalog() {
   grid.innerHTML = '<div class="empty">Katalog yükleniyor... ⏳</div>';
+  startEarlyPhotoNames();
 
   // ONEMLI: try/catch SADECE catalog.json'u getirip dogrulama adimini
   // sarmalar. Eger burasi (asagida) genis tutulup render() vb. adimlari da
@@ -1148,7 +1356,7 @@ async function loadCatalog() {
     return;
   }
 
-  await showPhoneCatalog(sameOriginProducts, false);
+  await showPhoneCatalog(sameOriginProducts.list, false, sameOriginProducts.generatedAt);
 }
 
 // Google Sheets'ten TEK bir dogrudan deneme yapar: fetch + HTTP durum
@@ -1161,6 +1369,73 @@ async function fetchSheetsTsvOnce(url, timeoutMs) {
     if (!res.ok) throw new Error("Excel'e ulaşılamadı.");
     return res.text();
   }, timeoutMs);
+}
+
+// TSV AYRIŞTIRICI — scripts/lib/tsv.js ile BİREBİR AYNI (testi:
+// scripts/tests/tsv.test.js iki kopyayı aynı girdilerle karşılaştırır).
+// Tırnaklı hücre, hücre içi satır sonu/sekme ve "" kaçışı desteklenir; eski
+// satır/sekme bölme yöntemi böyle bir hücrede sütunları kaydırıyordu.
+function parseTsvRows(text) {
+  const s = String(text == null ? "" : text).replace(/^﻿/, "");
+  const n = s.length;
+  const rows = [];
+  let row = [];
+  let i = 0;
+  if (!n) return rows;
+  while (i < n) {
+    let field;
+    let end = -1;
+    if (s[i] === '"') {
+      let j = i + 1;
+      let buf = "";
+      let closed = false;
+      while (j < n) {
+        if (s[j] === '"') {
+          if (s[j + 1] === '"') { buf += '"'; j += 2; continue; }
+          closed = true;
+          j++;
+          break;
+        }
+        buf += s[j];
+        j++;
+      }
+      if (closed && (j >= n || s[j] === "\t" || s[j] === "\n" || s[j] === "\r")) {
+        field = buf;
+        end = j;
+      }
+    }
+    if (end < 0) {
+      let k = i;
+      while (k < n && s[k] !== "\t" && s[k] !== "\n") k++;
+      field = s.slice(i, k);
+      if (field.endsWith("\r")) field = field.slice(0, -1);
+      end = k;
+    }
+    row.push(field);
+    i = end;
+    if (s[i] === "\r") i++;
+    if (i >= n) break;
+    if (s[i] === "\t") {
+      i++;
+      if (i >= n) row.push("");
+      continue;
+    }
+    if (s[i] === "\n") {
+      i++;
+      rows.push(row);
+      row = [];
+    }
+  }
+  if (row.length) rows.push(row);
+  return rows;
+}
+
+// Hucre temizligi: bas/son bosluk ve \r atilir; hucre ici satir sonlari tek
+// bosluga indirilir (marka/model/fiyat gibi tek satirlik alanlar icin).
+// keepNewlines: aciklama gibi cok satirli metin alanlarinda satir sonu korunur.
+function cleanCell(value, keepNewlines) {
+  const v = String(value == null ? "" : value).replace(/\r/g, "");
+  return (keepNewlines ? v.replace(/[ \t]*\n[ \t]*/g, "\n").replace(/\n{3,}/g, "\n\n") : v.replace(/\s*\n\s*/g, " ")).trim();
 }
 
 async function loadFromGoogleSheets() {
@@ -1182,13 +1457,13 @@ async function loadFromGoogleSheets() {
       tsv = await fetchSheetsTsvOnce(url, 6000);
     }
 
-    const lines = tsv.split('\n');
+    const rows = parseTsvRows(tsv);
     let newProducts = [];
-    let startIndex = lines[0].includes('MARKA') ? 1 : 0;
+    let startIndex = rows[0] && rows[0].join('\t').includes('MARKA') ? 1 : 0;
 
-    for(let i = startIndex; i < lines.length; i++) {
-      if(!lines[i].trim()) continue;
-      const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
+    for(let i = startIndex; i < rows.length; i++) {
+      const cols = rows[i].map(c => cleanCell(c));
+      if(!cols.some(Boolean)) continue;
       
       let marka = (cols[0] || '').toUpperCase();
       let model = (cols[1] || '').toUpperCase();
@@ -1256,8 +1531,8 @@ async function loadFromGoogleSheets() {
     // Paylasilan bir urun linkiyle gelindiyse (#urun/xxx) showPhoneCatalog
     // katalog cizildikten sonra ilgili urunu otomatik acar.
     const sheetProducts = sanitizePhoneList(newProducts);
-    if (!sheetProducts.length) throw new Error('Sheets verisi boş');
-    await showPhoneCatalog(sheetProducts, false);
+    if (!hasRealPhoneProduct(sheetProducts)) throw new Error('Sheets verisi boş');
+    await showPhoneCatalog(sheetProducts, false, null);
   } catch (err) {
     // DAYANIKLILIK: canli Google Sheets baglantisi basarisiz oldu. Eger daha
     // once basariyla yuklenmis bir katalog tarayicida sakliysa, musteriyi
@@ -1265,9 +1540,9 @@ async function loadFromGoogleSheets() {
     // ACIKCA "guncel olmayabilir" uyarisiyla birlikte gosteriyoruz. Cache de
     // yoksa mevcut hata ekrani aynen korunuyor.
     const cached = loadCatalogCache();
-    if (cached && cached.length) {
+    if (cached) {
       try {
-        await showPhoneCatalog(cached, true);
+        await showPhoneCatalog(cached.list, true, cached.generatedAt);
         return;
       } catch (renderErr) { /* cache verisiyle render de basarisiz olursa asagidaki genel hataya dus */ }
     }
@@ -1413,9 +1688,15 @@ function render() {
   if(sort === "name") filtered.sort((x, y) => x.m.localeCompare(y.m, "tr"));
 
   count.textContent = `${filtered.length} ürün listeleniyor`;
+  syncFilterUrl();
   
   if (!filtered.length) {
-    grid.innerHTML = '<div class="empty">Aradığınız kriterde ürün bulunamadı.</div>';
+    // DENETİM 2026-10-03: aranan model telefon/bakım kataloğunda yoksa laptop
+    // kataloğunda aynı aramayı tek dokunuşla dene; WhatsApp her zaman açık.
+    const waText = encodeURIComponent(q ? `Merhaba MİX GSM, "${q}" modelini arıyorum. Stok ve fiyat bilgisi alabilir miyim?` : 'Merhaba MİX GSM, katalog hakkında bilgi almak istiyorum.');
+    grid.innerHTML = '<div class="empty">Aradığınız kriterde ürün bulunamadı.<div class="empty-actions">'
+      + (q ? '<button type="button" class="cta-btn cta-btn--ghost" data-action="search-laptops">Laptoplarda Ara</button>' : '')
+      + `<a class="cta-btn cta-btn--wa" href="https://wa.me/905424818255?text=${waText}" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a></div></div>`;
     return;
   }
   phoneChunks = phoneChunks || createChunkedGrid('grid', 'catalogMore', 'ürün');
@@ -1504,6 +1785,18 @@ document.getElementById("advClearBtn").addEventListener("click", () => {
   render();
 });
 
+// DENETİM 2026-10-03: paylaşılan bağlantıdaki (?ara=…&marka=…) telefon
+// filtreleri ilk çizimden ÖNCE durum + kontrollere yazılır.
+(function applyUrlPhoneState(st) {
+  q = st.q; cat = st.cat; group = st.group; sort = st.sort; priceMin = st.priceMin; priceMax = st.priceMax;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  set('q', q); set('heroQ', q); set('sort', sort);
+  set('priceMinInput', priceMin === null ? '' : priceMin); set('priceMaxInput', priceMax === null ? '' : priceMax);
+  document.querySelectorAll('#filters button').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  document.querySelectorAll('#categoryFilters button').forEach(b => b.classList.toggle('active', b.dataset.group === group));
+  if (priceMin !== null || priceMax !== null) { const adv = document.getElementById('advFilters'); if (adv) adv.open = true; }
+})(urlFilterState);
+
 // --- Akilli kullanim alani pilleri ---
 // Sadece gercek sutun verisine dayanir: Batarya (mAh), Kamera (MP) ve
 // Islemci metnindeki bilinen kademe (perfTierOf, Telefonumu Bul
@@ -1550,12 +1843,7 @@ document.querySelectorAll('#quickusePills button').forEach(btn => {
 // kapanirsa (orn. baska bir modal acikken bu kapanirsa), arka plan
 // kaydirmasi SADECE gercekten hicbir modal/cekmece kalmadiysa tekrar
 // acilsin. Aksi halde hala acik bir modal varken arkaplan kayabilirdi.
-function anyModalOpen() {
-  const modalIds = ['modal', 'comparemodal', 'favmodal', 'findermodal', 'legalmodal'];
-  if (modalIds.some(id => { const el = document.getElementById(id); return el && el.classList.contains('open'); })) return true;
-  const panel = document.getElementById('filterPanel');
-  return !!(panel && panel.classList.contains('open'));
-}
+function anyModalOpen() { return anyOverlayOpen(); }
 
 // Filtre çekmecesi (mobil <=900px)
 function openFilterDrawer() {
@@ -1568,9 +1856,11 @@ function openFilterDrawer() {
   if (closeBtn) closeBtn.focus();
 }
 function closeFilterDrawer() {
-  document.getElementById('filterPanel').classList.remove('open');
+  const panel = document.getElementById('filterPanel');
+  if (!panel.classList.contains('open')) return;
+  panel.classList.remove('open');
   document.getElementById('filterBackdrop').classList.remove('open');
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
 }
 
 // Tükenen bir ürün için katalogdaki STOKTA OLAN diger urunler arasindan
@@ -1742,14 +2032,13 @@ function renderProductModal(p) {
   mpEl.textContent = "";
   if (p.p === null) {
     const span = document.createElement("span");
-    span.style.color = "var(--whatsapp)";
-    span.style.fontSize = "22px";
-    span.style.fontWeight = "600";
+    span.className = "modal-price-ask";        // renk temaya göre (açık temada koyu yeşil, AA)
     span.textContent = "WhatsApp'tan Fiyat Sorunuz";
     mpEl.appendChild(span);
   } else {
     mpEl.textContent = `${fmt(p.p)} TL`;
   }
+  renderCtaPrice('mcp', p.p, p.stock);
   
   document.getElementById("outOfStockWarn").style.display = p.stock === "OUT" ? "block" : "none";
   renderSimilarProducts(p);
@@ -1786,6 +2075,36 @@ function renderProductModal(p) {
   modal.querySelector('.close').focus();
 }
 
+// DENETİM 2026-10-03: pencerenin altındaki sabit fiyat + WhatsApp alanı.
+// Fiyat yoksa uydurulmaz: "Fiyat için sorun". Ekran okuyucu fiyatı üstteki
+// başlıktan zaten duyar (alan aria-hidden).
+// Satılan model: fiyat yok, "Satıldı" + benzerini sorma çağrısı.
+function renderCtaSold(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '';
+  const small = document.createElement('small');
+  small.textContent = 'Satıldı';
+  const main = document.createElement('span');
+  main.className = 'is-ask';
+  main.textContent = 'Benzer model sorun';
+  el.appendChild(small);
+  el.appendChild(main);
+}
+
+function renderCtaPrice(id, price, stock) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '';
+  const small = document.createElement('small');
+  small.textContent = stock === 'OUT' ? 'Şu an stokta yok' : stock === 'ASK' ? 'Stok durumu sorulacak' : 'Güncel fiyat';
+  const main = document.createElement('span');
+  if (price === null) { main.className = 'is-ask'; main.textContent = 'Fiyat için sorun'; }
+  else main.textContent = `${fmt(price)} TL`;
+  el.appendChild(small);
+  el.appendChild(main);
+}
+
 function openProduct(i) {
   const p = products[i];
   const alreadyOpen = document.getElementById("modal").classList.contains("open") && location.hash.startsWith('#urun/');
@@ -1819,12 +2138,24 @@ function closeProduct() {
   const modal = document.getElementById("modal");
   const wasOpen = modal.classList.contains("open");
   modal.classList.remove("open");
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
   if (wasOpen) leaveProductHistory('#urun/');
 }
 
+// Dokunmatik cihazda sistemin paylaşım penceresi (varsa); değilse panoya kopyala.
 function copyProductLink() {
-  navigator.clipboard.writeText(location.href).then(() => {
+  const url = location.href;
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if (coarse && navigator.share) {
+    const name = (document.getElementById('mn') || {}).textContent || 'Ürün';
+    navigator.share({ title: `${name} | MİX GSM`, url }).catch(() => { /* kullanıcı vazgeçti */ });
+    return;
+  }
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    showToast('Link kopyalanamadı, adres çubuğundan kopyalayabilirsiniz.');
+    return;
+  }
+  navigator.clipboard.writeText(url).then(() => {
     showToast('Ürün linki kopyalandı!');
   }).catch(() => {
     showToast('Link kopyalanamadı, adres çubuğundan kopyalayabilirsiniz.');
@@ -1935,7 +2266,7 @@ function openCompareModal() {
 
 function closeCompareModal() {
   document.getElementById('comparemodal').classList.remove('open');
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
 }
 
 function renderCompareTable() {
@@ -1975,16 +2306,32 @@ function renderCompareTable() {
   // goruntuleme filtresidir - veri/mantik degismez.
   const diffOnly = compareDiffOnly && items.length > 1;
   let visibleRowCount = 0;
+  const diffLabels = [], sameLabels = [];
   rows.forEach(([label, getter]) => {
     const values = items.map(p => String(getter(p)));
-    const allSame = values.every(v => v === values[0]);
+    const allSame = values.every(v => normalizeTR(v) === normalizeTR(values[0]));
+    (allSame ? sameLabels : diffLabels).push(label);
     if (diffOnly && allSame) return;
     visibleRowCount++;
-    html += `<tr><td>${escapeHtml(label)}</td>`;
+    html += `<tr class="${allSame ? 'is-same' : 'is-diff'}"><td>${escapeHtml(label)}</td>`;
     values.forEach(v => { html += `<td>${escapeHtml(v)}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table>';
+
+  // DENETİM 2026-10-03: tablonun üstünde doğrulanabilir özet (hangi
+  // özellikler farklı / aynı, fiyat farkı). "En iyi cihaz" hükmü YOK.
+  const priced = items.filter(p => p.p !== null);
+  let summary = `<p class="compare-summary"><strong>${diffLabels.length}</strong> özellik farklı`
+    + (diffLabels.length ? ` (${escapeHtml(diffLabels.join(', '))})` : '')
+    + `, <strong>${sameLabels.length}</strong> özellik aynı.`;
+  if (priced.length >= 2) {
+    const lo = priced.reduce((a, b) => (b.p < a.p ? b : a));
+    const hi = priced.reduce((a, b) => (b.p > a.p ? b : a));
+    if (hi.p > lo.p) summary += ` Fiyat farkı: ${fmt(hi.p - lo.p)} TL (en düşük fiyatlı: ${escapeHtml(productLabel(lo))}).`;
+  }
+  summary += '</p>';
+  html = summary + html;
 
   if (diffOnly && visibleRowCount === 0) {
     html += '<div class="fav-empty">Seçili ürünler arasında fark bulunamadı, tüm özellikler aynı.</div>';
@@ -2029,7 +2376,7 @@ function openLegalModal() {
 
 function closeLegalModal() {
   document.getElementById('legalmodal').classList.remove('open');
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
 }
 
 function openFavModal() {
@@ -2043,7 +2390,7 @@ function openFavModal() {
 
 function closeFavModal() {
   document.getElementById('favmodal').classList.remove('open');
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
 }
 
 function renderFavList() {
@@ -2118,7 +2465,7 @@ function openFinderModal() {
 
 function closeFinderModal() {
   document.getElementById('findermodal').classList.remove('open');
-  if (!anyModalOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
 }
 
 function restartFinder() { renderFinderStep(1); }
@@ -2164,6 +2511,23 @@ function perfTierOf(p) {
   return 1;
 }
 
+// DENETİM 2026-10-03 — ÖNERİNİN GEREKÇESİ: yalnız katalogdaki değerler ve
+// kullanıcının seçimleriyle doğrulanabilen kısa cümleler ("en iyi" gibi
+// dayanaksız hüküm yok; kamera/batarya değeri Sheet'teki metnin aynısı).
+function finderReasons(p, st) {
+  const out = [];
+  if (st.budget && p.p !== null) out.push(`Bütçene uyuyor: ${fmt(p.p)} TL (${st.budget.label})`);
+  if (p.stock === 'IN') out.push('Stokta');
+  else if (p.stock === 'ASK') out.push('Stok durumu WhatsApp\'tan teyit edilir');
+  const key = st.priority && st.priority.key;
+  if (key === 'camera' && String(p.camera || '').trim()) out.push(`Kamera: ${String(p.camera).trim()}`);
+  if (key === 'battery' && String(p.battery || '').trim()) out.push(`Batarya: ${String(p.battery).trim()}`);
+  if (key === 'performance' && String(p.processor || '').trim()) out.push(`İşlemci: ${String(p.processor).trim()}`);
+  if (key === 'value') out.push('Bu bütçe aralığındaki en uygun fiyatlı seçeneklerden');
+  if (st.brand && st.brand.cat !== 'ALL') out.push(`Seçtiğin marka: ${st.brand.label}`);
+  return out;
+}
+
 function showFinderResults() {
   const { budget, priority, brand } = finderState;
   let candidates = products.filter(p =>
@@ -2199,10 +2563,12 @@ function showFinderResults() {
         const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
-        return `<div class="fav-item" data-action="finder-open" data-i="${pIndex}" role="button" tabindex="0" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">
-          <img src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
+        const why = finderReasons(p, finderState).map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        return `<div class="fav-item" data-action="finder-open" data-i="${pIndex}" role="button" tabindex="0">
+          <img src="${escapeHtml(img)}" alt="" loading="lazy" decoding="async">
           <div class="fav-item-name">${escapeHtml(p.b)} ${escapeHtml(p.m)}</div>
           <div class="fav-item-price">${priceText}</div>
+          <ul class="finder-why" aria-label="Neden önerildi">${why}</ul>
         </div>`;
       }).join('') + '</div>';
   }
@@ -2220,16 +2586,23 @@ function showToast(t) {
   toastTimer = setTimeout(() => x.classList.remove("show"), TOAST_DURATION_MS);
 }
 
-function openLightbox(src) {
-  document.getElementById("lightbox-img").src = src;
+function openLightbox(src, alt) {
+  const img = document.getElementById("lightbox-img");
+  img.src = src;
+  if (alt) img.alt = alt + ' (büyük görünüm)';
   document.getElementById("lightbox").classList.add("active");
+  lockBodyScroll();
 }
 function closeLightbox() {
-  document.getElementById("lightbox").classList.remove("active");
+  const box = document.getElementById("lightbox");
+  if (!box.classList.contains("active")) return;
+  box.classList.remove("active");
+  unlockBodyScrollIfIdle();
 }
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeProduct(); closeLightbox(); closeCompareModal(); closeFavModal(); closeFinderModal(); closeLegalModal(); closeFilterDrawer(); }
+  // Escape: en üstteki pencereyi initDialogA11y kapatır (eskiden telefon
+  // tarafındaki tüm pencereler birlikte, laptop tarafı ayrıca kapanıyordu).
   // Klavye erisilebilirligi: onclick ile tiklanabilir olup dogal olarak
   // odaklanamayan kart/satir gibi elemanlar (role="button" + tabindex="0")
   // Enter veya Bosluk tusuyla da tetiklenebilsin.
@@ -2258,7 +2631,15 @@ document.addEventListener("keydown", e => {
     'finder-priority': (el) => { const i = idx(el); if (i > -1) selectFinderPriority(i); },
     'finder-brand': (el) => { const i = idx(el); if (i > -1) selectFinderBrand(i); },
     'laptop-empty-wa': () => navigateToLaptopWhatsapp('Merhaba MİX GSM, laptop kataloğu hakkında bilgi almak istiyorum.'),
-    'laptop-reset': () => resetLaptopFilters()
+    'laptop-reset': () => resetLaptopFilters(),
+    'search-laptops': () => {
+      const term = q;
+      if (activateStorefrontFn) activateStorefrontFn('laptop');
+      const lq = document.getElementById('laptopQ');
+      if (lq) { lq.value = term; lq.dispatchEvent(new Event('input', { bubbles: true })); }
+      const t = document.getElementById('laptopCatalogTitle');
+      if (t) t.scrollIntoView({ behavior: smoothOrAuto(), block: 'start' });
+    }
   };
   document.addEventListener('click', e => {
     const el = e.target && e.target.closest ? e.target.closest('[data-action]') : null;
@@ -2286,8 +2667,11 @@ window.addEventListener('popstate', () => {
     const idx = findProductBySlug(safeDecodeSlug(hashMatch[1]));
     if (idx > -1) { renderProductModal(products[idx]); return; }
   }
-  document.getElementById("modal").classList.remove("open");
-  if (!anyModalOpen()) unlockBodyScroll();
+  const phoneModal = document.getElementById("modal");
+  if (phoneModal.classList.contains("open")) {
+    phoneModal.classList.remove("open");
+    unlockBodyScrollIfIdle();
+  }
 });
 
 window.addEventListener('DOMContentLoaded', () => { loadCatalog(); updateFavs(); });
@@ -2383,7 +2767,7 @@ if (window.matchMedia) {
   on('.close', closeFilterDrawer, document.getElementById('filterPanel'));
   on('.btn-finder', openFinderModal, document.getElementById('filterPanel'));
   on('#filterToggleBtn', openFilterDrawer);
-  onAll('.store-gallery .store-photo', function() { openLightbox(this.querySelector('img').src); });
+  onAll('.store-gallery .store-photo', function() { const im = this.querySelector('img'); openLightbox(im.src, im.alt); });
   on('.footer-line a[href="#"]', e => { e.preventDefault(); openLegalModal(); });
 
   onBackdropClick('modal', closeProduct);
@@ -2509,9 +2893,97 @@ function laptopProductImageOrFallback(p) {
 // fazında) üzerinden bu fonksiyona yönlendiriliyor. Bu yüzden bu fonksiyon
 // çağrılmadan önce src zaten fallback'ten FARKLI olduğu kontrol edilir
 // (delegation listener'da) - sonsuz döngü riski böyle önlenir.
+// DENETİM 2 (2026-10-03): önce sahne türevi yüklenemezse ORİJİNAL fotoğraf,
+// o da yüklenemezse "görsel yok" denenir. data-orig bir kez kullanılır ve
+// silinir; listener src zaten "görsel yok" ise hiç çağırmaz -> döngü olmaz.
 function laptopImageOnError(imgEl) {
   if (!imgEl) return;
-  imgEl.src = LAPTOP_FALLBACK_IMAGE;
+  const orig = imgEl.getAttribute('data-orig');
+  imgEl.removeAttribute('data-orig');
+  imgEl.setAttribute('data-stage', 'white');
+  imgEl.src = orig || LAPTOP_FALLBACK_IMAGE;
+}
+
+// ================================================================
+// DENETİM 2 — LAPTOP FOTOĞRAF SAHNESİ
+// Fotoğrafların çoğu saf beyaz zeminli; koyu sitede büyük beyaz kutu gibi
+// görünüyordu. scripts/laptop-stage.py (çevrim dışı) kenara bağlı beyaz
+// zemini saydam yapıp küçültülmüş WebP türevleri ve bir manifest üretir
+// (laptop-photos/stage/). Site türev varsa onu, yoksa orijinali gösterir;
+// görsel CSS'teki açık gri ürün sahnesinin üstünde durur. Tarayıcıda piksel
+// işleme YOK. Görsel seçimi yalnız bu bölümdedir (tek yer).
+// ================================================================
+const LAPTOP_STAGE_BASE = 'laptop-photos/stage/';
+const LAPTOP_IMAGES_PREFIX = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/images/';
+const LAPTOP_STAGE_FILE = /^[A-Za-z0-9._-]+\.(sm|lg)\.webp$/;
+const LAPTOP_STAGE_WAIT_MS = 1500;
+let laptopStage = new Map();
+let laptopStagePromise = null;
+
+// Manifest güvenilmeyen girdi: yalnız güvenli dosya adları ve bilinen türler.
+function sanitizeLaptopStage(data) {
+  const out = new Map();
+  const files = data && typeof data === 'object' && data.files && typeof data.files === 'object' ? data.files : {};
+  Object.keys(files).slice(0, 2000).forEach(name => {
+    const e = files[name];
+    if (!e || typeof e !== 'object' || !/^[A-Za-z0-9._-]+$/.test(name)) return;
+    if (!LAPTOP_STAGE_FILE.test(e.sm) || !LAPTOP_STAGE_FILE.test(e.lg)) return;
+    if (!['cut', 'alpha', 'opaque'].includes(e.type)) return;
+    out.set(name, { sm: e.sm, lg: e.lg, kind: e.type === 'opaque' ? (e.bg === 'scene' ? 'scene' : 'white') : 'cut' });
+  });
+  return out;
+}
+function loadLaptopStage() {
+  if (!laptopStagePromise) {
+    laptopStagePromise = withTimeout(async (signal) => {
+      const res = await fetch(LAPTOP_STAGE_BASE + 'manifest.json', { cache: 'no-cache', signal });
+      return res.ok ? res.json() : null;
+    }, 5000).then(d => { laptopStage = sanitizeLaptopStage(d); }).catch(() => { laptopStage = new Map(); });
+  }
+  return laptopStagePromise;
+}
+// Katalog çizilmeden önce manifest için kısa bekleme (geç gelirse orijinaller).
+function laptopStageReady() {
+  return Promise.race([loadLaptopStage(), new Promise(r => setTimeout(r, LAPTOP_STAGE_WAIT_MS))]);
+}
+// Ürün görseli URL'si -> { src, orig, kind }. kind: cut (saydam türev),
+// white (beyaz zeminli: CSS multiply ile sahneye karışır), scene (ortam
+// fotoğrafı: olduğu gibi), size: 'sm' (kart/küçük resim) | 'lg' (galeri).
+function laptopStageImage(url, size) {
+  const u = String(url || '').trim();
+  if (!u) return { src: LAPTOP_FALLBACK_IMAGE, orig: '', kind: 'white' };
+  if (u.startsWith(LAPTOP_IMAGES_PREFIX)) {
+    let name = u.slice(LAPTOP_IMAGES_PREFIX.length);
+    try { name = decodeURIComponent(name); } catch (e) { name = ''; }
+    const e = laptopStage.get(name);
+    if (e) return { src: LAPTOP_STAGE_BASE + e[size === 'lg' ? 'lg' : 'sm'], orig: u, kind: e.kind };
+  }
+  return { src: u, orig: '', kind: 'white' };
+}
+function laptopStageImgAttrs(url, size) {
+  const st = laptopStageImage(url, size);
+  return 'src="' + escapeHtml(st.src) + '" data-stage="' + st.kind + '"' + (st.orig ? ' data-orig="' + escapeHtml(st.orig) + '"' : '');
+}
+function setLaptopStageImg(imgEl, url, size) {
+  const st = laptopStageImage(url, size);
+  imgEl.setAttribute('data-stage', st.kind);
+  if (st.orig) imgEl.setAttribute('data-orig', st.orig); else imgEl.removeAttribute('data-orig');
+  imgEl.src = st.src;
+}
+
+// ================================================================
+// DENETİM 2 — STOK GRUBU (tek yer). Katalog şemasında stok yalnız IN / ASK /
+// OUT olabilir (sanitizeLaptopProduct). OUT = Sheet'te "SATILDI" ya da açık
+// "stok yok" (parseLaptopStock). Bu ürünler ana listede değil "Satılan
+// Modeller" bölümünde gösterilir; ASK ("Sorunuz") satılmış SAYILMAZ.
+// ================================================================
+function isLaptopSold(p) {
+  return !!p && p.stock === 'OUT';
+}
+function laptopStockSummary(list) {
+  const sold = list.filter(isLaptopSold).length;
+  const active = list.length - sold;
+  return active + ' laptop stokta' + (sold ? ' · ' + sold + ' satılan model' : '') + '.';
 }
 
 const laptopCatalogCacheKey = 'mixgsm-laptop-cache-v1';
@@ -2557,8 +3029,9 @@ function sanitizeLaptopProduct(raw) {
   return p;
 }
 
+// DENETİM 2026-10-03: markası da modeli de olmayan satır ürün sayılmaz.
 function sanitizeLaptopList(list) {
-  return Array.isArray(list) ? list.map(sanitizeLaptopProduct).filter(Boolean) : [];
+  return Array.isArray(list) ? list.map(sanitizeLaptopProduct).filter(p => p && (p.brand || p.model)) : [];
 }
 
 const LaptopStore = {
@@ -2627,6 +3100,7 @@ function renderLaptopErrorState(message) {
 // eder ve sayfa bir #laptop/slug derin linkiyle açıldıysa ilgili laptop
 // modalını burada açar (veri hazır olmadan modal açılamayacağı için).
 function onLaptopDataReady() {
+  if (LaptopFilters.brand !== 'ALL' && !LaptopStore.products.some(p => p.brand === LaptopFilters.brand)) LaptopFilters.brand = 'ALL';
   renderLaptopFilterPanel();
   renderLaptopCatalog();
   maybeOpenLaptopFromHash();
@@ -2656,6 +3130,10 @@ const LaptopFilters = {
   gpu: 'ALL', gpuVram: 'ALL', gpuTgp: 'ALL',
   hz: 'ALL', usage: 'ALL'
 };
+// Paylaşılan bağlantıdaki laptop filtreleri (doğrulanmış; marka veri gelince denetlenir).
+laptopQ = urlFilterState.lq; laptopSort = urlFilterState.lsort;
+LaptopFilters.brand = urlFilterState.lbrand; LaptopFilters.condition = urlFilterState.lcond;
+LaptopFilters.priceMin = urlFilterState.lmin; LaptopFilters.priceMax = urlFilterState.lmax;
 
 // --- Laptop slug / deep-link (#laptop/slug) - telefonun #urun/slug
 // sisteminden TAMAMEN AYRI fonksiyonlar. Public Sheet'teki gerçek ID
@@ -2826,11 +3304,12 @@ function resetLaptopFilters() {
 // varken filtre/arama hiçbir şeyle eşleşmediğinde) skeleton GÖSTERİLMEZ -
 // doğrudan bu empty-state'e geçilir, kullanıcı filtreleri tek tıkla
 // temizleyebilir.
-function renderLaptopFilteredEmptyState() {
+function renderLaptopFilteredEmptyState(soldMatches) {
   const el = getLaptopGridEl();
   if (!el) return;
   setLaptopGridAriaBusy(false);
-  el.innerHTML = '<div class="laptop-empty">Aradığınız kriterlere uygun laptop bulunamadı.'
+  el.innerHTML = '<div class="laptop-empty">Aradığınız kriterlere uygun stokta laptop bulunamadı.'
+    + (soldMatches ? ' Eşleşen ' + soldMatches + ' satılan model aşağıda, "Satılan Modeller" bölümünde.' : '')
     + '<br><br><button type="button" class="laptop-adv-clear" data-action="laptop-reset" style="width:auto;display:inline-block;padding:10px 18px;">Filtreleri Temizle</button></div>';
 }
 
@@ -2848,6 +3327,7 @@ function laptopCardMarkup(p) {
   const idx = LaptopStore.products.indexOf(p);
   const title = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
   const img = laptopProductImageOrFallback(p);
+  const sold = isLaptopSold(p);
   // OKUNABILIRLIK DUZELTMESI: emoji daireler (🟢/🔴) solid renkli zemin
   // üzerinde gereksiz/karisik duruyordu - "●" isareti + BUYUK HARF metin
   // (istenen mockup ile birebir) kullanildi.
@@ -2856,10 +3336,15 @@ function laptopCardMarkup(p) {
     : '<span class="laptop-card-badge out">● SATILDI</span>';
   const tagSpans = [];
   // REDESIGN FİNAL: tek ana rozet (öncelik Fırsat > Yeni Gelen), emojisiz.
-  if (p.deal) tagSpans.push('<span class="laptop-card-tag">Fırsat</span>');
-  else if (p.newArrival) tagSpans.push('<span class="laptop-card-tag">Yeni Gelen</span>');
+  // Satılan modelde "Fırsat"/"Yeni Gelen" gösterilmez (alınabilir izlenimi vermesin).
+  if (!sold && p.deal) tagSpans.push('<span class="laptop-card-tag">Fırsat</span>');
+  else if (!sold && p.newArrival) tagSpans.push('<span class="laptop-card-tag">Yeni Gelen</span>');
   const tag = tagSpans.length ? '<div class="laptop-card-tags">' + tagSpans.join('') + '</div>' : '';
-  const priceMarkup = p.price === null
+  // Satılan modelde fiyat gösterilmez: güncel fiyat değil, geçmiş satış
+  // fiyatı olduğu da veride belirtilmiyor (uydurma yorum yok).
+  const priceMarkup = sold
+    ? '<span class="laptop-card-sold-note">Satıldı · benzerini sorun</span>'
+    : p.price === null
     ? '<span class="laptop-card-price ask">WhatsApp\'tan Sor</span>'
     : '<span class="laptop-card-price">' + fmt(p.price) + ' <em>TL</em></span>';
   const condText = p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '';
@@ -2878,9 +3363,9 @@ function laptopCardMarkup(p) {
 
   // ERİŞİLEBİLİRLİK: kartın tamamı fareyle tıklanır (grid click dinleyicisi);
   // klavye/ekran okuyucu için gerçek düğme model adıdır (role="button" kart YOK).
-  return '<article class="laptop-card" data-laptop-index="' + idx + '">'
+  return '<article class="laptop-card' + (sold ? ' laptop-card--sold' : '') + '" data-laptop-index="' + idx + '">'
     + '<div class="laptop-card-visual">' + tag + leftBadges
-    + '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(title) + '" loading="lazy" decoding="async">'
+    + '<img ' + laptopStageImgAttrs(img, 'sm') + ' alt="' + escapeHtml(title) + (sold ? ' (satıldı)' : '') + '" loading="lazy" decoding="async">'
     + '</div>'
     + '<div class="laptop-card-body">'
     + '<div class="laptop-card-brand">' + escapeHtml(p.brand || '') + '</div>'
@@ -2916,18 +3401,42 @@ function renderLaptopCatalog() {
   else if (laptopSort === 'new') filtered.sort((x, y) => Number(y.newArrival) - Number(x.newArrival));
   else if (laptopSort === 'deal') filtered.sort((x, y) => Number(y.deal) - Number(x.deal));
 
+  // DENETİM 2: aynı filtre/arama/sıralama sonucu stok durumuna göre ikiye
+  // ayrılır (veri kopyalanmaz): stoktakiler ana liste, satılanlar ayrı bölüm.
+  const active = filtered.filter(p => !isLaptopSold(p));
+  const sold = filtered.filter(isLaptopSold);
+
   const countEl = document.getElementById('laptopCount');
-  if (countEl) countEl.textContent = filtered.length + ' laptop listeleniyor';
+  if (countEl) countEl.textContent = active.length + ' laptop listeleniyor';
+  syncFilterUrl();
 
   setLaptopGridAriaBusy(false);
+  renderLaptopSold(sold);
 
-  if (!filtered.length) {
-    renderLaptopFilteredEmptyState();
+  if (!active.length) {
+    renderLaptopFilteredEmptyState(sold.length);
     return;
   }
 
   laptopChunks = laptopChunks || createChunkedGrid('laptopGrid', 'laptopCatalogMore', 'laptop');
-  laptopChunks.renderList(filtered, laptopCardMarkup, p => LaptopStore.products.indexOf(p));
+  laptopChunks.renderList(active, laptopCardMarkup, p => LaptopStore.products.indexOf(p));
+}
+
+// "Satılan Modeller": ana listeyle aynı kart, aynı parçalı yükleme.
+let laptopSoldChunks = null;
+function renderLaptopSold(list) {
+  const section = document.getElementById('laptopSold');
+  const countEl = document.getElementById('laptopSoldCount');
+  if (!section) return;
+  if (countEl) countEl.textContent = list.length ? '(' + list.length + ')' : '';
+  if (!list.length) {
+    section.hidden = true;
+    if (laptopSoldChunks) { document.getElementById('laptopSoldGrid').textContent = ''; }
+    return;
+  }
+  section.hidden = false;
+  laptopSoldChunks = laptopSoldChunks || createChunkedGrid('laptopSoldGrid', 'laptopSoldMore', 'model');
+  laptopSoldChunks.renderList(list, laptopCardMarkup, p => LaptopStore.products.indexOf(p));
 }
 
 // --- Laptop modalı: telefonun #modal / renderProductModal() /
@@ -2950,12 +3459,7 @@ function restoreLaptopFocus() {
   laptopLastFocusedTrigger = null;
 }
 
-function anyLaptopOverlayOpen() {
-  const ids = ['laptopModal', 'laptopFinderModal'];
-  if (ids.some(id => { const el = document.getElementById(id); return el && el.classList.contains('open'); })) return true;
-  const panel = document.getElementById('laptopFilterPanel');
-  return !!(panel && panel.classList.contains('open'));
-}
+function anyLaptopOverlayOpen() { return anyOverlayOpen(); }
 
 // Çoklu görsel mimarisi. Gerçek Public Sheet ALTI ayrı "Fotoğraf 1"..
 // "Fotoğraf 6" sütunu içeriyor (img..img6) - ürüne göre 0-6 arası dolu
@@ -2995,9 +3499,7 @@ function setLaptopGalleryImage(idx) {
   // delegated 'error' listener (bindLaptopStaticEventListeners) üzerinden
   // yönetiliyor.
   const mainImg = document.getElementById('lmi');
-  if (mainImg) {
-    mainImg.src = laptopGalleryImages[laptopGalleryIndex] || LAPTOP_FALLBACK_IMAGE;
-  }
+  if (mainImg) setLaptopStageImg(mainImg, laptopGalleryImages[laptopGalleryIndex], 'lg');
   const thumbsWrap = document.getElementById('laptopGalleryThumbs');
   if (thumbsWrap) {
     Array.prototype.forEach.call(thumbsWrap.children, function (thumbEl, i) {
@@ -3016,7 +3518,7 @@ function renderLaptopGallery(p) {
 
   const mainImg = document.getElementById('lmi');
   if (mainImg) {
-    mainImg.src = laptopGalleryImages[0] || LAPTOP_FALLBACK_IMAGE;
+    setLaptopStageImg(mainImg, laptopGalleryImages[0], 'lg');
     mainImg.alt = [p.brand, p.model].filter(Boolean).join(' ') || 'Laptop';
   }
 
@@ -3046,7 +3548,7 @@ function renderLaptopGallery(p) {
     thumbImg.loading = 'lazy';
     thumbImg.decoding = 'async';
     thumbImg.alt = '';
-    thumbImg.src = url;
+    setLaptopStageImg(thumbImg, url, 'sm');
     thumb.appendChild(thumbImg);
     thumbsWrap.appendChild(thumb);
   });
@@ -3058,7 +3560,7 @@ function renderLaptopModalBadges(p) {
   const wrap = document.getElementById('laptopModalBadges');
   if (!wrap) return;
   wrap.textContent = '';
-  if (!p) return;
+  if (!p || isLaptopSold(p)) return;      // satılan modelde Fırsat/Yeni Gelen yok
   // REDESIGN FİNAL: kartla aynı — tek rozet (Fırsat > Yeni Gelen), emojisiz.
   const label = p.deal ? 'Fırsat' : (p.newArrival ? 'Yeni Gelen' : '');
   if (label) {
@@ -3067,6 +3569,29 @@ function renderLaptopModalBadges(p) {
     badge.textContent = label;
     wrap.appendChild(badge);
   }
+}
+
+// DENETİM 2026-10-03 — İKİNCİ EL ÖZETİ: Sheet'te DOLU olan kozmetik, pil,
+// garanti, kutu, fatura ve adaptör değerleri aynen (yorum/tahmin eklenmeden)
+// tek bakışta. Sıfır üründe ya da hiçbir alan dolu değilse gösterilmez.
+function renderLaptopUsedSummary(p) {
+  const box = document.getElementById('laptopUsedSummary');
+  const list = document.getElementById('laptopUsedSummaryList');
+  if (!box || !list) return;
+  list.textContent = '';
+  const items = p.condition !== 'USED' ? [] : [
+    ['Kozmetik', p.cosmetic], ['Pil', p.batteryHealth], ['Garanti', p.warranty],
+    ['Kutu', p.box], ['Fatura', p.invoice], ['Adaptör', p.adapter]
+  ].filter(([, v]) => v && String(v).trim() && String(v).trim() !== '-');
+  items.forEach(([label, value]) => {
+    const li = document.createElement('li');
+    const k = document.createElement('span');
+    k.textContent = label + ': ';
+    li.appendChild(k);
+    li.appendChild(document.createTextNode(String(value).trim()));
+    list.appendChild(li);
+  });
+  box.hidden = !items.length;
 }
 
 function renderLaptopModal(p) {
@@ -3079,11 +3604,20 @@ function renderLaptopModal(p) {
   if (brandEl) brandEl.textContent = p.brand || '';
   if (nameEl) nameEl.textContent = p.model || '';
 
+  const sold = isLaptopSold(p);
   const priceEl = document.getElementById('lmp');
-  if (priceEl) priceEl.textContent = p.price === null ? "WhatsApp'tan Fiyat Sorunuz" : fmt(p.price) + ' TL';
+  if (priceEl) {
+    // Satılan modelde fiyat yerine durum: güncel ya da geçmiş fiyat gibi okunmasın.
+    priceEl.textContent = sold ? 'Bu model satıldı' : p.price === null ? "WhatsApp'tan Fiyat Sorunuz" : fmt(p.price) + ' TL';
+    priceEl.classList.toggle('is-sold', sold);
+  }
 
   const stockWarn = document.getElementById('laptopOutOfStockWarn');
-  if (stockWarn) stockWarn.style.display = p.stock === 'OUT' ? 'block' : 'none';
+  if (stockWarn) stockWarn.style.display = sold ? 'block' : 'none';
+  if (sold) renderCtaSold('lmcp'); else renderCtaPrice('lmcp', p.price, p.stock);
+  const waBtn = document.getElementById('laptopModalWaBtn');
+  if (waBtn && waBtn.lastChild) waBtn.lastChild.nodeValue = sold ? ' Benzerini Sor' : " WhatsApp'tan Sor";
+  renderLaptopUsedSummary(p);
 
   setLaptopModalRow('condition', p.condition === 'NEW' ? 'Sıfır' : p.condition === 'USED' ? '2. El' : '');
   setLaptopModalRow('cpu', p.cpu);
@@ -3111,7 +3645,7 @@ function renderLaptopModal(p) {
 
   const modal = document.getElementById('laptopModal');
   if (!modal) return;
-  laptopLastFocusedTrigger = document.activeElement;
+  if (!modal.contains(document.activeElement)) laptopLastFocusedTrigger = document.activeElement;
   modal.classList.add('open');
   lockBodyScroll();
   const closeBtn = document.getElementById('laptopModalCloseBtn');
@@ -3145,7 +3679,7 @@ function closeLaptopProduct() {
   const modal = document.getElementById('laptopModal');
   const wasOpen = !!(modal && modal.classList.contains('open'));
   if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
   if (wasOpen) leaveProductHistory('#laptop/');
   restoreLaptopFocus();
 }
@@ -3159,13 +3693,21 @@ function maybeOpenLaptopFromHash() {
 
 window.addEventListener('popstate', () => {
   const hashMatch = location.hash.match(/^#laptop\/(.+)$/);
-  if (hashMatch && LaptopStore.products.length) {
-    const idx = findLaptopBySlug(safeDecodeSlug(hashMatch[1]));
-    if (idx > -1) { renderLaptopModal(LaptopStore.products[idx]); return; }
+  if (hashMatch) {
+    // Laptop penceresi #laptop-section İÇİNDE: bölüm gizliyse (telefona
+    // geçilmişse) önce görünür yapılır, yoksa pencere görünmez açılırdı.
+    if (activateStorefrontFn) activateStorefrontFn('laptop');
+    if (LaptopStore.products.length) {
+      const idx = findLaptopBySlug(safeDecodeSlug(hashMatch[1]));
+      if (idx > -1) { renderLaptopModal(LaptopStore.products[idx]); return; }
+    }
   }
   const modal = document.getElementById('laptopModal');
-  if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
+  if (modal && modal.classList.contains('open')) {
+    modal.classList.remove('open');
+    unlockBodyScrollIfIdle();
+    restoreLaptopFocus();
+  }
 });
 
 // --- Mobil filtre drawer ---
@@ -3182,11 +3724,23 @@ function openLaptopFilterDrawer() {
 function closeLaptopFilterDrawer() {
   const panel = document.getElementById('laptopFilterPanel');
   const backdrop = document.getElementById('laptopFilterBackdrop');
-  if (panel) panel.classList.remove('open');
+  if (!panel || !panel.classList.contains('open')) return;
+  panel.classList.remove('open');
   if (backdrop) backdrop.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
   restoreLaptopFocus();
 }
+
+// DENETİM 2026-10-03: çekmece mobilde (<=900px) açıkken ekran genişlerse
+// (döndürme / pencere büyütme) panel masaüstü yan sütununa döner; "open"
+// sınıfı ve gövde kaydırma kilidi geride kalmasın.
+(function closeDrawersOnDesktop() {
+  if (!window.matchMedia) return;
+  const mq = window.matchMedia('(max-width: 900px)');
+  const onChange = () => { if (!mq.matches) { closeFilterDrawer(); closeLaptopFilterDrawer(); } };
+  if (mq.addEventListener) mq.addEventListener('change', onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+})();
 
 // --- WhatsApp: dinamik mesaj, mobil wa.me / masaüstü web.whatsapp.com,
 // window.open KULLANILMAZ (Faz 4/6 kuralı). ---
@@ -3197,6 +3751,13 @@ function buildLaptopWaMessage(p) {
   const variant = [unit(p.ramGB, ' RAM'), unit(p.ssdGB, ' SSD')].filter(Boolean).join(' / ');
   const code = String(p.id || '').trim();
   return productWhatsappText(name + (variant ? ' - ' + variant : '') + (code ? ' (Ürün kodu: ' + code + ')' : ''));
+}
+// Satılan model için yanlış vaat içermeyen mesaj: stoktaki benzerini sorar.
+// Numara/hedef aynı (navigateToLaptopWhatsapp).
+function buildLaptopSoldWaMessage(p) {
+  const name = [p.brand, p.model].filter(Boolean).join(' ');
+  const code = String(p.id || '').trim();
+  return `Merhaba İsa Bey, sitede satıldı olarak görünen ${(name + (code ? ' (Ürün kodu: ' + code + ')' : '')).replace(/\s+/g, ' ').trim()} modeline benzer, stokta olan bir laptop var mı?`;
 }
 function isMobileDevice() {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
@@ -3209,55 +3770,18 @@ function navigateToLaptopWhatsapp(message) {
   window.location.href = url;
 }
 
-// --- Focus Trap: laptop modalı, "Bana Laptop Bul" formu ve mobil filtre
-// drawer'ı için TEK, ortak bir Tab/Shift+Tab hapsi + Escape kapatma
-// mantığı. Telefonun kendi document keydown dinleyicisine (Escape ile
-// kendi modallerini kapatan) HİÇ DOKUNMUYOR - bu tamamen AYRI, yeni bir
-// keydown dinleyicisi. ---
-function getOpenLaptopFocusContainer() {
-  const modal = document.getElementById('laptopModal');
-  if (modal && modal.classList.contains('open')) return modal;
-  const finder = document.getElementById('laptopFinderModal');
-  if (finder && finder.classList.contains('open')) return finder;
-  const panel = document.getElementById('laptopFilterPanel');
-  if (panel && panel.classList.contains('open') && window.matchMedia('(max-width: 900px)').matches) return panel;
-  return null;
-}
-function laptopFocusableEls(container) {
-  return Array.from(container.querySelectorAll(
-    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )).filter(el => el.offsetParent !== null || el === document.activeElement);
-}
-document.addEventListener('keydown', function (e) {
-  const container = getOpenLaptopFocusContainer();
-  if (!container) return;
-
-  if (e.key === 'Escape') {
-    if (container.id === 'laptopModal') closeLaptopProduct();
-    else if (container.id === 'laptopFinderModal') closeLaptopFinder();
-    else if (container.id === 'laptopFilterPanel') closeLaptopFilterDrawer();
-    return;
-  }
-
-  if (e.key !== 'Tab') return;
-  const focusables = laptopFocusableEls(container);
-  if (!focusables.length) { e.preventDefault(); return; }
-  const first = focusables[0];
-  const last = focusables[focusables.length - 1];
-  if (e.shiftKey && document.activeElement === first) {
-    e.preventDefault(); last.focus();
-  } else if (!e.shiftKey && document.activeElement === last) {
-    e.preventDefault(); first.focus();
-  } else if (!container.contains(document.activeElement)) {
-    e.preventDefault(); first.focus();
-  }
-});
+// --- Odak hapsi + Escape: laptop pencereleri de telefon pencereleriyle AYNI
+// ortak yöneticide (initDialogA11y). İki ayrı keydown dinleyicisi, iki pencere
+// üst üste açıkken odağı iki kez taşıyor ve Escape ile ikisini birden
+// kapatıyordu. ---
 
 // --- "Bana Laptop Bul" formu: sessionStorage taslağı (versioned key),
 // validasyon, 3sn buton cooldown (WhatsApp yönlendirmesini GECİKTİRMEZ),
 // dinamik WhatsApp mesajı. ---
 const LAPTOP_FORM_DRAFT_KEY = 'mixgsm-laptop-form-draft-v1';
-const LAPTOP_FORM_FIELD_IDS = ['lfBudget', 'lfUsage', 'lfCondition', 'lfName', 'lfPhone', 'lfScreen', 'lfPriority', 'lfBrand', 'lfNote'];
+// DENETİM 2026-10-03: WhatsApp numarası alanı kaldırıldı (mesaj zaten
+// müşterinin kendi WhatsApp'ından gider); eski taslaktaki numara geri yüklenmez.
+const LAPTOP_FORM_FIELD_IDS = ['lfBudget', 'lfUsage', 'lfCondition', 'lfName', 'lfScreen', 'lfPriority', 'lfBrand', 'lfNote'];
 
 function saveLaptopFormDraft() {
   try {
@@ -3287,6 +3811,7 @@ function clearLaptopFormDraft() {
 function openLaptopFinder() {
   laptopLastFocusedTrigger = document.activeElement;
   restoreLaptopFormDraft();
+  updateLaptopFormPreview();
   const modal = document.getElementById('laptopFinderModal');
   if (!modal) return;
   modal.classList.add('open');
@@ -3297,29 +3822,11 @@ function openLaptopFinder() {
 function closeLaptopFinder() {
   const modal = document.getElementById('laptopFinderModal');
   if (modal) modal.classList.remove('open');
-  if (!anyLaptopOverlayOpen()) unlockBodyScroll();
+  unlockBodyScrollIfIdle();
   restoreLaptopFocus();
 }
 
 const LAPTOP_FORM_MAX_BUDGET = 2000000;
-
-// WhatsApp numarasini normalize eder; gecersizse null. Turkiye cep numarasi
-// (5xx, 05xx, 905xx, +90 5xx) -> "+90 5xx xxx xx xx". Yurt disi numara ancak
-// "+" / "00" ile yazilmissa (10-15 hane) kabul edilir. Harf veya izinli
-// olmayan karakter iceren giris reddedilir.
-function normalizeWhatsappPhone(value) {
-  const raw = String(value || '').trim();
-  if (!/^[0-9+\s().-]+$/.test(raw)) return null;
-  if (raw.indexOf('+') > 0 || (raw.match(/\+/g) || []).length > 1) return null;
-  const digits = raw.replace(/\D/g, '');
-  const tr = digits.match(/^(?:90|0)?(5\d{2})(\d{3})(\d{2})(\d{2})$/);
-  if (tr && !(raw.startsWith('+') && !digits.startsWith('90'))) {
-    return '+90 ' + tr[1] + ' ' + tr[2] + ' ' + tr[3] + ' ' + tr[4];
-  }
-  const intl = raw.startsWith('+') ? digits : (digits.startsWith('00') ? digits.slice(2) : '');
-  if (intl && /^[1-9]\d{9,14}$/.test(intl)) return '+' + intl;
-  return null;
-}
 
 function parseLaptopBudget(value) {
   const n = Number(String(value || '').trim());
@@ -3330,10 +3837,7 @@ function validateLaptopFinderForm() {
   let valid = true;
   const checks = [
     ['lfBudget', v => parseLaptopBudget(v) !== null, 'lfBudgetError', 'Lütfen geçerli bir bütçe girin.'],
-    ['lfUsage', v => v.trim() !== '', 'lfUsageError', 'Lütfen kullanım amacını seçin.'],
-    ['lfCondition', v => v.trim() !== '', 'lfConditionError', 'Lütfen durum tercihini seçin.'],
-    ['lfName', v => v.trim().length >= 2 && /\p{L}/u.test(v), 'lfNameError', 'Lütfen adınızı ve soyadınızı girin.'],
-    ['lfPhone', v => normalizeWhatsappPhone(v) !== null, 'lfPhoneError', 'Lütfen geçerli bir WhatsApp numarası girin (örn. 0532 123 45 67).']
+    ['lfUsage', v => v.trim() !== '', 'lfUsageError', 'Lütfen kullanım amacını seçin.']
   ];
   checks.forEach(check => {
     const id = check[0], test = check[1], errId = check[2], msg = check[3];
@@ -3345,28 +3849,103 @@ function validateLaptopFinderForm() {
       valid = false;
       if (row) row.classList.add('invalid');
       if (errEl) errEl.textContent = msg;
+      if (el) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', errId); }
     } else {
       if (row) row.classList.remove('invalid');
       if (errEl) errEl.textContent = '';
+      if (el) { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); }
     }
   });
+  if (!valid) {
+    const firstBad = document.querySelector('#laptopFinderForm [aria-invalid="true"]');
+    if (firstBad) firstBad.focus();
+  }
   return valid;
 }
 
 function buildLaptopFinderWaMessage(data) {
   const lines = [
     'Merhaba MİX GSM, "Bana Laptop Bul" formunu doldurdum:',
-    'Bütçe: ' + fmt(data.budget) + ' TL',
-    'Kullanım Amacı: ' + data.usage,
-    'Durum Tercihi: ' + data.condition,
-    'Ad Soyad: ' + data.name,
-    'WhatsApp: ' + data.phone
+    'Bütçe: ' + (data.budget ? fmt(data.budget) + ' TL' : '—'),
+    'Kullanım Amacı: ' + (data.usage || '—')
   ];
+  if (data.condition) lines.push('Durum Tercihi: ' + data.condition);
+  if (data.name) lines.push('Adım: ' + data.name);
   if (data.screen) lines.push('Ekran Boyutu: ' + data.screen);
   if (data.priority) lines.push('Öncelik: ' + data.priority);
   if (data.brand) lines.push('Marka Tercihi: ' + data.brand);
   if (data.note) lines.push('Not: ' + data.note);
   return lines.join('\n');
+}
+
+function collectLaptopFormData() {
+  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  return {
+    budget: parseLaptopBudget(val('lfBudget')),
+    usage: val('lfUsage'),
+    condition: val('lfCondition'),
+    name: val('lfName').trim().replace(/\s+/g, ' ').slice(0, 60),
+    screen: val('lfScreen'),
+    priority: val('lfPriority'),
+    brand: val('lfBrand'),
+    note: val('lfNote').trim().slice(0, 400)
+  };
+}
+
+// Gönderim öncesi önizleme: WhatsApp'a aktarılacak metnin AYNISI.
+function updateLaptopFormPreview() {
+  const pre = document.getElementById('lfPreview');
+  const data = collectLaptopFormData();
+  if (pre) pre.textContent = buildLaptopFinderWaMessage(data);
+  renderLaptopFormMatches(data);
+}
+
+// DENETİM 2026-10-03 — ÖNERİ GEREKÇESİ: katalogdaki stoktaki laptoplardan
+// bütçeye (ve seçildiyse durum / kullanım amacına) UYANLAR, doğrulanabilir
+// kısa gerekçeleriyle. Performans/pil süresi gibi veride olmayan iddia YOK.
+const LAPTOP_FORM_USAGE_MAP = { 'Oyun': ['Gaming'], 'Ofis / Günlük Kullanım': ['İş / Ofis', 'Günlük'], 'Öğrenci': ['Öğrenci'] };
+function laptopFormMatches(data, list) {
+  if (!data.budget) return [];
+  const wantCond = data.condition === 'Sıfır' ? 'NEW' : data.condition === '2. El' ? 'USED' : '';
+  const usageVals = LAPTOP_FORM_USAGE_MAP[data.usage] || null;
+  return (list || []).filter(p => p.stock === 'IN' && p.price !== null && p.price <= data.budget
+      && (!wantCond || p.condition === wantCond)
+      && (!usageVals || usageVals.includes(String(p.usage || '').trim()))
+      && (!data.brand || p.brand === data.brand))
+    .sort((a, b) => b.price - a.price)              // bütçeye en yakın olan önce
+    .slice(0, 3)
+    .map(p => {
+      const why = [`Bütçene uyuyor (${fmt(p.price)} TL)`];
+      if (usageVals) why.push(`Kullanım amacı: ${p.usage}`);
+      if (wantCond) why.push(`Durum: ${p.condition === 'NEW' ? 'Sıfır' : '2. El'}`);
+      if (data.brand) why.push(`Marka tercihin: ${p.brand}`);
+      const ram = laptopUnit(p.ramGB, 'GB');
+      if (ram) why.push(`RAM: ${ram}`);
+      return { p, why };
+    });
+}
+function renderLaptopFormMatches(data) {
+  const box = document.getElementById('lfMatches');
+  if (!box) return;
+  const matches = laptopFormMatches(data, LaptopStore.products);
+  box.textContent = '';
+  if (!matches.length) { box.hidden = true; return; }
+  const h = document.createElement('h3');
+  h.textContent = 'Katalogda şu an uygun olanlar';
+  box.appendChild(h);
+  matches.forEach(({ p, why }) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'laptop-match';
+    b.dataset.laptopIndex = String(LaptopStore.products.indexOf(p));
+    const t = document.createElement('strong');
+    t.textContent = [p.brand, p.model].filter(Boolean).join(' ');
+    const w = document.createElement('span');
+    w.textContent = why.join(' · ');
+    b.appendChild(t); b.appendChild(w);
+    box.appendChild(b);
+  });
+  box.hidden = false;
 }
 
 const LAPTOP_FORM_COOLDOWN_MS = 3000;
@@ -3375,17 +3954,7 @@ function handleLaptopFinderSubmit(e) {
   e.preventDefault();
   if (!validateLaptopFinderForm()) return;
 
-  const data = {
-    budget: parseLaptopBudget(document.getElementById('lfBudget').value),
-    usage: document.getElementById('lfUsage').value,
-    condition: document.getElementById('lfCondition').value,
-    name: document.getElementById('lfName').value.trim().replace(/\s+/g, ' '),
-    phone: normalizeWhatsappPhone(document.getElementById('lfPhone').value),
-    screen: document.getElementById('lfScreen').value,
-    priority: document.getElementById('lfPriority').value,
-    brand: document.getElementById('lfBrand').value,
-    note: document.getElementById('lfNote').value.trim()
-  };
+  const data = collectLaptopFormData();
 
   // KURAL: cooldown SADECE gönder butonunu geçici olarak devre dışı
   // bırakır (çift gönderimi önlemek için) - WhatsApp yönlendirmesini
@@ -3416,7 +3985,9 @@ function handleLaptopFinderSubmit(e) {
   // çalıştığında, TEK SEFER bağlanıyor. renderLaptopCatalog() ne kadar
   // çok çağrılırsa çağrılsın yeni bir listener EKLENMİYOR/register
   // edilmiyor - kartların üstündeki tek, sabit #laptopGrid dinliyor.
-  const laptopGridEl = document.getElementById('laptopGrid');
+  // DENETİM 2: aynı tek dinleyici deseni "Satılan Modeller" ızgarasında da.
+  ['laptopGrid', 'laptopSoldGrid'].forEach(gridId => {
+  const laptopGridEl = document.getElementById(gridId);
   if (laptopGridEl) {
     laptopGridEl.addEventListener('click', e => {
       const card = e.target.closest('.laptop-card');
@@ -3430,6 +4001,7 @@ function handleLaptopFinderSubmit(e) {
       openLaptopProductFromCard(card);
     });
   }
+  });
 
   // FAZ 5 DÜZELTME: Laptop görsellerinde (kart, modal ana görsel, galeri
   // thumbnail'leri) HİÇBİR inline onerror="" veya img.onerror = fn ataması
@@ -3442,11 +4014,18 @@ function handleLaptopFinderSubmit(e) {
     const t = e.target;
     if (!t || t.tagName !== 'IMG') return;
     if (t.src === LAPTOP_FALLBACK_IMAGE) return;
-    const inLaptopCard = t.closest && t.closest('#laptopGrid .laptop-card');
+    const inLaptopCard = t.closest && t.closest('#laptopGrid .laptop-card, #laptopSoldGrid .laptop-card');
     const isModalMainImg = t.id === 'lmi';
     const inGalleryThumbs = t.closest && t.closest('#laptopGalleryThumbs');
     if (inLaptopCard || isModalMainImg || inGalleryThumbs) laptopImageOnError(t);
   }, true);
+
+  // URL'den gelen laptop durumu kontrollere (veri gelmeden önce) yazılır.
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('laptopQ', laptopQ); setVal('laptopSort', laptopSort);
+  setVal('laptopPriceMinInput', LaptopFilters.priceMin === null ? '' : LaptopFilters.priceMin);
+  setVal('laptopPriceMaxInput', LaptopFilters.priceMax === null ? '' : LaptopFilters.priceMax);
+  document.querySelectorAll('#laptopConditionGroup button').forEach(b => b.classList.toggle('active', b.dataset.condition === LaptopFilters.condition));
 
   const laptopQInput = document.getElementById('laptopQ');
   if (laptopQInput) {
@@ -3499,7 +4078,8 @@ function handleLaptopFinderSubmit(e) {
   if (laptopModalEl) laptopModalEl.addEventListener('click', e => { if (e.target.id === 'laptopModal') closeLaptopProduct(); });
   const modalWaBtn = document.getElementById('laptopModalWaBtn');
   if (modalWaBtn) modalWaBtn.addEventListener('click', () => {
-    if (currentLaptopModalProduct) navigateToLaptopWhatsapp(buildLaptopWaMessage(currentLaptopModalProduct));
+    const cur = currentLaptopModalProduct;
+    if (cur) navigateToLaptopWhatsapp(isLaptopSold(cur) ? buildLaptopSoldWaMessage(cur) : buildLaptopWaMessage(cur));
   });
 
   const findBtn = document.getElementById('laptopFindBtn');
@@ -3519,9 +4099,23 @@ function handleLaptopFinderSubmit(e) {
     finderForm.addEventListener('submit', handleLaptopFinderSubmit);
     LAPTOP_FORM_FIELD_IDS.forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('input', saveLaptopFormDraft);
+      if (el) { el.addEventListener('input', saveLaptopFormDraft); el.addEventListener('input', updateLaptopFormPreview); }
     });
-    document.querySelectorAll('#laptopFinderForm select').forEach(el => el.addEventListener('change', saveLaptopFormDraft));
+    document.querySelectorAll('#laptopFinderForm select').forEach(el => {
+      el.addEventListener('change', saveLaptopFormDraft);
+      el.addEventListener('change', updateLaptopFormPreview);
+    });
+    const matchesBox = document.getElementById('lfMatches');
+    if (matchesBox) matchesBox.addEventListener('click', e => {
+      const b = e.target.closest('.laptop-match');
+      if (!b) return;
+      const idx = parseInt(b.dataset.laptopIndex, 10);
+      if (!Number.isInteger(idx) || !LaptopStore.products[idx]) return;
+      closeLaptopFinder();
+      openLaptopProduct(idx);
+    });
+    const privacyBtn = document.getElementById('lfPrivacyBtn');
+    if (privacyBtn) privacyBtn.addEventListener('click', openLegalModal);
   }
 
   // FAZ 5: Galeri küçük resimleri - #laptopGalleryThumbs SABİT bir
@@ -3588,6 +4182,7 @@ async function loadLaptopCatalogFromSameOrigin() {
     return res.json();
   }, 5000);
 }
+let laptopCatalogTime = null;   // catalog-laptop.json generatedAt (CI)
 
 // (2) same-origin başarısızsa ve gerçek bir Public Sheet bağlıysa, dogrudan
 // Sheet TSV'sini dener (telefonun 9sn+6sn iki-deneme desenini tekrarlar).
@@ -3602,9 +4197,9 @@ async function fetchLaptopTsvOnce(timeoutMs) {
 function parseLaptopTsvToProducts(tsv) {
   // scripts/generate-catalog-laptop.js içindeki parseTsvToLaptopProducts()
   // ile BİREBİR AYNI sütun sırası/kurallar (bkz. o dosyadaki yorum).
-  const lines = tsv.split('\n');
+  const rows = parseTsvRows(tsv);
   const products = [];
-  const startIndex = lines[0] && normalizeTR(lines[0]).includes('id') ? 1 : 0;
+  const startIndex = rows[0] && normalizeTR(rows[0].join('\t')).includes('id') ? 1 : 0;
 
   const parseCondition = (raw) => {
     const n = normalizeTR(raw);
@@ -3636,9 +4231,9 @@ function parseLaptopTsvToProducts(tsv) {
     return (!isNegative && Number.isFinite(parsed) && parsed >= 1000 && parsed <= 500000) ? parsed : null;
   };
 
-  for (let i = startIndex; i < lines.length; i++) {
-    if (!lines[i] || !lines[i].trim()) continue;
-    const cols = lines[i].split('\t').map(c => c.trim().replace(/\r/g, ''));
+  for (let i = startIndex; i < rows.length; i++) {
+    const cols = rows[i].map((c, k) => cleanCell(c, k === 29));   // 29: açıklama çok satırlı kalabilir
+    if (!cols.some(Boolean)) continue;
     const brand = (cols[2] || '').toUpperCase();
     const model = (cols[3] || '').toUpperCase();
     if (!brand && !model) continue;
@@ -3694,6 +4289,7 @@ async function loadLaptopCatalog() {
   LaptopStore.error = null;
   setLaptopHeroNote('Laptop kataloğu yükleniyor…');
   renderLaptopSkeleton();
+  loadLaptopStage();                     // fotoğraf sahnesi manifesti katalogla paralel
 
   function finishLaptopLoad() {
     LaptopStore.loading = false;
@@ -3705,10 +4301,13 @@ async function loadLaptopCatalog() {
     const sameOrigin = await loadLaptopCatalogFromSameOrigin();
     const sameOriginList = sanitizeLaptopList(sameOrigin && sameOrigin.products);
     if (sameOriginList.length) {
+      laptopCatalogTime = toCatalogTime(sameOrigin.generatedAt);
+      showCatalogTime('laptopCatalogUpdated', laptopCatalogTime, 'Liste güncellemesi');
       LaptopStore.products = sameOriginList;
       LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
       saveLaptopCatalogCache(LaptopStore.products);
-      setLaptopHeroNote(LaptopStore.products.length + ' laptop bulundu.');
+      setLaptopHeroNote(laptopStockSummary(LaptopStore.products));
+      await laptopStageReady();
       onLaptopDataReady();
       finishLaptopLoad();
       return;
@@ -3744,10 +4343,11 @@ async function loadLaptopCatalog() {
       LaptopStore.loaded = true; LaptopStore.usingCache = false; LaptopStore.error = null;
       saveLaptopCatalogCache(LaptopStore.products);
       if (LaptopStore.products.length) {
-        setLaptopHeroNote(LaptopStore.products.length + ' laptop bulundu.');
+        setLaptopHeroNote(laptopStockSummary(LaptopStore.products));
       } else {
         setLaptopHeroNote('Laptop kataloğu hazırlanıyor, çok yakında burada olacak.');
       }
+      await laptopStageReady();
       onLaptopDataReady();
       finishLaptopLoad();
       return;
@@ -3766,6 +4366,7 @@ async function loadLaptopCatalog() {
       ? 'Bağlantı sorunu - önbellekteki laptop verisi (1 saatten eski) gösteriliyor. Fiyat ve stok güncel olmayabilir, WhatsApp\'tan teyit alabilirsiniz.'
       : 'Bağlantı sorunu - son başarılı laptop verisi gösteriliyor. Fiyat ve stok güncel olmayabilir, WhatsApp\'tan teyit alabilirsiniz.';
     setLaptopHeroNote(cacheMsg);
+    await laptopStageReady();
     onLaptopDataReady();
     finishLaptopLoad();
     return;
@@ -3809,8 +4410,20 @@ async function loadLaptopCatalog() {
     }
   }
 
+  // DENETİM 2026-10-03: gizlenen bölümün içindeki pencere/çekmece açık
+  // kalmasın (gizli + inert bölümde görünmez pencere ve kaydırma kilidi
+  // kalıyordu). Geçmiş kaydına dokunulmaz: popstate'ten de çağrılır.
+  function closeOverlaysIn(section) {
+    let closed = false;
+    section.querySelectorAll('.laptop-modal.open, .laptop-filter-panel.open, .filter-panel.open').forEach(el => { el.classList.remove('open'); closed = true; });
+    section.querySelectorAll('.filter-drawer-backdrop.open, .laptop-filter-drawer-backdrop.open').forEach(el => el.classList.remove('open'));
+    if (closed) unlockBodyScrollIfIdle();
+  }
+
   function activateStorefront(name) {
     const showLaptop = name === 'laptop';
+    const wasLaptop = btnLaptop.classList.contains('active');
+    if (wasLaptop !== showLaptop) closeOverlaysIn(showLaptop ? phoneSection : laptopSection);
     setSectionVisibility(phoneSection, !showLaptop);
     setSectionVisibility(laptopSection, showLaptop);
     btnPhone.classList.toggle('active', !showLaptop);
@@ -3827,7 +4440,9 @@ async function loadLaptopCatalog() {
       laptopLoadStarted = true;
       loadLaptopCatalog();
     }
+    if (wasLaptop !== showLaptop) syncFilterUrl();
   }
+  activateStorefrontFn = activateStorefront;
 
   btnPhone.addEventListener('click', () => activateStorefront('phone'));
   btnLaptop.addEventListener('click', () => activateStorefront('laptop'));
@@ -3848,7 +4463,7 @@ async function loadLaptopCatalog() {
   // kullanıcı toggle'a tıklamadan laptop storefront'unu otomatik aktif et
   // (aksi halde laptop-section hidden+inert kalır ve link hiçbir şey
   // açmaz). Telefon tarafının #urun/slug davranışına dokunmuyor.
-  if (location.hash.indexOf('#laptop/') === 0) {
+  if (location.hash.indexOf('#laptop/') === 0 || urlFilterState.store === 'laptop') {
     activateStorefront('laptop');
   }
 })();
@@ -3883,12 +4498,42 @@ async function loadLaptopCatalog() {
   const storeLinks = document.querySelectorAll('[data-nav-store]');
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // DENETİM 2026-10-03 — SEÇİLİ MENÜ = GÖRÜNEN BÖLÜM: eskiden açılışta (hero
+  // ekrandayken) bile "Telefonlar" seçili görünüyordu. Ekranın ortasından
+  // geçen bölüm izlenir (IntersectionObserver; kaydırma dinleyicisi yok):
+  // açılış -> "Ana Sayfa", katalog -> etkin mağaza (Telefonlar / Laptoplar),
+  // Mağazamız / Yorumlar / SSS -> header'daki ilgili bağlantı.
+  const homeLink = document.querySelector('.bottom-nav a[href="#"]');
+  const sectionLinks = { store: document.querySelector('.nav-links a[href="#store"]'), reviews: document.querySelector('.nav-links a[href="#referanslar"]'), faq: document.querySelector('.nav-links a[href="#sss"]') };
+  let zone = 'home';
   function syncCurrentStore() {
     const laptopActive = !!(btnLaptop && btnLaptop.classList.contains('active'));
     storeLinks.forEach(function (a) {
-      if ((a.dataset.navStore === 'laptop') === laptopActive) a.setAttribute('aria-current', 'true');
+      if (zone === 'catalog' && (a.dataset.navStore === 'laptop') === laptopActive) a.setAttribute('aria-current', 'true');
       else a.removeAttribute('aria-current');
     });
+    if (homeLink) { if (zone === 'home') homeLink.setAttribute('aria-current', 'true'); else homeLink.removeAttribute('aria-current'); }
+    Object.keys(sectionLinks).forEach(function (k) {
+      const a = sectionLinks[k];
+      if (!a) return;
+      if (zone === k) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    });
+  }
+  // Öncelik sırası: iç içe bölgelerde ilk eşleşen kazanır (marka paneli
+  // #home-vitrin içinde ama "Telefonlar" bağlantısının gittiği yer).
+  const zones = [['catalog', 'brandStrip'], ['home', 'home-vitrin'], ['catalog', 'catalogEntry'], ['catalog', 'phone-section'], ['catalog', 'laptop-section'],
+    ['other', 'danisma'], ['store', 'store'], ['reviews', 'referanslar'], ['other', 'socialTitle'], ['faq', 'sss']];
+  if ('IntersectionObserver' in window) {
+    const watched = zones.map(function (z) { return { zone: z[0], el: document.getElementById(z[1]), on: false }; }).filter(function (w) { return w.el; });
+    const io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { watched.forEach(function (w) { if (w.el === en.target) w.on = en.isIntersecting; }); });
+      const hit = watched.find(function (w) { return w.on; });
+      const next = hit ? hit.zone : 'other';
+      if (next !== zone) { zone = next; syncCurrentStore(); }
+    }, { rootMargin: '-45% 0px -54% 0px' });
+    watched.forEach(function (w) { io.observe(w.el); });
+  } else {
+    zone = 'catalog';
   }
 
   storeLinks.forEach(function (a) {
@@ -3913,6 +4558,27 @@ async function loadLaptopCatalog() {
     new MutationObserver(syncCurrentStore).observe(btnLaptop, { attributes: true, attributeFilter: ['class'] });
   }
   syncCurrentStore();
+
+  // DENETİM 2026-10-03 — AÇILIŞTA ARAMA: ayrı bir filtre sistemi DEĞİL;
+  // telefon kataloğunun mevcut #q aramasını doldurur (aynı durum, aynı sonuç).
+  const heroForm = document.getElementById('heroSearch');
+  const heroQ = document.getElementById('heroQ');
+  const catalogQ = document.getElementById('q');
+  if (heroForm && heroQ && catalogQ) {
+    heroForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const term = cleanUrlText(heroQ.value);
+      if (btnPhone && !btnPhone.classList.contains('active')) btnPhone.click();
+      catalogQ.value = term;
+      catalogQ.dispatchEvent(new Event('input', { bubbles: true }));
+      const target = document.getElementById('catalog');
+      const heading = document.getElementById('catalogHeading');
+      if (target) target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+      if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
+    });
+    // Katalogdaki arama değişince açılış kutusu da aynı metni gösterir.
+    catalogQ.addEventListener('input', function () { if (document.activeElement !== heroQ) heroQ.value = catalogQ.value; });
+  }
 })();
 
 // ================================================================
@@ -4312,18 +4978,27 @@ async function loadLaptopCatalog() {
 })();
 
 // ================================================================
-// REDESIGN SAĞLAMLAŞTIRMA — TELEFON PENCERELERİ ERİŞİLEBİLİRLİĞİ
-// Ürün, Favoriler, Telefon Bul, Karşılaştır, KVKK ve büyük fotoğraf
-// pencereleri için: açılınca odak pencerenin içinde, Tab/Shift+Tab pencerede
-// döner, kapanınca odak açan öğeye geri döner. Mevcut aç/kapa fonksiyonları
-// DEĞİŞMEZ; sadece sınıf değişimi izlenir. Laptop pencerelerinin kendi odak
-// yönetimi zaten var (dahil edilmedi).
+// REDESIGN SAĞLAMLAŞTIRMA — PENCERE ERİŞİLEBİLİRLİĞİ (telefon + laptop)
+// Ürün, Favoriler, Telefon Bul, Karşılaştır, KVKK, büyük fotoğraf, laptop
+// ürün/form pencereleri ve mobil filtre çekmeceleri için: açılınca odak
+// pencerenin içinde, Tab/Shift+Tab pencerede döner, Escape en üsttekini kapatır,
+// kapanınca odak açan öğeye geri döner. Mevcut aç/kapa fonksiyonları DEĞİŞMEZ;
+// sadece sınıf değişimi izlenir.
 // ================================================================
 (function initDialogA11y() {
-  // filterPanel: mobil filtre çekmecesi (masaüstünde yan panel, "open" almaz).
-  const DIALOGS = [['modal', 'open'], ['favmodal', 'open'], ['findermodal', 'open'], ['comparemodal', 'open'], ['legalmodal', 'open'], ['lightbox', 'active'], ['filterPanel', 'open']];
+  // DENETİM 2026-10-03: telefon VE laptop pencereleri tek yığında. Escape
+  // yalnız EN ÜSTTEKİ pencereyi kapatır; Tab yalnız en üstteki pencerede döner.
+  // filterPanel / laptopFilterPanel: mobil çekmece (masaüstünde "open" almaz).
+  const DIALOGS = [
+    ['modal', 'open', () => closeProduct()], ['favmodal', 'open', () => closeFavModal()],
+    ['findermodal', 'open', () => closeFinderModal()], ['comparemodal', 'open', () => closeCompareModal()],
+    ['legalmodal', 'open', () => closeLegalModal()], ['lightbox', 'active', () => closeLightbox()],
+    ['filterPanel', 'open', () => closeFilterDrawer()],
+    ['laptopModal', 'open', () => closeLaptopProduct()], ['laptopFinderModal', 'open', () => closeLaptopFinder()],
+    ['laptopFilterPanel', 'open', () => closeLaptopFilterDrawer()]
+  ];
   const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
-  const stack = [];                      // { el, opener }
+  const stack = [];                      // { el, opener, close }
   let lastOutside = null;
   const dialogEls = DIALOGS.map(([id]) => document.getElementById(id)).filter(Boolean);
   const inDialog = t => dialogEls.some(d => d.contains(t));
@@ -4331,16 +5006,17 @@ async function loadLaptopCatalog() {
   // Pencere içindeki odaklar "açan öğe" sayılmaz (açılış anında da).
   document.addEventListener('focusin', e => { if (!inDialog(e.target)) lastOutside = e.target; }, true);
 
-  DIALOGS.forEach(([id, cls]) => {
+  DIALOGS.forEach(([id, cls, close]) => {
     const el = document.getElementById(id);
     if (!el) return;
     let wasOpen = el.classList.contains(cls);
+    if (wasOpen) stack.push({ el, opener: null, close });
     new MutationObserver(() => {
       const isOpen = el.classList.contains(cls);
       if (isOpen === wasOpen) return;
       wasOpen = isOpen;
       if (isOpen) {
-        stack.push({ el, opener: lastOutside });
+        stack.push({ el, opener: lastOutside, close });
         if (!el.contains(document.activeElement)) {
           const first = [...el.querySelectorAll(FOCUSABLE)].find(visible);
           if (first) first.focus({ preventScroll: true });
@@ -4355,12 +5031,18 @@ async function loadLaptopCatalog() {
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Tab' || !stack.length) return;
-    const top = stack[stack.length - 1].el;
-    const items = [...top.querySelectorAll(FOCUSABLE)].filter(visible);
+    if (!stack.length) return;
+    const top = stack[stack.length - 1];
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      top.close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const items = [...top.el.querySelectorAll(FOCUSABLE)].filter(visible);
     if (!items.length) { e.preventDefault(); return; }
     const first = items[0], last = items[items.length - 1];
-    if (!top.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    if (!top.el.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
     else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });

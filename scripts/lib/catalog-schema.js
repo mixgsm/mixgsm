@@ -52,9 +52,10 @@ function isYes(v) {
   return YES_VALUES.has(normalizeTR(v == null ? "" : String(v)));
 }
 
+// Baslik satiri da ayni (tirnak destekli) ayristiriciyla okunur.
 function findHeaderLine(tsv) {
-  const first = String(tsv || "").split("\n")[0];
-  return first ? first.replace(/\r/g, "") : null;
+  const first = require("./tsv").parseTsvRows(String(tsv || ""))[0];
+  return first ? first.map((c) => c.replace(/\r/g, "")).join("\t") : null;
 }
 
 function validateHeader(headerLine, expected) {

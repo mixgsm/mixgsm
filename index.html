@@ -43,7 +43,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.f16cc9fd97.js" defer></script>
+<script src="js/app.f280be1e3f.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -827,7 +827,10 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
   #laptop-section .laptop-filter-panel { visibility: hidden; transition: transform .28s ease, visibility 0s linear .28s; }
   #laptop-section .laptop-filter-panel.open { transform: translateY(0); visibility: visible; transition: transform .28s ease; }
 }
-@media (min-width: 900px) {
+/* DENETİM 2026-10-03: 900px'te max-width:900px (çekmece) ile min-width:900px
+   (yan sütun) aynı anda uygulanıyordu; masaüstü düzeni telefon tarafındaki
+   gibi 901px'te başlar. */
+@media (min-width: 901px) {
   #laptop-section .laptop-catalog-layout { grid-template-columns: 240px 1fr; align-items: start; }
   #laptop-section .laptop-filter-panel { position: sticky; top: calc(var(--nav-h, 64px) + 20px); }
 }
@@ -1403,6 +1406,229 @@ Geri almak için bu bloğu silmek yeterli. -->
   color: #AEB8CC;
 }
 </style>
+<!-- DENETİM 2026-10-03 — erişilebilirlik, mobil kullanım ve okunurluk
+düzeltmeleri. Yalnızca ekleme/ezme; mevcut kurallar yerinde duruyor. Bloğun
+tamamı silinirse site önceki görünümüne döner (JS'in eklediği yeni öğeler
+o durumda tarayıcı varsayılanıyla görünür). -->
+<style>
+/* --- Ortak tokenlar: küçük metinde WCAG AA (≥4,5:1) sağlayan tonlar --- */
+:root { --wa-text: #25D366; --danger-text: #F2737E; --tap: 44px; }
+:root[data-theme="light"] { --wa-text: #0C7A40; --danger-text: #B42318; }
+.zone-dark { --wa-text: #25D366; --danger-text: #F2737E; }
+
+/* D) Durum rozetleri ve uyarılar (açık + koyu tema) */
+.stock.no { color: var(--danger-text); background: color-mix(in srgb, var(--danger-text) 12%, transparent); }
+.cache-notice, .modal-stock-warn { color: var(--danger-text); }
+#laptop-section .laptop-modal-stock-warn { color: var(--danger-text); }
+.price-query, .laptop-price-ask { color: var(--wa-text) !important; }
+#laptop-section .laptop-card-price.ask { color: var(--wa-text); }
+:root[data-theme="light"] #laptop-section .laptop-card-badge.ask { color: #6B5200; background: rgba(201,162,39,.22); }
+.modal-price-ask { color: var(--wa-text); font-size: 22px; font-weight: 600; }
+/* Mağaza fotoğrafı penceresi her temada koyu: kapatma simgesi her zaman açık renk. */
+.lightbox-close { color: #fff; background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.35); width: 48px; height: 48px; top: max(16px, env(safe-area-inset-top)); }
+.lightbox-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* B) Laptop arama: kutunun tamamında görünür klavye odağı */
+#laptop-section .laptop-search:focus-within { border-color: color-mix(in srgb, var(--text) 28%, transparent); }
+#laptop-section .laptop-search:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+@supports not selector(:has(*)) {
+  #laptop-section .laptop-search input:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+}
+.search:has(input:focus-visible) input { outline-offset: 2px; }
+
+/* C) Telefon ürün penceresi: kapat + paylaş kaydırma boyunca üstte (laptop
+   penceresindeki sabit şeritle aynı dil). Şerit kendi satırını kaplar; ürün
+   görselini ya da adını örtmez. */
+.modal-bar { grid-column: 1 / -1; position: sticky; top: 0; z-index: var(--z-modal-control); display: flex; justify-content: flex-end; gap: 8px; padding: 10px 12px 6px; background: linear-gradient(to bottom, var(--bg) 72%, color-mix(in srgb, var(--bg) 0%, transparent)); }
+.modal-bar .close, .modal-bar .share-btn { position: static; margin: 0; }
+.modal .close, .modal .share-btn, #laptop-section .laptop-modal-close, .comparemodal .close, .filter-panel .close { width: var(--tap); height: var(--tap); }
+#laptop-section .laptop-modal-bar { padding: 10px 12px 6px; }
+
+/* A) Ürün penceresinde fiyat + WhatsApp alanı: içerik kayarken altta görünür
+   kalır (sticky), en sona gelince doğal yerine oturur ve son teknik satırları
+   örtmez. Alt çentik (safe-area) payı alanın içinde. */
+.modal-cta { position: sticky; bottom: 0; z-index: var(--z-modal-control); display: flex; align-items: center; gap: 12px; margin: 18px -30px 0; padding: 12px 30px calc(12px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); box-shadow: 0 -10px 24px -18px rgba(0,0,0,.55); }
+.modal-cta-price { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 17px; font-weight: 700; line-height: 1.2; color: var(--text); }
+.modal-cta-price small { font-size: 12px; font-weight: 600; color: var(--muted); }
+.modal-cta-price .is-ask { font-size: 15px; color: var(--wa-text); }
+.modal-cta .modalwa, #laptop-section .laptop-modal-cta .laptop-modalwa { flex: 0 0 auto; width: auto; min-height: 48px; padding: 0 18px; }
+.modalinfo { padding-bottom: 0; }
+#laptop-section .laptop-modalinfo { padding-bottom: 0; }
+#laptop-section .laptop-modal-cta { margin: 18px -28px 0; padding: 12px 28px calc(12px + env(safe-area-inset-bottom)); }
+@media (max-width: 768px) {
+  .modal-cta { margin: 18px -22px 0; padding-left: 22px; padding-right: 22px; }
+  .modalinfo { padding-bottom: 0; }
+}
+@media (max-width: 720px) {
+  #laptop-section .laptop-modalinfo { padding-bottom: 0; }
+}
+@media (max-width: 380px) {
+  .modal-cta, #laptop-section .laptop-modal-cta { gap: 8px; }
+  .modal-cta .modalwa, #laptop-section .laptop-modal-cta .laptop-modalwa { padding: 0 12px; font-size: 14px; }
+}
+/* Kısa / yatay ekran: alan daha sıkı */
+@media (max-height: 480px) {
+  .modal-cta, #laptop-section .laptop-modal-cta { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); margin-top: 12px; }
+  .modal-cta .modalwa, #laptop-section .laptop-modal-cta .laptop-modalwa { min-height: 44px; }
+  .modalbox, #laptop-section .laptop-modalbox { top: 4dvh; max-height: 96dvh; }
+}
+
+/* D) İkinci el laptop özeti (yalnız Sheet'te dolu alanlar) */
+#laptop-section .laptop-used-summary { margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+#laptop-section .laptop-used-summary[hidden] { display: none; }
+#laptop-section .laptop-used-summary h3 { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--text); }
+#laptop-section .laptop-used-summary ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+#laptop-section .laptop-used-summary li { font-size: 13px; line-height: 1.3; padding: 5px 9px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); }
+#laptop-section .laptop-used-summary li span { color: var(--muted); }
+#laptop-section .laptop-modal-desc { white-space: pre-line; }
+
+/* B) Dokunma alanları (dokunmatik ekranlarda en az 44px; ikonlar büyümez) */
+.fav::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+@media (pointer: coarse), (max-width: 720px) {
+  .theme-toggle-btn { width: var(--tap); height: var(--tap); border-radius: 12px; }
+  .comparebar button, .comparetraybar button { min-height: var(--tap); min-width: var(--tap); padding-left: 12px; padding-right: 12px; }
+  .comparebar, .comparetraybar { padding-top: 4px; padding-bottom: 4px; }
+  #laptop-section .laptop-filter-group button, #laptop-section .laptop-filter-group-adv button, .filter-group-adv button, .quickuse-pills button { min-height: var(--tap); }
+  #laptop-section .laptop-gallery-arrow { width: var(--tap); height: var(--tap); }
+  #laptop-section .laptop-filter-close { width: var(--tap); height: var(--tap); display: inline-flex; align-items: center; justify-content: center; }
+  .sort, #laptop-section .laptop-sort { min-height: var(--tap); }
+  .adv-clear { min-height: var(--tap); }
+  .compare-remove { min-height: 36px; padding: 6px 8px; }
+}
+
+/* C) Mobil form alanları ≥16px: iOS odaklanınca sayfayı büyütmez. */
+@media (max-width: 900px), (pointer: coarse) {
+  .search input, #laptop-section .laptop-search input, .adv-price-row input, .adv-select, .sort,
+  #laptop-section .laptop-price-row input, #laptop-section .laptop-sort,
+  #laptop-section .laptop-form-row input, #laptop-section .laptop-form-row select, #laptop-section .laptop-form-row textarea,
+  .home-hero-search input { font-size: 16px; }
+}
+
+/* Laptop formu: gönderim önizlemesi ve gizlilik notu */
+#laptop-section .laptop-form-preview { margin: 4px 0 14px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 10px; background: var(--surface); }
+#laptop-section .laptop-form-preview-title { margin: 0 0 6px; font-size: 12.5px; font-weight: 700; color: var(--text); }
+#laptop-section .laptop-form-preview pre { margin: 0; font: inherit; font-size: 13px; line-height: 1.5; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+#laptop-section .laptop-form-privacy { margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+#laptop-section .laptop-form-privacy button { padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; min-height: 24px; }
+#laptop-section .laptop-form-matches { margin: 0 0 14px; }
+#laptop-section .laptop-form-matches[hidden] { display: none; }
+#laptop-section .laptop-form-matches h3 { margin: 0 0 8px; font-size: 13px; font-weight: 700; }
+#laptop-section .laptop-match { display: block; width: 100%; text-align: left; margin: 0 0 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+#laptop-section .laptop-match strong { display: block; font-size: 14px; }
+#laptop-section .laptop-match span { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* Öneri gerekçeleri (Telefonumu Bul) */
+.finder-why { list-style: none; margin: 6px 0 8px; padding: 0; text-align: left; }
+.finder-why li { position: relative; padding-left: 16px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.finder-why li::before { content: "✓"; position: absolute; left: 0; color: var(--wa-text); font-weight: 700; }
+
+/* Karşılaştırma: farklı satırlar vurgulu, aynı olanlar sade */
+.comparetable tr.is-diff td:first-child { color: var(--text); font-weight: 600; }
+.comparetable tr.is-diff td:first-child::after { content: " • farklı"; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+.comparetable tr.is-same td { color: var(--muted); }
+.compare-summary { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
+
+/* Katalog güncellenme zamanı (catalog*.json generatedAt) */
+.catalog-updated { display: block; margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+.topline, #laptop-section .laptop-topline { flex-wrap: wrap; row-gap: 8px; column-gap: 12px; }
+.topline .count-wrap, #laptop-section .laptop-count-wrap { flex: 1 1 180px; min-width: 0; }
+.topline .sort, #laptop-section .laptop-sort { margin-left: auto; }
+.comparebar span, .comparetraybar span { white-space: nowrap; }
+.catalog-updated[hidden] { display: none; }
+
+/* 8) Açılış etiketi: uzun model adı iki satıra kadar. left:50% + translate
+   yerine iki kenara yaslı + ortalı: etiket sahnenin tam genişliğini
+   kullanabilir (önceden yalnız yarısını kullanıp adı kesiyordu). */
+.home-hero-pick { left: 10px; right: 10px; transform: none; width: fit-content; margin-inline: auto; border-radius: 14px; }
+.home-hero-pick-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; text-align: center; }
+@media (min-width: 768px) { .home-hero-pick { max-width: calc(100% - 28px); } .home-hero-stage.has-pick img { margin-bottom: 44px; } }
+@media (max-width: 767px) { .home-hero-stage.has-pick img { max-height: 56%; margin-bottom: 56px; } }
+
+/* 6) Açılış dönüşü: görünür durdur/başlat düğmesi */
+.home-hero-rotate { position: absolute; top: 8px; right: 8px; z-index: 3; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: rgba(12,12,14,0.6); color: #fff; cursor: pointer; }
+.home-hero-rotate::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+.home-hero-rotate[hidden] { display: none; }
+.home-hero-rotate svg.icon { font-size: 16px; }
+.home-hero-rotate:focus-visible { outline: 2px solid #0A0A0A; outline-offset: 2px; box-shadow: 0 0 0 4px #fff; }
+.home-hero-rotate .ic-play, .home-hero-rotate[aria-pressed="true"] .ic-pause { display: none; }
+.home-hero-rotate[aria-pressed="true"] .ic-play { display: block; }
+
+/* 4D) Açılışta erken arama (mevcut #q arama durumunu kullanır) */
+.home-hero-search { position: relative; display: flex; gap: 8px; max-width: 520px; margin: 0 0 18px; }
+.home-hero-search svg.icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #A3ACBD; font-size: 17px; pointer-events: none; }
+.home-hero-search input { flex: 1 1 auto; min-width: 0; height: 50px; padding: 0 12px 0 42px; border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; background: rgba(255,255,255,0.07); color: #F5F5F7; font-size: 15px; }
+.home-hero-search input::placeholder { color: #A3ACBD; opacity: 1; }
+.home-hero-search input:focus-visible { outline: 2px solid #F5F5F7; outline-offset: 2px; }
+.home-hero-search button { flex: 0 0 auto; min-width: 64px; height: 50px; padding: 0 16px; border: 0; border-radius: 14px; background: #F5F5F7; color: #0A0A0A; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.home-hero-search button:focus-visible { outline: 2px solid #F5F5F7; outline-offset: 3px; }
+@media (max-width: 767px) { .home-hero-sub { margin-bottom: 16px; } .home-hero-search { margin-bottom: 14px; } }
+
+/* Telefon kataloğunda sonuç yoksa laptopta arama önerisi */
+.empty .empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+
+/* E) İki yorumlu düzen: geniş ekranda boşluk kalmasın */
+@media (min-width: 900px) { #googleReviews { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: 960px; } }
+
+/* Hareket azaltma */
+@media (prefers-reduced-motion: reduce) { .modal-cta { box-shadow: none; } }
+</style>
+<!-- DENETİM 2 (2026-10-03) — laptop ürün sahnesi + Satılan Modeller.
+Laptop fotoğrafları (scripts/laptop-stage.py ile zemini saydamlaştırılmış
+türevler) açık gri, yumuşak bir ürün sahnesinde; sahne her iki temada açık
+kalır (telefon açılış sahnesiyle aynı yaklaşım). Görsel kırpılmaz, oranı
+bozulmaz, doğal boyutundan büyütülmez. -->
+<style>
+#laptop-section {
+  --stage-hi: #F5F6F8; --stage-lo: #E3E6EB;
+  --stage-bg: radial-gradient(120% 95% at 50% 30%, var(--stage-hi) 0%, var(--stage-lo) 100%);
+}
+:root[data-theme="dark"] #laptop-section { --stage-hi: #E9EBEF; --stage-lo: #CDD2D9; }
+
+/* Kart sahnesi: görsel kutuda ortalanır, nefes payı bırakılır. */
+#laptop-section .laptop-card-visual { background: var(--stage-bg); display: flex; align-items: center; justify-content: center; padding: 7% 9% 6%; overflow: hidden; }
+#laptop-section .laptop-card-visual img,
+#laptop-section .vitrin .laptop-card-visual img { position: static; inset: auto; width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
+/* İşlenmemiş beyaz zeminli fotoğraf (yeni yüklenen / güvenlik nedeniyle
+   dokunulmayan): beyaz, sahne rengine karışır; beyaz kutu görünmez. */
+#laptop-section img[data-stage="white"] { mix-blend-mode: multiply; }
+/* Kart üzerindeki rozetler sahnenin açık zemininde okunur kalsın. */
+#laptop-section .laptop-card-badge.ask { background: rgba(255,255,255,.88); color: #6B5200; border: 1px solid rgba(107,82,0,.35); }
+
+/* Galeri: koyu pencerede yuvarlak köşeli ürün sahnesi; görsel kırpılmaz. */
+#laptop-section .laptop-modalvisual { padding: 16px 16px 14px; gap: 12px; }
+#laptop-section .laptop-gallery-main { aspect-ratio: 16 / 10; max-height: min(52vh, 460px); max-height: min(52dvh, 460px); border-radius: var(--radius-lg); background: var(--stage-bg); overflow: hidden; }
+#laptop-section .laptop-modalvisual .laptop-gallery-main img { width: auto; height: auto; max-width: 88%; max-height: 86%; object-fit: contain; }
+#laptop-section .laptop-gallery-thumbs { margin-top: 0; padding: 2px; gap: 8px; scrollbar-width: thin; }
+#laptop-section .laptop-gallery-thumb { width: 64px; height: 48px; border-radius: 10px; background: var(--stage-bg); display: flex; align-items: center; justify-content: center; }
+#laptop-section .laptop-gallery-thumb img { width: auto; height: auto; max-width: 88%; max-height: 84%; object-fit: contain; }
+#laptop-section .laptop-gallery-thumb.active { border-color: var(--laptop-gold); box-shadow: 0 0 0 1px var(--laptop-gold); }
+#laptop-section .laptop-gallery-thumb:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+#laptop-section .laptop-gallery-arrow { background: rgba(12,12,14,.62); border-color: rgba(255,255,255,.25); }
+#laptop-section .laptop-gallery-arrow:hover { background: rgba(12,12,14,.8); }
+#laptop-section .laptop-gallery-arrow:focus-visible { outline: 2px solid #0A0A0A; outline-offset: 2px; box-shadow: 0 0 0 4px #fff; }
+@media (max-width: 480px) {
+  #laptop-section .laptop-modalvisual { padding: 12px 12px 10px; }
+  #laptop-section .laptop-gallery-main { aspect-ratio: 4 / 3; }
+  #laptop-section .laptop-gallery-thumb { width: 56px; height: 44px; }
+}
+@media (max-height: 480px) {
+  #laptop-section .laptop-gallery-main { max-height: 62dvh; }
+}
+
+/* Satılan Modeller: ayrı bölüm, daha sakin kart; metin kontrastı korunur
+   (yalnız görsel soluklaşır, yazılar tam renkli). Bilgi yalnız renkle
+   verilmez: "SATILDI" rozeti + "Satıldı · benzerini sorun" metni. */
+#laptop-section .laptop-sold { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--line); }
+#laptop-section .laptop-sold[hidden] { display: none; }
+#laptop-section .laptop-sold-head { margin-bottom: 16px; }
+#laptop-section .laptop-sold-title { margin: 0 0 6px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+#laptop-section .laptop-sold-count { color: var(--muted); font-weight: 600; }
+#laptop-section .laptop-sold-note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+#laptop-section .laptop-card--sold { background: var(--surface); }
+#laptop-section .laptop-card--sold .laptop-card-visual img { filter: grayscale(.45); opacity: .82; }
+#laptop-section .laptop-card-sold-note { font-size: 13px; font-weight: 600; color: var(--muted); }
+#laptop-section .laptop-modalprice.is-sold { color: var(--danger-text); font-size: 18px; }
+</style>
 
 
 </head>
@@ -1442,6 +1668,8 @@ Geri almak için bu bloğu silmek yeterli. -->
   <symbol id="ic-gamepad" viewBox="0 0 24 24"><path d="M7.5 7h9a4.5 4.5 0 0 1 4.37 5.6l-.95 3.8a2.3 2.3 0 0 1-3.9 1.05L14.3 15.5H9.7l-1.72 1.95a2.3 2.3 0 0 1-3.9-1.05l-.95-3.8A4.5 4.5 0 0 1 7.5 7z"></path><line x1="8" y1="10" x2="8" y2="13"></line><line x1="6.5" y1="11.5" x2="9.5" y2="11.5"></line><circle cx="15.5" cy="10.8" r=".6"></circle><circle cx="17" cy="12.6" r=".6"></circle></symbol>
   <symbol id="ic-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"></path><path d="M3 12.5h18"></path></symbol>
   <symbol id="ic-cap" viewBox="0 0 24 24"><polygon points="12 4 22 9 12 14 2 9 12 4"></polygon><path d="M6 11v4.5c0 1.4 2.7 3 6 3s6-1.6 6-3V11"></path><line x1="22" y1="9" x2="22" y2="14"></line></symbol>
+  <symbol id="ic-pause" viewBox="0 0 24 24"><line x1="8" y1="5" x2="8" y2="19"></line><line x1="16" y1="5" x2="16" y2="19"></line></symbol>
+  <symbol id="ic-play" viewBox="0 0 24 24"><polygon points="7 4.5 19.5 12 7 19.5 7 4.5"></polygon></symbol>
   <symbol id="ic-pen" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><line x1="13" y1="7" x2="17" y2="11"></line></symbol>
 </svg>
 
@@ -1481,6 +1709,13 @@ Geri almak için bu bloğu silmek yeterli. -->
       <p class="home-hero-eyebrow">MİX GSM</p>
       <h1 class="home-hero-title" id="homeHeroTitle"><span class="home-hero-l1">Günün Teknolojisi,</span> <span class="home-hero-l2">Bugünün Fiyatı.</span></h1>
       <p class="home-hero-sub">Yeni nesil akıllı cihazlar ve bilgisayarlar, her an güncellenen fiyatlarla MİX GSM'de</p>
+      <!-- DENETİM 2026-10-03: belirli modeli arayan için erken arama. Ayrı bir
+           filtre sistemi DEĞİL: telefon kataloğunun mevcut #q aramasını doldurur. -->
+      <form class="home-hero-search" id="heroSearch" role="search" aria-label="Katalogda ara">
+        <svg class="icon" aria-hidden="true"><use href="#ic-search"></use></svg>
+        <input id="heroQ" type="search" name="ara" placeholder="Model ara (örn. iPhone 17)" aria-label="Model veya marka ara" autocomplete="off" enterkeyhint="search" maxlength="60">
+        <button type="submit">Ara</button>
+      </form>
       <div class="home-hero-actions">
         <a href="#catalogEntry" class="home-hero-cta">Cihazları Keşfet <svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></a>
         <a href="https://wa.me/905424818255?text=Merhaba%20MİX%20GSM,%20katalog%20hakkında%20bilgi%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" class="home-hero-wa"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
@@ -1488,6 +1723,7 @@ Geri almak için bu bloğu silmek yeterli. -->
     </div>
     <div class="home-hero-stage" id="heroStage">
       <img id="heroProductImg" alt="" style="display:none;" fetchpriority="high" decoding="async">
+      <button type="button" class="home-hero-rotate" id="heroRotateBtn" aria-pressed="false" aria-label="Ürün geçişini durdur" hidden><svg class="icon ic-pause" aria-hidden="true"><use href="#ic-pause"></use></svg><svg class="icon ic-play" aria-hidden="true"><use href="#ic-play"></use></svg></button>
       <div class="home-hero-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
       <!-- Açılış ürünü etiketi: Sheet "Ana Sayfa" seçimleri sırayla döner;
            basınca ürün penceresi açılır (merkezi data-action="open-product"). -->
@@ -1761,7 +1997,8 @@ Geri almak için bu bloğu silmek yeterli. -->
     <div class="cache-notice" id="cacheNotice" style="display:none;" role="status">Bağlantı sorunu nedeniyle son başarılı katalog verisi gösteriliyor. Fiyat ve stok bilgisi güncel olmayabilir, WhatsApp'tan teyit alabilirsiniz.</div>
     <div class="topline">
       <div class="count-wrap">
-        <span class="count" id="count">Yükleniyor...</span>
+        <span class="count" id="count" role="status">Yükleniyor...</span>
+        <span class="catalog-updated" id="catalogUpdated" hidden></span>
       </div>
       <select class="sort" id="sort" aria-label="Sıralama">
         <option value="default">Sıralama: Varsayılan</option>
@@ -1908,7 +2145,8 @@ Geri almak için bu bloğu silmek yeterli. -->
       </div>
       <div class="laptop-topline">
         <div class="laptop-count-wrap">
-          <span class="laptop-count" id="laptopCount">Yükleniyor...</span>
+          <span class="laptop-count" id="laptopCount" role="status">Yükleniyor...</span>
+          <span class="catalog-updated" id="laptopCatalogUpdated" hidden></span>
         </div>
         <select class="laptop-sort" id="laptopSort" aria-label="Laptop Sıralama">
           <option value="default">Sıralama: Önerilen</option>
@@ -1920,6 +2158,17 @@ Geri almak için bu bloğu silmek yeterli. -->
       </div>
       <section class="laptop-grid" id="laptopGrid" aria-busy="false"></section>
       <div class="catalog-more" id="laptopCatalogMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="laptopGrid">Daha Fazla Göster</button></div>
+
+      <!-- DENETİM 2: satılmış / stokta olmayan laptoplar ana listeden ayrı.
+           Aynı katalog verisi stok durumuna göre gruplanır (kopya yok). -->
+      <section class="laptop-sold" id="laptopSold" aria-labelledby="laptopSoldTitle" hidden>
+        <div class="laptop-sold-head">
+          <h3 class="laptop-sold-title" id="laptopSoldTitle">Satılan Modeller <span class="laptop-sold-count" id="laptopSoldCount"></span></h3>
+          <p class="laptop-sold-note">Bu cihazlar satıldı, stokta değil. Benzer bir model için WhatsApp'tan sorabilirsiniz.</p>
+        </div>
+        <div class="laptop-grid laptop-sold-grid" id="laptopSoldGrid"></div>
+        <div class="catalog-more" id="laptopSoldMore" hidden><button type="button" class="cta-btn cta-btn--ghost" aria-controls="laptopSoldGrid">Daha Fazla Göster</button></div>
+      </section>
     </main>
   </div>
 
@@ -1946,6 +2195,11 @@ Geri almak için bu bloğu silmek yeterli. -->
           Bu laptop şu an stoklarımızda bulunmamaktadır. Alternatif modeller için WhatsApp'tan bilgi alabilirsiniz.
         </div>
 
+        <section class="laptop-used-summary" id="laptopUsedSummary" aria-labelledby="laptopUsedSummaryTitle" hidden>
+          <h3 id="laptopUsedSummaryTitle">İkinci el durum özeti</h3>
+          <ul id="laptopUsedSummaryList"></ul>
+        </section>
+
         <table class="laptop-spec-table">
           <tr id="tr-lm-condition"><td>Durum</td><td id="lmfcondition"></td></tr>
           <tr id="tr-lm-cpu"><td>İşlemci</td><td id="lmfcpu"></td></tr>
@@ -1971,7 +2225,10 @@ Geri almak için bu bloğu silmek yeterli. -->
 
         <p class="laptop-modal-desc" id="lmDescription"></p>
 
-        <button type="button" class="laptop-modalwa" id="laptopModalWaBtn"><svg class="icon"><use href="#ic-chat"></use></svg> Bu Laptobu Sor</button>
+        <div class="modal-cta laptop-modal-cta">
+          <div class="modal-cta-price" id="lmcp" aria-hidden="true"></div>
+          <button type="button" class="laptop-modalwa" id="laptopModalWaBtn"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1982,7 +2239,7 @@ Geri almak için bu bloğu silmek yeterli. -->
     <div class="laptop-modalbox laptop-form-box">
       <div class="laptop-modal-bar"><button type="button" class="laptop-modal-close" id="laptopFinderCloseBtn" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button></div>
       <h2 id="lfTitle" class="laptop-form-title">Bana Laptop Bul</h2>
-      <p class="laptop-form-sub">Aşağıdaki bilgileri doldurun, size en uygun laptopu WhatsApp üzerinden birlikte bulalım.</p>
+      <p class="laptop-form-sub">Bütçenizi ve kullanım amacınızı yazın; uygun modelleri WhatsApp üzerinden birlikte netleştirelim. Yıldızlı (*) alanlar zorunludur.</p>
 
       <form id="laptopFinderForm" novalidate>
         <div class="laptop-form-row">
@@ -2005,27 +2262,21 @@ Geri almak için bu bloğu silmek yeterli. -->
           <span class="laptop-form-error" id="lfUsageError"></span>
         </div>
 
+        <!-- DENETİM 2026-10-03: Durum tercihi isteğe bağlı; WhatsApp numarası
+             alanı kaldırıldı (mesaj zaten müşterinin kendi WhatsApp hesabından
+             gider), ad isteğe bağlı. -->
         <div class="laptop-form-row">
-          <label for="lfCondition">Durum Tercihi *</label>
-          <select id="lfCondition" name="condition" required>
-            <option value="">Seçiniz</option>
+          <label for="lfCondition">Durum Tercihi (opsiyonel)</label>
+          <select id="lfCondition" name="condition">
+            <option value="">Farketmez</option>
             <option value="Sıfır">Sıfır</option>
             <option value="2. El">2. El</option>
-            <option value="Farketmez">Farketmez</option>
           </select>
-          <span class="laptop-form-error" id="lfConditionError"></span>
         </div>
 
         <div class="laptop-form-row">
-          <label for="lfName">Ad Soyad *</label>
-          <input type="text" id="lfName" name="name" placeholder="Ad Soyad" autocomplete="name" maxlength="60" required>
-          <span class="laptop-form-error" id="lfNameError"></span>
-        </div>
-
-        <div class="laptop-form-row">
-          <label for="lfPhone">WhatsApp Numaranız *</label>
-          <input type="tel" id="lfPhone" name="phone" placeholder="05xx xxx xx xx" autocomplete="tel" inputmode="tel" maxlength="20" required>
-          <span class="laptop-form-error" id="lfPhoneError"></span>
+          <label for="lfName">Adınız (opsiyonel)</label>
+          <input type="text" id="lfName" name="name" placeholder="Size nasıl hitap edelim?" autocomplete="given-name" maxlength="60">
         </div>
 
         <div class="laptop-form-row">
@@ -2061,6 +2312,16 @@ Geri almak için bu bloğu silmek yeterli. -->
           <label for="lfNote">Not (opsiyonel)</label>
           <textarea id="lfNote" name="note" rows="3" maxlength="400" placeholder="Eklemek istediğiniz bir şey var mı?"></textarea>
         </div>
+
+        <!-- Katalogdaki uygun laptoplar: yalnız bütçe/kullanım/durum verisiyle
+             eşleşenler; gerekçeler veriden (uydurma performans iddiası yok). -->
+        <div class="laptop-form-matches" id="lfMatches" aria-live="polite" hidden></div>
+
+        <div class="laptop-form-preview">
+          <p class="laptop-form-preview-title" id="lfPreviewTitle">WhatsApp'a aktarılacak mesaj</p>
+          <pre id="lfPreview" aria-labelledby="lfPreviewTitle"></pre>
+        </div>
+        <p class="laptop-form-privacy">Gönder'e bastığınızda yukarıdaki metin WhatsApp'ta hazır mesaj olarak açılır; göndermeden önce görüp düzenleyebilirsiniz. Bilgileriniz bu siteye kaydedilmez. <button type="button" id="lfPrivacyBtn">Gizlilik açıklaması</button></p>
 
         <button type="submit" class="laptop-btn-primary laptop-form-submit" id="laptopFinderSubmitBtn" style="width:100%;">WhatsApp'tan Gönder</button>
       </form>
@@ -2121,7 +2382,9 @@ Geri almak için bu bloğu silmek yeterli. -->
   </div>
 </section>
 
-<!-- Google yorumları: işletmenin seçtiği 3 Google yorumu; metinler ve
+<!-- DENETİM 2026-10-03: "Laptop takası…" yorumu kaldırıldı (MİX GSM takas
+     yapmıyor; yerine yeni/uyarlanmış yorum YAZILMADI).
+     Google yorumları: işletmenin seçtiği Google yorumları; metinler ve
      isimler AYNEN. Statik içerik — Google/Places API, puan/yıldız veya canlı
      veri YOK. Eski WhatsApp alıntıları ve tekli slider kodu kaldırıldı. -->
 <section class="home-sec reviews zone-light" id="referanslar" aria-labelledby="reviewsTitle">
@@ -2136,7 +2399,6 @@ Geri almak için bu bloğu silmek yeterli. -->
   <div class="reviews-track" id="googleReviews" tabindex="0" role="region" aria-label="Google yorumları">
     <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Cihazlar temiz, fiyatlar makul. İsa Bey'e ilgisinden dolayı teşekkürler."</blockquote><figcaption class="ref-source">— Mehmet K.</figcaption></figure>
-    <figure class="ref-card"><blockquote class="ref-quote">"Laptop takası için gittim, süreci çok şeffaf yönettiler. Gaziantep'te tek adresim."</blockquote><figcaption class="ref-source">— Ayşe K.</figcaption></figure>
   </div>
 </section>
 
@@ -2211,8 +2473,11 @@ Geri almak için bu bloğu silmek yeterli. -->
 <!-- Modals & Overlays -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mn">
   <div class="modalbox">
-    <button class="close" aria-label="Kapat"><svg class="icon"><use href="#ic-close"></use></svg></button>
-    <button class="share-btn" aria-label="Ürün Linkini Kopyala"><svg class="icon"><use href="#ic-share"></use></svg></button>
+    <!-- DENETİM 2026-10-03: kapat + paylaş kaydırma boyunca üstte kalan şeritte. -->
+    <div class="modal-bar">
+      <button type="button" class="share-btn" aria-label="Ürün bağlantısını paylaş"><svg class="icon" aria-hidden="true"><use href="#ic-share"></use></svg></button>
+      <button type="button" class="close" aria-label="Kapat"><svg class="icon" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+    </div>
     <div class="modalvisual">
       <div class="pgal-main" id="miMain">
         <button type="button" class="pgal-arrow prev" id="miPrev" aria-label="Önceki görsel" hidden><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
@@ -2248,7 +2513,11 @@ Geri almak için bu bloğu silmek yeterli. -->
 
       <a id="mGsmarena" class="gsmarena-link" target="_blank" rel="noopener noreferrer"><svg class="icon"><use href="#ic-search-ext"></use></svg> Tüm Teknik Özellikleri GSMArena'da İncele</a>
 
-      <a id="mw" class="modalwa" target="_blank" rel="noopener noreferrer"><svg class="icon"><use href="#ic-chat"></use></svg> Bu Ürünü Sor</a>
+      <!-- DENETİM 2026-10-03: fiyat + WhatsApp alanı kaydırırken altta görünür. -->
+      <div class="modal-cta">
+        <div class="modal-cta-price" id="mcp" aria-hidden="true"></div>
+        <a id="mw" class="modalwa" target="_blank" rel="noopener noreferrer"><svg class="icon" aria-hidden="true"><use href="#ic-chat"></use></svg> WhatsApp'tan Sor</a>
+      </div>
     </div>
   </div>
 </div>
@@ -2320,8 +2589,8 @@ Geri almak için bu bloğu silmek yeterli. -->
     <h2 id="legalModalTitle" style="margin:0 0 16px;font-size:20px;">KVKK Aydınlatma Metni ve Gizlilik Politikası</h2>
     <div style="color:var(--muted);font-size:14px;line-height:1.8;">
       <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitedeki ürün kataloğunu görüntülemek için herhangi bir kayıt veya kişisel bilgi girmeniz gerekmez. Laptop kataloğundaki isteğe bağlı "Bana Laptop Bul" formu dışında, sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan başka bir form bulunmamaktadır.</p>
-      <p><strong>"Bana Laptop Bul" formu:</strong> Bu formu doldurduğunuzda girdiğiniz bilgiler (bütçe, kullanım amacı, durum tercihi, ad-soyad, WhatsApp numaranız ve varsa ekran boyutu, öncelik, marka tercihi, notunuz) yalnızca formu gönderene kadar, sadece kullandığınız cihazın tarayıcı oturumunda (sessionStorage) geçici olarak tutulur; bu bilgiler MİX GSM sunucusuna veya üçüncü bir tarafa otomatik olarak gönderilmez. "Gönder" butonuna bastığınızda girdiğiniz bilgiler hazır bir WhatsApp mesajına dönüştürülür ve WhatsApp uygulamasına yönlendirilirsiniz; mesajı fiilen göndermek size kalır ve bu aşamadan sonra bilgileriniz WhatsApp/Meta'nın kendi gizlilik politikasına tabi olur. Formu gönderdiğinizde tarayıcınızdaki geçici kayıt otomatik olarak silinir; sekmeyi gönderim yapmadan kapatmanız halinde de bu geçici kayıt kendiliğinden kaybolur.</p>
-      <p><strong>Favoriler ve karşılaştırma listesi:</strong> Favori ürünleriniz ve karşılaştırma listeniz yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
+      <p><strong>"Bana Laptop Bul" formu:</strong> Bu formu doldurduğunuzda girdiğiniz bilgiler (bütçe, kullanım amacı ve varsa durum tercihi, adınız, ekran boyutu, öncelik, marka tercihi, notunuz) yalnızca formu gönderene kadar, sadece kullandığınız cihazın tarayıcı oturumunda (sessionStorage) geçici olarak tutulur; bu bilgiler MİX GSM sunucusuna veya üçüncü bir tarafa otomatik olarak gönderilmez. "Gönder" butonuna bastığınızda girdiğiniz bilgiler hazır bir WhatsApp mesajına dönüştürülür ve WhatsApp uygulamasına yönlendirilirsiniz; mesajı fiilen göndermek size kalır ve bu aşamadan sonra bilgileriniz WhatsApp/Meta'nın kendi gizlilik politikasına tabi olur. Formu gönderdiğinizde tarayıcınızdaki geçici kayıt otomatik olarak silinir; sekmeyi gönderim yapmadan kapatmanız halinde de bu geçici kayıt kendiliğinden kaybolur.</p>
+      <p><strong>Favoriler, tema tercihi ve karşılaştırma listesi:</strong> Favori ürünleriniz, açık/koyu tema tercihiniz ve son yüklenen ürün listesinin bir kopyası (bağlantı sorununda gösterilmek üzere) yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır; karşılaştırma listeniz ise yalnızca sayfa açıkken tutulur. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
       <p><strong>Çerez ve takip:</strong> Site herhangi bir çerez (cookie) veya ziyaretçi takip/analiz yazılımı (ör. Google Analytics, Facebook Pixel) kullanmamaktadır.</p>
       <p><strong>WhatsApp, telefon ve Google Maps yönlendirmeleri:</strong> Sitedeki "WhatsApp'tan Yaz", "Aramak İçin Tıkla" ve "Google Maps" gibi butonlar sizi ilgili üçüncü taraf uygulama/servise yönlendirir. Bu servisler üzerinden bizimle paylaştığınız bilgiler (isim, telefon numarası, mesaj içeriği vb.), yalnızca sizinle iletişime geçip talebinizi karşılamak amacıyla kullanılır ve söz konusu platformların (WhatsApp/Meta, Google) kendi gizlilik politikalarına tabidir.</p>
       <p><strong>İletişim:</strong> Bu konudaki sorularınız için bize WhatsApp veya telefon üzerinden ulaşabilirsiniz.</p>

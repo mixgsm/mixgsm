@@ -21,6 +21,7 @@
 const fs = require("fs");
 const path = require("path");
 const schema = require("./lib/catalog-schema");
+const { parseTsvRows, cleanCell } = require("./lib/tsv");
 
 // MIX GSM: Public Laptop Sheet TSV export linki (isa tarafindan onaylandi,
 // 22.09.2026). Bu SADECE musteri-facing alanlar icin ayrilmis Public Sheet -
@@ -146,13 +147,15 @@ function parsePrice(raw) {
 // NOT: "WhatsApp Mesaji" sutunu BILEREK YOK - mesaj urun verisinden
 // dinamik uretilecek (Faz 6).
 function parseTsvToLaptopProducts(tsv) {
-  const lines = tsv.split("\n");
+  // Tirnakli hucre / hucre ici satir sonu destekli ayristirma (lib/tsv.js).
+  // Aciklama (29) cok satirli kalabilir; diger hucreler tek satira indirilir.
+  const rows = parseTsvRows(tsv);
   const products = [];
-  const startIndex = lines[0] && normalizeTR(lines[0]).includes("id") ? 1 : 0;
+  const startIndex = rows[0] && normalizeTR(rows[0].join("\t")).includes("id") ? 1 : 0;
 
-  for (let i = startIndex; i < lines.length; i++) {
-    if (!lines[i] || !lines[i].trim()) continue;
-    const cols = lines[i].split("\t").map((c) => c.trim().replace(/\r/g, ""));
+  for (let i = startIndex; i < rows.length; i++) {
+    const cols = rows[i].map((c, k) => cleanCell(c, k === 29));
+    if (!cols.some(Boolean)) continue;
 
     const brand = (cols[2] || "").toUpperCase();
     const model = (cols[3] || "").toUpperCase();

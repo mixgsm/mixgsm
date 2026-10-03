@@ -16,6 +16,7 @@ const vm = require("vm");
 const schema = require("./lib/catalog-schema");
 const { checkAssets, readAppSource } = require("./asset-version");
 const { loadSiteImageMatcher, checkPhoneImages, checkLaptopImages } = require("./check-images");
+const { checkLaptopStage } = require("./lib/laptop-stage");
 
 const HTML_PAGES = [
   { file: "index.html", requireCanonical: true },
@@ -185,6 +186,7 @@ function runQa(root, { quiet = false } = {}) {
     const warnings = ph.broken.concat(ph.fallback.map((x) => "gorsel yok: " + x), la.broken, la.noImage.map((x) => "laptop gorsel yok: " + x));
     return { errors: [], warnings };
   });
+  run("Laptop foto sahnesi", () => checkLaptopStage(root));
 
   const errors = sections.flatMap((s) => s.errors);
   const warnings = sections.flatMap((s) => s.warnings);

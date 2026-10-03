@@ -47,7 +47,7 @@ jobs:
       # Yalnizca VERI testleri: HTML/tasarim kaynakli bir QA hatasi fiyat
       # guncellemelerini dondurmasin (tam QA: .github/workflows/qa.yml).
       - name: Katalog dogrulama testleri
-        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/sitemap.test.js scripts/tests/sheet-selection.test.js
+        run: node --test scripts/tests/catalog-schema.test.js scripts/tests/check-images.test.js scripts/tests/sitemap.test.js scripts/tests/sheet-selection.test.js scripts/tests/tsv.test.js
 
       - name: catalog.json olustur (Google Sheets'ten - TELEFON)
         run: node scripts/generate-catalog.js
