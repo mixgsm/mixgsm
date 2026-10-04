@@ -33,15 +33,21 @@ concurrency:
 
 jobs:
   update-catalog:
-    runs-on: ubuntu-latest
+    # Sabit surum: "ubuntu-latest" 19 Ekim 2026'dan itibaren Ubuntu 26'ya geciyor;
+    # Playwright'in sistem bagimliliklari yeni surumde hazir olmayabilir.
+    runs-on: ubuntu-24.04
     steps:
       - name: Depoyu al
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          # Her zaman main'in EN SON halini al. Eski bir calismayi "Re-run"
+          # etmek bile eski commit yerine guncel main uzerinde calisir.
+          ref: main
 
       - name: Node.js kur
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "22"
 
       # Dogrulama kurallarinin kendisi bozuksa hicbir sey uretilmez/commit edilmez.
       # Yalnizca VERI testleri: HTML/tasarim kaynakli bir QA hatasi fiyat
@@ -129,5 +135,16 @@ jobs:
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
             git commit -m "chore: catalog.json / catalog-laptop.json / fiyat listesi gorselleri otomatik guncellendi"
-            git push
+            # Bu sirada main'e baska bir commit gelmis olabilir (or. elle yukleme).
+            # Gondermeden once en son main'in ustune al; zorla gonderme (force) YOK.
+            for deneme in 1 2 3; do
+              if git pull --rebase origin main && git push origin HEAD:main; then
+                exit 0
+              fi
+              git rebase --abort 2>/dev/null || true
+              echo "Gonderme basarisiz (deneme $deneme), tekrar denenecek..."
+              sleep 10
+            done
+            echo "::error::Katalog commit'i main'e gonderilemedi (3 deneme)."
+            exit 1
           fi
