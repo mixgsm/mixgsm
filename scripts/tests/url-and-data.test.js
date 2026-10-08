@@ -124,8 +124,22 @@ test("900px siniri: laptop masaustu duzeni 901px'te baslar (mobil cekmece kurall
   assert.ok(/@media \(max-width: 900px\) \{\s*#laptop-section \.laptop-filter-drawer-backdrop\.open/.test(html));
 });
 
-test("takas: sitede takas teklifi/tanitimi veya takasli yorum yok", () => {
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8").replace(/<!--[\s\S]*?-->/g, "");
-  assert.ok(!/takas/i.test(html), "index.html'de 'takas' gecen gorunur icerik var");
-  assert.ok(!/takas/i.test(source.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")), "site kodunda 'takas' metni var");
+test("takas: sitede takas teklifi/tanitimi veya takasli yorum yok (yalniz 'takas yok' bilgisi serbest)", () => {
+  // MİX GSM takas yapmaz. Serbest olan TEK ifade: takas YAPILMADIGINI soyleyen
+  // onayli SSS soru/cevabi (gorunur + JSON-LD) ve laptop ozetindeki cumle.
+  // Bunlar cikarildiktan sonra 'takas' gecen baska hicbir sey kalmamali.
+  const ALLOWED = [
+    "Eski cihazımı getirip takas yapabilir miyim?",
+    "Hayır, işletmemizde ikinci el telefon alım-satımı veya takas (trade-in) işlemi yapılmamaktadır.",
+    "Takas seçeneğimiz yoktur."
+  ];
+  const strip = (txt) => ALLOWED.reduce((acc, a) => acc.split(a).join(""), txt);
+  const html = strip(fs.readFileSync(path.join(root, "index.html"), "utf8").replace(/<!--[\s\S]*?-->/g, ""));
+  assert.ok(!/takas/i.test(html), "index.html'de onaysiz 'takas' gecen gorunur icerik var");
+  const code = strip(source.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, ""));
+  assert.ok(!/takas/i.test(code), "site kodunda onaysiz 'takas' metni var");
+  // Onayli bilgi gercekten yerinde mi: SSS (gorunur + JSON-LD) ve laptop ozeti.
+  const raw = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  assert.equal(raw.split(ALLOWED[0]).length - 1, 2, "SSS takas sorusu hem gorunur hem JSON-LD'de olmali");
+  assert.ok(source.includes(ALLOWED[2]), "laptop ozetinde 'Takas seçeneğimiz yoktur.' olmali");
 });
