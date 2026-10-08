@@ -136,7 +136,8 @@ test("laptop penceresi: kapat seridi ve WhatsApp alani; ikinci el ozeti yalniz d
     return { ok: !!hit && hit.closest("#laptopModalCloseBtn") !== null, items, hidden: document.getElementById("laptopUsedSummary").hidden };
   });
   assert.equal(r.ok, true);
-  if (!r.hidden) r.items.forEach((t2) => assert.ok(/^(Kozmetik|Pil|Garanti|Kutu|Fatura|Adaptör): \S/.test(t2), t2));
+  // Dolu alanlar "Etiket: değer" biçiminde; tek istisna onaylı "takas yok" cümlesi.
+  if (!r.hidden) r.items.forEach((t2) => assert.ok(t2 === "Takas seçeneğimiz yoktur." || /^(Kozmetik|Pil|Garanti|Kutu|Fatura|Adaptör): \S/.test(t2), t2));
   assert.deepEqual(errors, []);
 });
 
