@@ -82,13 +82,13 @@ test("galeri: sabit eşleşmeli (alias) modelde de ek fotoğraflar gelir, Pro Ma
 });
 
 test("galeri: 'xiaomi-' önekli yüklemeler doğru Xiaomi modeline bağlanır", () => {
-  const repo = ["MI-17.jpg", "xiaomi-17-2.jpg", "xiaomi-17-3.jpg", "xiaomi-17-pro-2.jpg", "MI-17T.jpg", "xiaomi-17t-1.jpg",
-    "REDMI-NOTE-17-PRO-MAX.jpg", "xiaomi-redmi-note-17-pro-max-2.jpg", "xiaomi-redmi-note-17-pro-2.jpg"];
+  const repo = ["MI-17.jpg", "xiaomi-17-1.jpg", "xiaomi-17-3.jpg", "xiaomi-17-pro-2.jpg", "MI-17T.jpg", "xiaomi-17t-1.jpg",
+    "REDMI-NOTE-17-PRO-MAX.jpg", "xiaomi-redmi-note-17-pro-max-3.jpg", "xiaomi-redmi-note-17-pro-2.jpg"];
   assert.deepEqual(files(matcher.candidates(phone("XIAOMI", "MI 17"), repo)).filter((f) => !/webp$/.test(f)),
-    ["MI-17.jpg", "xiaomi-17-2.jpg", "xiaomi-17-3.jpg"]);
+    ["MI-17.jpg", "xiaomi-17-1.jpg", "xiaomi-17-3.jpg"]);
   assert.deepEqual(files(matcher.candidates(phone("XIAOMI", "MI 17T"), repo)), ["MI-17T.jpg", "xiaomi-17t-1.jpg"]);
   assert.deepEqual(files(matcher.candidates(phone("XIAOMI", "REDMI NOTE 17 PRO MAX 5G"), repo)),
-    ["REDMI-NOTE-17-PRO-MAX.jpg", "xiaomi-redmi-note-17-pro-max-2.jpg"]);
+    ["REDMI-NOTE-17-PRO-MAX.jpg", "xiaomi-redmi-note-17-pro-max-3.jpg"]);
 });
 
 test("galeri: ürün adındaki '5G' ile yüklenen ek fotoğraflar eklenir, farklı 5G modeli karışmaz", () => {
@@ -127,11 +127,11 @@ test("varyant: 1., 2., 3. varyant kartta sırayla 1., 2., 3. fotoğrafı göster
 });
 
 test("varyant: fotoğraf varyanttan azsa başa döner; aynı adlı .jpg/.webp tek fotoğraf sayılır", () => {
-  const repo = ["MI-17.jpg", "MI-17.webp", "xiaomi-17-2.jpg"];
+  const repo = ["MI-17.jpg", "MI-17.webp", "xiaomi-17-1.jpg"];
   const mi17 = (s) => phone("XIAOMI", "MI 17", { s });
   const list = matcher.withPhotoVariantIndex([mi17("12 GB / 256 GB"), mi17("12 GB / 512 GB"), mi17("16 GB / 512 GB")]);
   const firsts = list.map((p) => files(matcher.candidates(p, repo))[0]);
-  assert.deepEqual(firsts, ["MI-17.jpg", "xiaomi-17-2.jpg", "MI-17.jpg"]);
+  assert.deepEqual(firsts, ["MI-17.jpg", "xiaomi-17-1.jpg", "MI-17.jpg"]);
 });
 
 test("varyant: Sheet görseli ve hafıza dosyası (-512GB) varsa sıra değişmez", () => {
@@ -160,4 +160,10 @@ test("laptop: eksik, buyuk/kucuk harf farkli ve paylasilan gorseller yakalanir",
   assert.ok(r.broken.some((x) => /pc-002-01\.jpg/.test(x) && /harf/.test(x)));
   assert.ok(r.shared.some((x) => /PC-001, PC-003/.test(x)));
   assert.equal(r.imagesOk, 2);
+});
+
+test("galeri: depodaki birebir kopya fotograflar (m_ onekli vb.) galeriye alinmaz", () => {
+  const repo = ["APPLE-IPHONE-17.jpg", "m_apple-iphone-17-2.jpg", "MI-17.jpg", "xiaomi-17-2.jpg", "xiaomi-17-3.jpg"];
+  assert.deepEqual(files(matcher.candidates(phone("IPHONE", "IPHONE 17"), repo)), ["APPLE-IPHONE-17.jpg"]);
+  assert.deepEqual(files(matcher.candidates(phone("XIAOMI", "MI 17"), repo)).filter((f) => !/webp$/.test(f)), ["MI-17.jpg", "xiaomi-17-3.jpg"]);
 });
