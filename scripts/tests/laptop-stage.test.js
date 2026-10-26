@@ -66,7 +66,7 @@ test("depodaki gercek sahne manifesti kaynak fotograflarla tutarli", () => {
 const stageApi = vm.runInNewContext(
   "const LAPTOP_FALLBACK_IMAGE = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';\n" +
   fnSrc("function escapeHtml(") +
-  constSrc("const LAPTOP_STAGE_BASE =") + constSrc("const LAPTOP_IMAGES_PREFIX =") + constSrc("const LAPTOP_STAGE_FILE =") +
+  constSrc("const LAPTOP_STAGE_BASE =") + constSrc("const LAPTOP_IMAGES_PREFIX =") + constSrc("const LAPTOP_STAGE_FILE =") + constSrc("const LAPTOP_POSTER_PATH =") +
   "let laptopStage = new Map();\n" +
   fnSrc("function sanitizeLaptopStage(") + fnSrc("function laptopStageImage(") + fnSrc("function laptopStageImgAttrs(") +
   ";({ sanitizeLaptopStage, laptopStageImage, laptopStageImgAttrs, set: (m) => { laptopStage = m; } })", {});
@@ -91,6 +91,10 @@ test("sahne secimi: turev varsa ayni kaynaktan kucuk/buyuk turev + orijinal yede
   ["PC-099-01.jpg", "kotu.jpg", "tur.jpg", "__proto__"].forEach((n) => {
     assert.deepEqual({ ...stageApi.laptopStageImage(IMG + n, "sm") }, { src: IMG + n, orig: "", kind: "white" }, n);
   });
+  // afiş (laptop-photos/afis/): olduğu gibi, sahne türevi aranmaz
+  assert.deepEqual({ ...stageApi.laptopStageImage("laptop-photos/afis/PC-063.webp", "lg") },
+    { src: "laptop-photos/afis/PC-063.webp", orig: "", kind: "poster" });
+  assert.equal(stageApi.laptopStageImage("laptop-photos/afis/../index.html", "lg").kind, "white");
   // bos URL: "gorsel yok"
   assert.match(stageApi.laptopStageImage("", "sm").src, /gorsel-yok\.jpg$/);
   // isaretleme: kacisli, yedek orijinal data-orig'de

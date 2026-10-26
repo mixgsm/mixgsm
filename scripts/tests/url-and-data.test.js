@@ -95,6 +95,7 @@ test("katalog dogrulama: yalniz baslik satirlari gecerli katalog sayilmaz; bos l
     "const toText = v => typeof v === 'string' ? v : '';\nconst toPrice = (v,a,b) => Number.isInteger(v)&&v>=a&&v<=b ? v : null;\nconst toStock = v => ['IN','OUT','ASK'].includes(v) ? v : 'ASK';\n" +
     "const LAPTOP_PRICE_MIN = 1000, LAPTOP_PRICE_MAX = 500000;\nconst normalizeLaptopGithubImageUrl = () => '';\n" +
     constSrc("const LAPTOP_TEXT_FIELDS =") + constSrc("const LAPTOP_IMAGE_FIELDS =") +
+    constSrc("const LAPTOP_POSTER_PATH =") + fnSrc("function normalizeLaptopPosterPath(") +
     fnSrc("function sanitizeLaptopProduct(") + fnSrc("function sanitizeLaptopList(") +
     ";({ hasRealPhoneProduct, sanitizeLaptopList })", {});
   assert.equal(ctx.hasRealPhoneProduct([{ b: "⚡ MIX GSM • GÜNCEL VİTRİN", m: "" }, { b: "MARKA", m: "MODEL / ÜRÜN TANIMI" }]), false);
@@ -103,6 +104,15 @@ test("katalog dogrulama: yalniz baslik satirlari gecerli katalog sayilmaz; bos l
   const list = ctx.sanitizeLaptopList([{ brand: "", model: "" }, null, 5, { brand: "ACER", model: "NITRO 5", price: 34000, stock: "IN" }]);
   assert.equal(list.length, 1);
   assert.equal(list[0].price, 34000);
+  // afiş yolu: yalnız laptop-photos/afis/<güvenli ad>.<webp|jpg|jpeg|png>
+  const posters = ctx.sanitizeLaptopList([
+    { brand: "HP", model: "A", poster: "laptop-photos/afis/PC-063.webp" },
+    { brand: "HP", model: "B", poster: "https://kotu.example/x.webp" },
+    { brand: "HP", model: "C", poster: "laptop-photos/afis/../../index.html" },
+    { brand: "HP", model: "D", poster: "laptop-photos/images/PC-001-01.jpg" },
+    { brand: "HP", model: "E" },
+  ]);
+  assert.deepEqual(posters.map((p) => p.poster), ["laptop-photos/afis/PC-063.webp", "", "", "", ""]);
 });
 
 test("katalog zamani: yalniz gecerli ve gelecekte olmayan ISO zaman gosterilir", () => {

@@ -43,7 +43,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.c931dbf0cc.js" defer></script>
+<script src="js/app.ba0cbc4170.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
@@ -1642,6 +1642,58 @@ bozulmaz, doğal boyutundan büyütülmez. -->
 #laptop-section .laptop-modalprice.is-sold { color: var(--danger-text); font-size: 18px; }
 </style>
 
+<!-- AFİŞ VİTRİNİ — "Haftanın Laptopları" (#posterVitrin, yalnız #laptop-section
+     içinde). Afişler kendi renklerini taşıdığı için çerçeve sade: neon/parlama
+     yok, tek kaydırmalı şerit (otomatik dönen slider değil). <1024px: sonraki
+     afişin kenarı görünür + noktalar; >=1024px: 4 sütun, fazlası okla kayar.
+     Ürün penceresinde afiş galerinin ilk görseli (data-stage="poster"). -->
+<style>
+#laptop-section .poster-vitrin { padding: 32px 0 8px; }
+#laptop-section .poster-vitrin[hidden] { display: none; }
+#laptop-section .poster-vitrin-head { max-width: 1200px; margin: 0 auto 14px; padding: 0 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+#laptop-section .poster-vitrin-title { margin: 0; font-size: clamp(24px, 6vw, 32px); font-weight: 700; line-height: 1.1; letter-spacing: -0.025em; color: var(--text); }
+#laptop-section .poster-vitrin-sub { margin: 6px 0 0; font-size: 14.5px; color: var(--muted); }
+#laptop-section .poster-vitrin-arrows { display: none; gap: 8px; flex: 0 0 auto; }
+#laptop-section .poster-vitrin-arrows button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+#laptop-section .poster-vitrin-arrows button:disabled { opacity: .35; cursor: default; }
+#laptop-section .poster-vitrin-arrows button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+#laptop-section .poster-vitrin-arrows .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+#laptop-section .poster-vitrin-arrows #posterVitrinNext .icon { transform: scaleX(-1); }
+#laptop-section .poster-vitrin-track { display: flex; gap: 14px; padding: 4px 20px 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#laptop-section .poster-vitrin-track::-webkit-scrollbar { display: none; }
+#laptop-section .poster-item { flex: 0 0 78%; max-width: 340px; min-width: 0; scroll-snap-align: start; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; }
+#laptop-section .poster-item:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; border-radius: var(--radius-lg); }
+#laptop-section .poster-frame { display: block; aspect-ratio: 1 / 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
+#laptop-section .poster-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s var(--ease-out); }
+@media (hover: hover) { #laptop-section .poster-item:hover .poster-frame img { transform: scale(1.02); } }
+#laptop-section .poster-meta { display: flex; flex-direction: column; gap: 2px; padding: 12px 4px 0; }
+#laptop-section .poster-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+#laptop-section .poster-spec { font-size: 13px; color: var(--muted); line-height: 1.4; }
+#laptop-section .poster-price { margin-top: 4px; font-size: 17px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+#laptop-section .poster-vitrin-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0 0; }
+#laptop-section .poster-vitrin-dots:empty { display: none; }
+#laptop-section .poster-vitrin-dots i { width: 6px; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--text) 22%, transparent); transition: width .2s var(--ease-out), background .2s var(--ease-out); }
+#laptop-section .poster-vitrin-dots i.on { width: 18px; background: var(--text); }
+@media (min-width: 640px) { #laptop-section .poster-item { flex-basis: calc((100% - 14px) / 2.3); } }
+@media (min-width: 768px) {
+  #laptop-section .poster-vitrin { padding-top: 44px; }
+  #laptop-section .poster-vitrin-head { padding: 0 32px; }
+  #laptop-section .poster-vitrin-track { padding-left: 32px; padding-right: 32px; scroll-padding-inline: 32px; }
+}
+@media (min-width: 1024px) {
+  #laptop-section .poster-vitrin-track { max-width: 1200px; margin: 0 auto; }
+  #laptop-section .poster-item { flex-basis: calc((100% - 42px) / 4); max-width: none; }
+  #laptop-section .poster-vitrin.is-scrollable .poster-vitrin-arrows { display: flex; }
+  #laptop-section .poster-vitrin-dots { display: none; }
+}
+/* Ürün penceresi galerisi: afiş kırpılmadan, sahne üstünde tam görünür. */
+#laptop-section .laptop-modalvisual .laptop-gallery-main img[data-stage="poster"] { max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; }
+#laptop-section .laptop-gallery-thumb img[data-stage="poster"] { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
+@media (prefers-reduced-motion: reduce) {
+  #laptop-section .poster-frame img, #laptop-section .poster-vitrin-dots i { transition: none; }
+}
+</style>
+
 
 </head>
 <body>
@@ -2041,6 +2093,23 @@ bozulmaz, doğal boyutundan büyütülmez. -->
       <button type="button" class="laptop-btn-outline" id="laptopStockBtn">Stoktaki Laptoplar</button>
     </div>
     <p class="laptop-hero-note" role="status">Laptop kataloğu yükleniyor…</p>
+  </section>
+
+  <!-- AFİŞ VİTRİNİ: "Haftanın Laptopları". laptop-photos/afis/<ID>.webp
+       dosyası olan, stoktaki ürünler (bkz. initPosterVitrin). Afiş yoksa gizli. -->
+  <section class="poster-vitrin" id="posterVitrin" aria-labelledby="posterVitrinTitle" hidden>
+    <div class="poster-vitrin-head">
+      <div>
+        <h2 class="poster-vitrin-title" id="posterVitrinTitle">Haftanın Laptopları</h2>
+        <p class="poster-vitrin-sub">Türkiye’nin her yerine anlaşmalı kargo</p>
+      </div>
+      <div class="poster-vitrin-arrows">
+        <button type="button" id="posterVitrinPrev" aria-label="Önceki laptoplar"><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+        <button type="button" id="posterVitrinNext" aria-label="Sonraki laptoplar"><svg class="icon" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+      </div>
+    </div>
+    <div class="poster-vitrin-track" id="posterVitrinTrack"></div>
+    <div class="poster-vitrin-dots" id="posterVitrinDots" aria-hidden="true"></div>
   </section>
 
   <!-- REDESIGN ADIM 7: Laptop Fırsatları. Sadece laptop verisi (mevcut

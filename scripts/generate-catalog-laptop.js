@@ -245,6 +245,42 @@ function withAutoPhotos(products, files) {
   });
 }
 
+// AFİŞ VİTRİNİ ("Haftanın Laptopları"): laptop-photos/afis/ klasöründe
+// ürün ID'siyle adlandırılmış TEK dosya (örn. PC-063.webp) varsa ürüne
+// "poster" alanı eklenir. Sheet'e sütun eklenmez; dosyayı yüklemek ürünü
+// vitrine koyar, silmek vitrinden çıkarır. Satılan (stok yok) ürün vitrinde
+// zaten gösterilmez. Yol GÖRECELİ ve aynı sitedendir (CSP img-src 'self').
+// Aynı ID için birden çok uzantı varsa öncelik: webp > jpg > jpeg > png.
+const LAPTOP_POSTER_DIR = path.join(__dirname, "..", "laptop-photos", "afis");
+const LAPTOP_POSTER_EXTS = ["webp", "jpg", "jpeg", "png"];
+
+function posterFileFor(id, files) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId || !SAFE_PHOTO_NAME.test(cleanId)) return "";
+  const byLower = new Map(files.filter((f) => SAFE_PHOTO_NAME.test(f)).map((f) => [f.toLowerCase(), f]));
+  for (const ext of LAPTOP_POSTER_EXTS) {
+    const hit = byLower.get((cleanId + "." + ext).toLowerCase());
+    if (hit) return "laptop-photos/afis/" + hit;
+  }
+  return "";
+}
+
+// Liste değiştirilmez; afişi bulunan ürünün kopyası döner.
+function withPosters(products, files) {
+  return products.map((p) => {
+    const poster = posterFileFor(p.id, files);
+    return poster ? { ...p, poster } : p;
+  });
+}
+
+function listLaptopPosterFiles() {
+  try {
+    return fs.readdirSync(LAPTOP_POSTER_DIR);
+  } catch (err) {
+    return [];   // klasör yoksa afiş yok demektir; hata değil
+  }
+}
+
 function listLaptopPhotoFiles() {
   try {
     return fs.readdirSync(LAPTOP_PHOTO_DIR);
@@ -281,7 +317,10 @@ async function main() {
   // urun kaybi varsa mevcut catalog-laptop.json KORUNUR. process.exitCode=1
   // adimi Actions'ta kirmizi gosterir; continue-on-error sayesinde telefon
   // akisi etkilenmez.
-  const products = withAutoPhotos(parseTsvToLaptopProducts(tsv), listLaptopPhotoFiles());
+  const products = withPosters(
+    withAutoPhotos(parseTsvToLaptopProducts(tsv), listLaptopPhotoFiles()),
+    listLaptopPosterFiles()
+  );
   const headerErrors = schema.validateHeader(schema.findHeaderLine(tsv), schema.LAPTOP_COLUMNS);
   const previousCount = schema.readPreviousCount(OUTPUT_PATH, (list) => list.length);
   const result = schema.validateLaptopCatalog(products, { previousCount });
@@ -317,4 +356,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseTsvToLaptopProducts, autoLaptopPhotos, withAutoPhotos };
+module.exports = { parseTsvToLaptopProducts, autoLaptopPhotos, withAutoPhotos, posterFileFor, withPosters };
