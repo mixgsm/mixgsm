@@ -5,6 +5,35 @@
 // olay kalmadığı için hiçbir fonksiyonun global olması gerekmiyor. Dışarıya
 // hiçbir şey açılmaz (eski window.MIXGSM tanılama arayüzü kaldırıldı).
 (function () {
+// TELEFON FOTOĞRAFLARI KENDİ ALAN ADIMIZDAN: ürün fotoğrafları artık
+// raw.githubusercontent.com yerine aynı siteden (/photos/...) yüklenir. Telefon
+// ikinci bir sunucuya bağlanmaz, tarayıcı önbelleği 5 yerine 10 dakikadır.
+// Veri (Sheet/katalog) ve doğrulama kuralları DEĞİŞMEDİ: Sheet'e yine GitHub
+// linki yazılır; yalnız ekrana basılırken adres çevrilir.
+const PHOTO_RAW_BASE = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/';
+const PHOTO_SITE_BASE = '/photos/';
+const PHONE_NO_PHOTO_SRC = PHOTO_SITE_BASE + 'gorsel-yok.jpg';
+function sitePhotoUrl(url) {
+  const u = String(url || '');
+  return u.startsWith(PHOTO_RAW_BASE) ? PHOTO_SITE_BASE + u.slice(PHOTO_RAW_BASE.length) : u;
+}
+// GÜVENLİK AĞI: yeni yüklenen bir fotoğraf sitede birkaç dakika gecikmeli
+// yayına girer. Aynı siteden yüklenemeyen fotoğraf BİR KEZ eski GitHub
+// adresinden denenir; o da olmazsa mevcut yedek zinciri (sonraki fotoğraf /
+// "görsel yok") aynen çalışır. Diğer hata dinleyicilerinden ÖNCE kaydedilir.
+document.addEventListener('error', e => {
+  const t = e.target;
+  if (!t || t.tagName !== 'IMG') return;
+  let path = '';
+  try {
+    const u = new URL(t.currentSrc || t.src, location.href);
+    if (u.origin === location.origin && u.pathname.startsWith(PHOTO_SITE_BASE)) path = u.pathname.slice(PHOTO_SITE_BASE.length);
+  } catch (err) { return; }
+  if (!path || !/^[A-Za-z0-9._%-]+$/.test(path) || t.dataset.rawRetry === path) return;
+  t.dataset.rawRetry = path;   // her fotoğraf için yalnız bir kez
+  e.stopImmediatePropagation();
+  t.src = PHOTO_RAW_BASE + path;
+}, true);
 // Ortak body-scroll-kilidi (telefon VE laptop tum modal/cekmece acilis-kapanis
 // noktalari tarafindan kullanilir). Duz "overflow:hidden" iOS Safari'de arka
 // plan icerigin hala kaydirilabilir kalmasina yol acabiliyordu; bu yuzden
@@ -271,7 +300,9 @@ function updateProductSchema() {
       : 'https://schema.org/LimitedAvailability';
     // Sitede gosterilen gorselle ayni gercek gorseli kullan (sayfadaki
     // eslestirme mantigiyla birebir tutarli olsun diye).
-    const productImage = imageCandidatesForProduct(p)[0];
+    // Google için tam adres: fotoğraf kendi alan adımızdan (mixgsm.tr/photos/...).
+    const shownImage = displayImageCandidates(p)[0] || '';
+    const productImage = shownImage.startsWith('/') ? 'https://mixgsm.tr' + shownImage : shownImage;
     return {
       "@type": "ListItem",
       "position": i + 1,
@@ -373,7 +404,7 @@ function showHeroItem(i, animate) {
   const pickBtn = document.getElementById('heroPick');
   const p = hero.list[i];
   if (!img || !p) return;
-  const src = imageCandidatesForProduct(p)[0];
+  const src = displayImageCandidates(p)[0];
   const apply = () => {
     hero.i = i;
     img.src = src;
@@ -471,10 +502,10 @@ function renderHeroProduct(waitForPhotoDiscovery) {
     img.style.display = 'none'; empty.style.display = 'block'; empty.textContent = 'Güncel katalog için ürünleri inceleyin.';
     return;
   }
-  if (waitForPhotoDiscovery && HERO_NO_PHOTO.test(imageCandidatesForProduct(list[0])[0])) return;
+  if (waitForPhotoDiscovery && HERO_NO_PHOTO.test(displayImageCandidates(list[0])[0])) return;
   // PERFORMANS (LCP): önce yalnız İLK görselli seçim hesaplanıp gösterilir
   // (find ilk eşleşmede durur); dönüş listesinin tamamı boşta hesaplanır.
-  const hasPhoto = p => !HERO_NO_PHOTO.test(imageCandidatesForProduct(p)[0]);
+  const hasPhoto = p => !HERO_NO_PHOTO.test(displayImageCandidates(p)[0]);
   const current = hero.list[hero.i];
   const target = current && list.includes(current) && hasPhoto(current) ? current : (list.find(hasPhoto) || list[0]);
   hero.list = [target];
@@ -1103,6 +1134,13 @@ function imageCandidatesForProductRaw(p) {
   return urls.slice(0, MAX_PRODUCT_IMAGES);
 }
 
+// Ekrana basılan fotoğraf adresleri: eşleştirme sonucu (GitHub adresi) aynı
+// siteye çevrilir. Eşleştirme mantığı ve CI görsel kontrolü GitHub adresiyle
+// çalışmaya devam eder (imageCandidatesForProduct değişmedi).
+function displayImageCandidates(p) {
+  return imageCandidatesForProduct(p).map(sitePhotoUrl);
+}
+
 function tryNextProductImage(img) {
   try {
     const sources = JSON.parse(img.dataset.imageSources || '[]');
@@ -1116,14 +1154,14 @@ function tryNextProductImage(img) {
   } catch(e) {}
 
   img.onerror = null;
-  img.src = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+  img.src = PHONE_NO_PHOTO_SRC;
 }
 
 function autoImageMarkup(p) {
-  const sources = imageCandidatesForProduct(p);
+  const sources = displayImageCandidates(p);
 
   if(!sources.length) {
-    return `<img src="https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">`;
+    return `<img src="${PHONE_NO_PHOTO_SRC}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">`;
   }
 
   const encoded = JSON.stringify(sources).replace(/'/g,'&#39;');
@@ -1950,7 +1988,7 @@ function renderSimilarProducts(p) {
   similarBox.style.display = "block";
   similarList.innerHTML = similar.map(sp => {
     const spIndex = products.indexOf(sp);
-    const spImg = imageCandidatesForProduct(sp)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const spImg = displayImageCandidates(sp)[0] || PHONE_NO_PHOTO_SRC;
     const spPrice = sp.p === null ? `WhatsApp'tan Sor` : `${fmt(sp.p)} TL`;
     return `<div class="similar-item" data-action="open-product" data-i="${spIndex}" role="button" tabindex="0" aria-label="${escapeHtml(sp.b)} ${escapeHtml(sp.m)} ürününü görüntüle">
       <img src="${escapeHtml(spImg)}" alt="${escapeHtml(sp.m)}" loading="lazy" decoding="async">
@@ -1964,7 +2002,7 @@ function renderSimilarProducts(p) {
 // Kaynak: imageCandidatesForProduct (Sheet görseli ilk, sonra aynı modelin
 // depodaki fotoğrafları). Yüklenemeyen görsel listeden düşer; hiç kalmazsa
 // "görsel yok" gösterilir. DOM yalnız createElement/setAttribute ile yazılır.
-const PHONE_NO_PHOTO_URL = 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+const PHONE_NO_PHOTO_URL = PHONE_NO_PHOTO_SRC;
 const PHONE_SWIPE_MIN_PX = 40;
 let phoneGallery = { images: [], index: 0, label: '', gen: 0 };
 
@@ -2028,7 +2066,7 @@ function dropPhoneGalleryImage(i) {
 }
 
 function renderPhoneGallery(p) {
-  const images = imageCandidatesForProduct(p).filter(u => u !== PHONE_NO_PHOTO_URL);
+  const images = displayImageCandidates(p).filter(u => u !== PHONE_NO_PHOTO_URL);
   phoneGallery = { images, index: 0, label: productLabel(p), gen: phoneGallery.gen + 1 };
   const img = document.getElementById('mi');
   // Yedek zinciri artık galeri yönetir; merkezi 'error' dinleyicisi karışmasın.
@@ -2341,7 +2379,7 @@ function renderCompareTable() {
 
   let html = '<table class="comparetable"><thead><tr><th><span class="sr-only">Özellik</span></th>';
   items.forEach(p => {
-    const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const img = displayImageCandidates(p)[0] || PHONE_NO_PHOTO_SRC;
     const pk = `${p.b}|${p.m}|${p.s}`;
     html += `<th>
       <img class="compare-thumb" src="${escapeHtml(img)}" alt="${escapeHtml(p.m)}" loading="lazy" decoding="async">
@@ -2457,7 +2495,7 @@ function renderFavList() {
   }
 
   wrap.innerHTML = '<div class="fav-list">' + items.map(p => {
-    const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+    const img = displayImageCandidates(p)[0] || PHONE_NO_PHOTO_SRC;
     const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
     const pk = favKeyOf(p);
     const pIndex = products.indexOf(p);
@@ -2612,7 +2650,7 @@ function showFinderResults() {
   } else {
     wrap.innerHTML = '<div class="finder-q">Senin için önerilerimiz:</div><div class="fav-list">' +
       results.map(p => {
-        const img = imageCandidatesForProduct(p)[0] || 'https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/gorsel-yok.jpg';
+        const img = displayImageCandidates(p)[0] || PHONE_NO_PHOTO_SRC;
         const priceText = p.p === null ? "WhatsApp'tan Sor" : `${fmt(p.p)} TL`;
         const pIndex = products.indexOf(p);
         const why = finderReasons(p, finderState).map(r => `<li>${escapeHtml(r)}</li>`).join('');
@@ -4841,7 +4879,7 @@ async function loadLaptopCatalog() {
   const isVitrinDeal = p => p.tagLabel === 'Fırsat' && p.group === 'PHONE';   // kişisel bakım hariç
   const isVitrinNew = p => p.tagLabel === 'Yeni';
   const phoneOk = p => !isNonProductRow(p) && p.stock === 'IN' && p.p !== null;
-  const hasPhonePhoto = p => imageCandidatesForProduct(p).some(u => !NO_PHOTO.test(u));
+  const hasPhonePhoto = p => displayImageCandidates(p).some(u => !NO_PHOTO.test(u));
   const phoneKey = p => 'p|' + norm(p.b) + '|' + norm(p.m);
   const laptopOk = p => p.deal && p.stock === 'IN' && p.price !== null && !!String(p.img || '').trim();
   const laptopKey = p => 'l|' + norm(p.brand) + '|' + norm(p.model);

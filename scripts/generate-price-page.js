@@ -238,7 +238,7 @@ function renderPage(feed, business) {
     })),
   };
 
-  const description = `MİX GSM Gaziantep güncel telefon fiyat ve stok listesi: Xiaomi, iPhone, Samsung, Infinix, Tecno ve daha fazlası. Son güncelleme: ${when}.`;
+  const description = `MİX GSM güncel telefon fiyat ve stok listesi: Xiaomi, iPhone, Samsung ve daha fazlası. Türkiye geneline kargo. Son güncelleme: ${when}.`;
 
   return `<!doctype html>
 <html lang="tr">

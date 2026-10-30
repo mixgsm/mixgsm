@@ -245,6 +245,49 @@ function withAutoPhotos(products, files) {
   });
 }
 
+// KOPYA FOTOĞRAF KORUMASI: Sheet'te aynı fotoğraf bir üründe iki kez yazılırsa
+// (aynı link ya da içeriği birebir aynı iki dosya, örn. PC-004-01.jpg ile
+// PC-004-06.jpg) galeride aynı resim iki kez görünmesin. İlk geçen tutulur,
+// sonrakiler atlanır; kalanların sırası korunur, boşluklar sona kayar.
+// Kapak (img) hiçbir zaman değişmez çünkü ilk geçen her zaman tutulur.
+// Görsel üretilmez, dosya silinmez; yalnız tekrar eden referans düşer.
+const crypto = require("crypto");
+
+function localPhotoHash(url) {
+  const u = String(url || "");
+  if (!u.startsWith(LAPTOP_PHOTO_BASE)) return "";
+  let name = u.slice(LAPTOP_PHOTO_BASE.length);
+  try { name = decodeURIComponent(name); } catch (e) { return ""; }
+  if (!SAFE_PHOTO_NAME.test(name)) return "";
+  try {
+    return crypto.createHash("sha256").update(fs.readFileSync(path.join(LAPTOP_PHOTO_DIR, name))).digest("hex");
+  } catch (e) {
+    return "";   // dosya okunamadı: yalnız link karşılaştırması yapılır
+  }
+}
+
+// Liste değiştirilmez; kopyası ayıklanan ürünün kopyası döner.
+function withoutDuplicatePhotos(products, hashOf = localPhotoHash) {
+  return products.map((p) => {
+    const seen = new Set();
+    const kept = [];
+    let dropped = 0;
+    for (const k of LAPTOP_IMAGE_FIELDS) {
+      const url = p[k];
+      if (!url) continue;
+      const keys = ["url:" + url];
+      const h = hashOf(url);
+      if (h) keys.push("sha:" + h);
+      if (keys.some((x) => seen.has(x))) { dropped++; continue; }
+      keys.forEach((x) => seen.add(x));
+      kept.push(url);
+    }
+    if (!dropped) return p;
+    console.log(p.id + ": " + dropped + " kopya fotoğraf galeriden çıkarıldı (Sheet'teki tekrar eden hücreyi silebilirsiniz).");
+    return { ...p, ...Object.fromEntries(LAPTOP_IMAGE_FIELDS.map((k, i) => [k, kept[i] || ""])) };
+  });
+}
+
 // AFİŞ VİTRİNİ ("Haftanın Laptopları"): laptop-photos/afis/ klasöründe
 // ürün ID'siyle adlandırılmış TEK dosya (örn. PC-063.webp) varsa ürüne
 // "poster" alanı eklenir. Sheet'e sütun eklenmez; dosyayı yüklemek ürünü
@@ -318,7 +361,7 @@ async function main() {
   // adimi Actions'ta kirmizi gosterir; continue-on-error sayesinde telefon
   // akisi etkilenmez.
   const products = withPosters(
-    withAutoPhotos(parseTsvToLaptopProducts(tsv), listLaptopPhotoFiles()),
+    withoutDuplicatePhotos(withAutoPhotos(parseTsvToLaptopProducts(tsv), listLaptopPhotoFiles())),
     listLaptopPosterFiles()
   );
   const headerErrors = schema.validateHeader(schema.findHeaderLine(tsv), schema.LAPTOP_COLUMNS);
@@ -356,4 +399,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseTsvToLaptopProducts, autoLaptopPhotos, withAutoPhotos, posterFileFor, withPosters };
+module.exports = { parseTsvToLaptopProducts, autoLaptopPhotos, withAutoPhotos, withoutDuplicatePhotos, posterFileFor, withPosters };

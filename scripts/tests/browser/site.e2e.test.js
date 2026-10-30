@@ -418,8 +418,10 @@ test("yuklenemeyen urun gorseli: yedek zinciri 'gorsel yok' dosyasina duser, son
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   t.after(() => ctx.close());
   await routeExternal(ctx);
-  // Son eklenen yonlendirme once calisir: urun fotograflari 404, "gorsel yok" dosyasi gercek.
+  // Son eklenen yonlendirme once calisir: urun fotograflari hem sitede hem
+  // GitHub yedeginde 404, "gorsel yok" dosyasi gercek.
   await ctx.route(/^https:\/\/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/photos\/(?!gorsel-yok)/, (route) => route.fulfill({ status: 404, body: "" }));
+  await ctx.route(/^http:\/\/127\.0\.0\.1:\d+\/photos\/(?!gorsel-yok)/, (route) => route.fulfill({ status: 404, body: "" }));
   const page = await ctx.newPage();
   let requests = 0;
   page.on("request", (r) => { if (/gorsel-yok/.test(r.url())) requests++; });
@@ -429,6 +431,37 @@ test("yuklenemeyen urun gorseli: yedek zinciri 'gorsel yok' dosyasina duser, son
   await page.waitForFunction(() => [...document.querySelectorAll("#grid .card img")].slice(0, 4).every((i) => /gorsel-yok/.test(i.src)), null, { timeout: 15000 });
   await page.waitForTimeout(500);
   assert.ok(requests < 40, `gorsel-yok istegi: ${requests}`);
+});
+
+test("telefon fotograflari kendi alan adindan yuklenir (GitHub raw'a istek gitmez)", async (t) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  t.after(() => ctx.close());
+  await routeExternal(ctx);
+  const page = await ctx.newPage();
+  const raw = [];
+  page.on("request", (r) => { if (/raw\.githubusercontent\.com\/mixgsm\/mixgsm\/main\/photos\//.test(r.url())) raw.push(r.url()); });
+  await page.goto(srv.url, { waitUntil: "load" });
+  await page.waitForSelector("#grid .card img");
+  await page.$eval("#grid", (g) => g.scrollIntoView());
+  await page.waitForFunction(() => [...document.querySelectorAll("#grid .card img")].slice(0, 4).every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+  const srcs = await page.$$eval("#grid .card img", (imgs) => imgs.slice(0, 4).map((i) => i.src));
+  for (const s of srcs) assert.match(s, /^http:\/\/127\.0\.0\.1:\d+\/photos\//, s);
+  assert.deepEqual(raw, []);
+});
+
+test("sitede henuz olmayan telefon fotografi bir kez GitHub yedeginden gelir", async (t) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  t.after(() => ctx.close());
+  await routeExternal(ctx);
+  // Site kopyasi yok (yeni yuklenmis, yayina girmemis gibi); GitHub'da var.
+  await ctx.route(/^http:\/\/127\.0\.0\.1:\d+\/photos\/(?!gorsel-yok)/, (route) => route.fulfill({ status: 404, body: "" }));
+  const page = await ctx.newPage();
+  await page.goto(srv.url, { waitUntil: "load" });
+  await page.waitForSelector("#grid .card img");
+  await page.$eval("#grid", (g) => g.scrollIntoView());
+  await page.waitForFunction(() => [...document.querySelectorAll("#grid .card img")].slice(0, 4).every((i) => i.complete && i.naturalWidth > 0 && /raw\.githubusercontent\.com/.test(i.src)), null, { timeout: 15000 });
+  const real = await page.$$eval("#grid .card img", (imgs) => imgs.slice(0, 4).filter((i) => !/gorsel-yok/.test(i.src)).length);
+  assert.ok(real > 0, "yedekten gercek fotograf gelmeli");
 });
 
 test("yatay tasma yok: 320-1440 genislikler ve yatay kisa ekran (812x375)", async (t) => {

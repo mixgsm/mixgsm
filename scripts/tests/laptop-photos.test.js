@@ -46,3 +46,33 @@ test("3 fotoğraflı üründe kalan alanlar boş kalır", () => {
   assert.deepEqual([p.img, p.img2, p.img3, p.img4, p.img5, p.img6],
     [BASE + "PC-036-01.webp", BASE + "PC-036-02.webp", BASE + "PC-036-05.jpg", "", "", ""]);
 });
+
+// --- Kopya fotoğraf koruması ---
+const { withoutDuplicatePhotos } = require("../generate-catalog-laptop");
+
+test("kopya fotoğraf: içeriği aynı ikinci dosya galeriden düşer, sıra korunur, boşluk sona kayar", () => {
+  const hashes = { "PC-004-01.jpg": "A", "PC-004-02.jpg": "B", "PC-004-06.jpg": "A" };
+  const hashOf = (u) => hashes[u.slice(BASE.length)] || "";
+  const p = laptop("PC-004", { img: BASE + "PC-004-01.jpg", img2: BASE + "PC-004-02.jpg", img6: BASE + "PC-004-06.jpg" });
+  const out = withoutDuplicatePhotos([p], hashOf)[0];
+  assert.equal(out.img, BASE + "PC-004-01.jpg");
+  assert.equal(out.img2, BASE + "PC-004-02.jpg");
+  assert.equal(out.img6, "");
+  assert.equal(p.img6, BASE + "PC-004-06.jpg");   // girdi değiştirilmez
+});
+
+test("kopya fotoğraf: ortadaki kopya düşünce sonrakiler bir yukarı kayar; kapak değişmez", () => {
+  const hashes = { "a.jpg": "1", "b.jpg": "2", "c.jpg": "2", "d.jpg": "3" };
+  const hashOf = (u) => hashes[u.slice(BASE.length)] || "";
+  const p = laptop("PC-009", { img: BASE + "a.jpg", img2: BASE + "b.jpg", img3: BASE + "c.jpg", img4: BASE + "d.jpg" });
+  const out = withoutDuplicatePhotos([p], hashOf)[0];
+  assert.deepEqual([out.img, out.img2, out.img3, out.img4], [BASE + "a.jpg", BASE + "b.jpg", BASE + "d.jpg", ""]);
+});
+
+test("kopya fotoğraf: aynı link iki kez yazılırsa da düşer; kopyası olmayan ürün aynen döner", () => {
+  const p = laptop("PC-050", { img: BASE + "x.jpg", img2: BASE + "x.jpg" });
+  const q = laptop("PC-051", { img: BASE + "y.jpg", img2: BASE + "z.jpg" });
+  const out = withoutDuplicatePhotos([p, q], () => "");
+  assert.equal(out[0].img2, "");
+  assert.strictEqual(out[1], q);
+});
