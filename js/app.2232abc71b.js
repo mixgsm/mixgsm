@@ -1343,6 +1343,25 @@ function syncFilterUrl() {
   }, 250);
 }
 
+// INP: pencere/çekmece açılırken odak, ekran çizildikten SONRA verilir.
+// Kilitten (body position:fixed) hemen sonra focus() tüm sayfanın yeniden
+// yerleşimini o anda zorluyordu; yavaş telefonda pencere açılışı ~50-80 ms
+// uzuyordu. Erişilebilirlik aynı: odak yine kapat düğmesine / ilk alana
+// gider, yalnız bir kare sonra.
+function afterPaint(fn) {
+  requestAnimationFrame(() => setTimeout(fn, 0));
+}
+function focusAfterPaint(el) {
+  if (!el) return;
+  // Pencere bu arada kapandıysa (ör. hemen Esc) odak geri ALINMAZ: kapanış
+  // odağı açan düğmeye zaten iade etti.
+  const host = el.closest('.open');
+  afterPaint(() => {
+    if (!el.isConnected || (host && !host.classList.contains('open'))) return;
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+  });
+}
+
 function scheduleIdle(fn) {
   if ('requestIdleCallback' in window) window.requestIdleCallback(() => fn(), { timeout: 2000 });
   else setTimeout(fn, 200);
@@ -1943,7 +1962,7 @@ function openFilterDrawer() {
   // ERISILEBILIRLIK: klavye/ekran okuyucu kullanan kullanicilar acilan
   // cekmeceye odaklansin (mevcut urun modalindaki ayni davranis).
   const closeBtn = document.querySelector('#filterPanel .close');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 function closeFilterDrawer() {
   const panel = document.getElementById('filterPanel');
@@ -2162,7 +2181,7 @@ function renderProductModal(p) {
   
   modal.classList.add("open");
   lockBodyScroll();
-  modal.querySelector('.close').focus();
+  focusAfterPaint(modal.querySelector('.close'));
 }
 
 // DENETİM 2026-10-03: pencerenin altındaki sabit fiyat + WhatsApp alanı.
@@ -2351,7 +2370,7 @@ function openCompareModal() {
   document.getElementById('comparemodal').classList.add('open');
   lockBodyScroll();
   const closeBtn = document.querySelector('#comparemodal .close');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 
 function closeCompareModal() {
@@ -2461,7 +2480,7 @@ function openLegalModal() {
   document.getElementById('legalmodal').classList.add('open');
   lockBodyScroll();
   const closeBtn = document.querySelector('#legalmodal .close');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 
 function closeLegalModal() {
@@ -2475,7 +2494,7 @@ function openFavModal() {
   document.getElementById('favmodal').classList.add('open');
   lockBodyScroll();
   const closeBtn = document.querySelector('#favmodal .close');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 
 function closeFavModal() {
@@ -2550,7 +2569,7 @@ function openFinderModal() {
   document.getElementById('findermodal').classList.add('open');
   lockBodyScroll();
   const closeBtn = document.querySelector('#findermodal .close');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 
 function closeFinderModal() {
@@ -3767,7 +3786,7 @@ function renderLaptopModal(p) {
   modal.classList.add('open');
   lockBodyScroll();
   const closeBtn = document.getElementById('laptopModalCloseBtn');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 
 function openLaptopProduct(i) {
@@ -3837,7 +3856,7 @@ function openLaptopFilterDrawer() {
   if (backdrop) backdrop.classList.add('open');
   lockBodyScroll();
   const closeBtn = document.getElementById('laptopFilterCloseBtn');
-  if (closeBtn) closeBtn.focus();
+  if (closeBtn) focusAfterPaint(closeBtn);
 }
 function closeLaptopFilterDrawer() {
   const panel = document.getElementById('laptopFilterPanel');
@@ -3935,7 +3954,7 @@ function openLaptopFinder() {
   modal.classList.add('open');
   lockBodyScroll();
   const firstField = document.getElementById('lfBudget');
-  if (firstField) firstField.focus();
+  if (firstField) focusAfterPaint(firstField);
 }
 function closeLaptopFinder() {
   const modal = document.getElementById('laptopFinderModal');
@@ -5161,7 +5180,7 @@ async function loadLaptopCatalog() {
     track.dataset.sig = sig;
     track.innerHTML = idx.map(itemHtml).join('');
     if (dots) dots.innerHTML = idx.length > 1 ? idx.map(() => '<i></i>').join('') : '';
-    requestAnimationFrame(sync);
+    afterPaint(sync);                                // ölçüm çizimden sonra: zorunlu yerleşim yok
   }
 
   track.addEventListener('click', e => {
