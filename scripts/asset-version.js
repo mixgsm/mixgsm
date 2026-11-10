@@ -92,6 +92,13 @@ function checkAssets(root) {
     const expected = expectedInlineHashes(html);
     expected.filter((h) => !hashes.includes(h)).forEach((h) => errors.push(`CSP'de olmayan satir ici script: ${h}`));
     hashes.filter((h) => !expected.includes(h)).forEach((h) => errors.push(`CSP'de artik kullanilmayan hash: ${h}`));
+    // Uygulama kodunun yukledigi dis script adresi (ziyaret sayaci) CSP'de yoksa
+    // tarayici onu sessizce engeller; sayac hic calismaz.
+    if (referenced && appFiles.includes(referenced)) {
+      const src = fs.readFileSync(path.join(root, APP_DIR, referenced), "utf8");
+      const ext = [...new Set([...src.matchAll(/\.src = '(https:\/\/[a-z0-9.-]+)\//g)].map((m) => m[1]))];
+      ext.filter((o) => !tokens.includes(o)).forEach((o) => errors.push(`CSP script-src'de eksik adres: ${o}`));
+    }
   }
   return errors;
 }
@@ -108,7 +115,11 @@ function fixAssets(root) {
 
   html = html.replace(CSP_META, (all, open, content, close) => {
     const directives = content.split(";").map((d) => d.trim()).filter(Boolean).map((d) =>
-      d.startsWith("script-src ") ? ["script-src", "'self'", ...expectedInlineHashes(html)].join(" ") : d
+      // Izinli dis adresler (https://... ; or. ziyaret sayaci) KORUNUR: yalniz
+      // 'self' ve satir ici script hash'leri yeniden uretilir.
+      d.startsWith("script-src ")
+        ? ["script-src", "'self'", ...expectedInlineHashes(html), ...d.split(/\s+/).slice(1).filter((t) => /^https:\/\//.test(t))].join(" ")
+        : d
     );
     return open + directives.join("; ") + ";" + close;
   });
