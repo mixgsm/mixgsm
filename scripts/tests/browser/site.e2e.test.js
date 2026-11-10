@@ -127,6 +127,8 @@ test("laptop penceresi: kapat seridi ve WhatsApp alani; ikinci el ozeti yalniz d
   await toLaptop(page);
   await page.locator("#laptopGrid .laptop-card .card-open").first().click();
   await page.waitForSelector("#laptopModal.open");
+  // Karttan pencereye geçiş (View Transition) sürerken tıklama hedefi ölçülmez.
+  await page.waitForFunction(() => !document.documentElement.classList.contains("vt-urun"));
   await page.$eval("#laptopModal .laptop-modalbox", (b) => { b.scrollTop = b.scrollHeight; });
   await page.waitForTimeout(50);
   const r = await page.evaluate(() => {
