@@ -12,9 +12,17 @@
      yeniler; CI testi unutulursa yakalar). style-src'de 'unsafe-inline' satır
      içi style="" öznitelikleri için gerekli. connect-src'deki
      *.googleusercontent.com: Sheets dışa aktarma adresi oraya 307 ile
-     yönlendiriyor; olmadan catalog.json yokken Sheets yedeği hiç çalışmıyordu. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
+     yönlendiriyor; olmadan catalog.json yokken Sheets yedeği hiç çalışmıyordu.
+     SAYAÇ (2026-11): script-src'deki static.cloudflareinsights.com ve
+     connect-src'deki cloudflareinsights.com yalnız çerezsiz ziyaret sayacı
+     (Cloudflare Web Analytics) içindir. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fiaW1ruMhUhnK75UU+4XwsF7e3ZFMePaYvn+d1vaXLI='; style-src 'self' 'unsafe-inline'; img-src 'self' https://raw.githubusercontent.com data:; connect-src 'self' https://docs.google.com https://*.googleusercontent.com https://api.github.com https://cloudflareinsights.com; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none';">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- ZİYARET SAYACI: Cloudflare Web Analytics'in verdiği 32 haneli anahtar
+     content="" içine yazılır (ör. content="0123abcd..."). Boşken sayaç
+     kapalıdır, hiçbir şey yüklenmez. Yalnız bu satır değişir; başka dosyaya
+     dokunmak gerekmez. -->
+<meta name="mixgsm-sayac" content="a01c7e1d566b4320a782b6eb9271a204">
 <!-- TEMA: sayfa ilk boyanmadan ÖNCE (senkron, en tepede) doğru tema
      data-theme attribute'unu <html>'e yazıyoruz ki kullanıcı önce koyu
      sonra açık temaya geçiş gibi bir "sıçrama/flash" görmesin. Kayıtlı
@@ -43,7 +51,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.10d3e06f28.js" defer></script>
+<script src="js/app.7242ddb47c.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <title>MİX GSM | Güvenilir Teknoloji, Doğru Cihaz</title>
@@ -158,6 +166,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Hayır, işletmemizde ikinci el telefon alım-satımı veya takas (trade-in) işlemi yapılmamaktadır."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Kredi kartına taksit yapılıyor mu?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Evet. Tüm ürünlerde kredi kartına 3 taksit imkânı vardır. Taksit; Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartlarında geçerlidir. Taksitli tutar nakit/havale fiyatından farklıdır; yaklaşık tutar ürün sayfasında gösterilir, kesin tutarı WhatsApp'tan teyit edebilirsiniz."
           }
         }
       ]
@@ -1694,6 +1710,57 @@ bozulmaz, doğal boyutundan büyütülmez. -->
 </style>
 
 
+<!-- 2026-11 EKLERİ: taksit bilgisi, "Son baktıklarınız" şeridi, karttan pencereye
+geçiş. Ayrı blok: yalnız yeni sınıfları tanımlar. Geri almak için bu bloğu
+silmek yeterli (JS tarafı eksik öğeleri sessizce atlar). -->
+<style>
+/* --- Taksit --- */
+.taksit-line { display: block; margin-top: 4px; font-size: 12px; font-weight: 500; line-height: 1.3; color: var(--muted); white-space: nowrap; }
+#laptop-section .laptop-card-bottom { flex-wrap: wrap; }
+#laptop-section .laptop-card-bottom .taksit-line { flex: 1 0 100%; margin-top: 2px; }
+.modalprice:has(+ .taksit-box:not([hidden])), #laptop-section .laptop-modalprice:has(+ .taksit-box:not([hidden])) { margin-bottom: 10px; }
+.taksit-box { margin: 0 0 22px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.taksit-box[hidden] { display: none; }
+.taksit-main { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; column-gap: 12px; row-gap: 2px; font-size: 14px; color: var(--text); }
+.taksit-main strong { font-size: 16px; font-weight: 700; white-space: nowrap; }
+.taksit-note { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+#laptop-section .taksit-box { margin-bottom: 14px; }
+
+/* --- Son baktıklarınız --- */
+.recent { padding: 28px 0 32px; }
+.recent[hidden] { display: none; }
+.recent-head { max-width: 1200px; margin: 0 auto 12px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.recent-title { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--text); }
+.recent-clear { min-height: 44px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.recent-clear:hover { color: var(--text); }
+.recent-clear:focus-visible, .recent-tile:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 8px; }
+.recent-track { max-width: 1200px; margin: 0 auto; display: flex; gap: 10px; padding: 2px 20px 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 20px; scrollbar-width: none; }
+.recent-track::-webkit-scrollbar { display: none; }
+.recent-tile { flex: 0 0 auto; width: 232px; display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); color: var(--text); font: inherit; text-align: left; cursor: pointer; scroll-snap-align: start; transition: border-color .15s; }
+.recent-thumb { flex: 0 0 auto; width: 60px; height: 60px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.recent-thumb img { width: 100%; height: 100%; padding: 5px; object-fit: contain; }
+.recent-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.recent-brand { font-size: 11.5px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-name { font-size: 13.5px; font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.recent-price { font-size: 12.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+@media (hover: hover) { .recent-tile:hover { border-color: color-mix(in srgb, var(--text) 28%, transparent); } }
+@media (min-width: 768px) {
+  .recent { padding: 36px 0 40px; }
+  .recent-head { padding: 0 32px; }
+  .recent-track { padding-left: 32px; padding-right: 32px; scroll-padding-inline: 32px; gap: 12px; }
+  .recent-title { font-size: 20px; }
+}
+
+/* --- Karttan pencereye geçiş (View Transitions) --- */
+html.vt-urun .modal, html.vt-urun .modalbox,
+html.vt-urun #laptop-section .laptop-modal, html.vt-urun #laptop-section .laptop-modalbox { transition: none; }
+::view-transition-group(urun-gorsel) { animation-duration: .34s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(urun-gorsel), ::view-transition-new(urun-gorsel) { width: 100%; height: 100%; object-fit: contain; }
+html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root) { animation-duration: .24s; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+</style>
 </head>
 <body>
 <noscript><div class="noscript-note"><strong>MİX GSM</strong><p>Bu kataloğu görüntülemek için JavaScript'in etkin olması gerekiyor.</p><a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp'tan stok ve fiyat sorun</a></div></noscript>
@@ -1930,6 +1997,15 @@ bozulmaz, doğal boyutundan büyütülmez. -->
     <h2 class="vitrin-title" id="vitrinNewTitle">Yeni Gelenler</h2>
   </div>
   <div class="vitrin-track" id="vitrinNewTrack"></div>
+</section>
+<!-- SON BAKTIKLARINIZ (2026-11): ziyaretçinin açtığı son ürünler; yalnız kendi
+     cihazında saklanır (bkz. js: initRecentStrip). Kayıt yoksa bölüm gizlidir. -->
+<section class="recent zone-light" id="recentStrip" aria-labelledby="recentTitle" hidden>
+  <div class="recent-head">
+    <h2 class="recent-title" id="recentTitle">Son baktıklarınız</h2>
+    <button type="button" class="recent-clear" id="recentClear">Temizle</button>
+  </div>
+  <div class="recent-track" id="recentTrack"></div>
 </section>
 </div><!-- /#home-vitrin -->
 
@@ -2270,6 +2346,7 @@ bozulmaz, doğal boyutundan büyütülmez. -->
         <div class="laptop-modalname" id="lmn"></div>
         <div class="laptop-modal-badges" id="laptopModalBadges"></div>
         <div class="laptop-modalprice" id="lmp"></div>
+        <div class="taksit-box" id="lmTaksit" hidden></div>
 
         <div id="laptopOutOfStockWarn" class="laptop-modal-stock-warn">
           Bu laptop şu an stoklarımızda bulunmamaktadır. Alternatif modeller için WhatsApp'tan bilgi alabilirsiniz.
@@ -2506,6 +2583,7 @@ bozulmaz, doğal boyutundan büyütülmez. -->
   <details class="faq-card"><summary>Mağazadan elden teslim alabilir miyim?</summary><p>Elbette. Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep adresindeki MİX GSM mağazamızdan cihazınızı inceleyerek teslim alabilirsiniz.</p></details>
   <details class="faq-card"><summary>Satış sonrası teknik destek süreçleri nasıl?</summary><p>Cihazınızın markasına ve modeline göre (özellikle Xiaomi modellerinde) teknik ve yazılımsal destek seçenekleri için WhatsApp üzerinden bize ulaşabilirsiniz. Satış sonrası da yanınızdayız.</p></details>
   <details class="faq-card"><summary>Eski cihazımı getirip takas yapabilir miyim?</summary><p>Hayır, işletmemizde ikinci el telefon alım-satımı veya takas (trade-in) işlemi yapılmamaktadır.</p></details>
+  <details class="faq-card"><summary>Kredi kartına taksit yapılıyor mu?</summary><p>Evet. Tüm ürünlerde kredi kartına 3 taksit imkânı vardır. Taksit; Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartlarında geçerlidir. Taksitli tutar nakit/havale fiyatından farklıdır; yaklaşık tutar ürün sayfasında gösterilir, kesin tutarı WhatsApp'tan teyit edebilirsiniz.</p></details>
   </div>
 </section>
 
@@ -2571,6 +2649,7 @@ bozulmaz, doğal boyutundan büyütülmez. -->
       <div class="modalbrand" id="mb"></div>
       <div class="modalname" id="mn"></div>
       <div class="modalprice" id="mp"></div>
+      <div class="taksit-box" id="mTaksit" hidden></div>
       
       <div id="outOfStockWarn" class="modal-stock-warn">
         Bu ürün şu an stoklarımızda bulunmamaktadır. Alternatif modeller için WhatsApp'tan bilgi alabilirsiniz.
@@ -2671,8 +2750,8 @@ bozulmaz, doğal boyutundan büyütülmez. -->
     <div style="color:var(--muted);font-size:14px;line-height:1.8;">
       <p>MİX GSM (İsa ASLAN) olarak bu internet sitesi bir <strong>ürün kataloğu</strong> niteliğindedir. Sitedeki ürün kataloğunu görüntülemek için herhangi bir kayıt veya kişisel bilgi girmeniz gerekmez. Laptop kataloğundaki isteğe bağlı "Bana Laptop Bul" formu dışında, sitede isim, telefon, adres gibi kişisel bilgilerinizi toplayan başka bir form bulunmamaktadır.</p>
       <p><strong>"Bana Laptop Bul" formu:</strong> Bu formu doldurduğunuzda girdiğiniz bilgiler (bütçe, kullanım amacı ve varsa durum tercihi, adınız, ekran boyutu, öncelik, marka tercihi, notunuz) yalnızca formu gönderene kadar, sadece kullandığınız cihazın tarayıcı oturumunda (sessionStorage) geçici olarak tutulur; bu bilgiler MİX GSM sunucusuna veya üçüncü bir tarafa otomatik olarak gönderilmez. "Gönder" butonuna bastığınızda girdiğiniz bilgiler hazır bir WhatsApp mesajına dönüştürülür ve WhatsApp uygulamasına yönlendirilirsiniz; mesajı fiilen göndermek size kalır ve bu aşamadan sonra bilgileriniz WhatsApp/Meta'nın kendi gizlilik politikasına tabi olur. Formu gönderdiğinizde tarayıcınızdaki geçici kayıt otomatik olarak silinir; sekmeyi gönderim yapmadan kapatmanız halinde de bu geçici kayıt kendiliğinden kaybolur.</p>
-      <p><strong>Favoriler, tema tercihi ve karşılaştırma listesi:</strong> Favori ürünleriniz, açık/koyu tema tercihiniz ve son yüklenen ürün listesinin bir kopyası (bağlantı sorununda gösterilmek üzere) yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır; karşılaştırma listeniz ise yalnızca sayfa açıkken tutulur. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
-      <p><strong>Çerez ve takip:</strong> Site herhangi bir çerez (cookie) veya ziyaretçi takip/analiz yazılımı (ör. Google Analytics, Facebook Pixel) kullanmamaktadır.</p>
+      <p><strong>Favoriler, son baktıklarınız, tema tercihi ve karşılaştırma listesi:</strong> Favori ürünleriniz, son baktığınız ürünlerin listesi, açık/koyu tema tercihiniz ve son yüklenen ürün listesinin bir kopyası (bağlantı sorununda gösterilmek üzere) yalnızca kullandığınız cihazın tarayıcısında (localStorage) saklanır; karşılaştırma listeniz ise yalnızca sayfa açıkken tutulur. Bu bilgiler MİX GSM'e ya da üçüncü bir tarafa gönderilmez, sitenin sunucusunda tutulmaz; tarayıcı geçmişinizi/verilerinizi temizlediğinizde bu kayıtlar da silinir.</p>
+      <p><strong>Çerez ve ziyaret sayımı:</strong> Site çerez (cookie) kullanmamaktadır; Google Analytics, Facebook Pixel gibi reklam veya kişisel takip yazılımları da yoktur. Yalnızca siteye kaç kişinin girdiğini ve hangi sayfaların görüntülendiğini toplu olarak görebilmek için çerezsiz bir ziyaret sayacı (Cloudflare Web Analytics) kullanılır. Bu sayaç sizi kişi olarak tanımlamaz ve cihazınıza herhangi bir kayıt bırakmaz; görüntülenen sayfanın adresi, siteye nereden gelindiği, ülke ile tarayıcı ve cihaz türü gibi teknik bilgiler, toplu istatistik üretmek amacıyla Cloudflare tarafından işlenir.</p>
       <p><strong>WhatsApp, telefon ve Google Maps yönlendirmeleri:</strong> Sitedeki "WhatsApp'tan Yaz", "Aramak İçin Tıkla" ve "Google Maps" gibi butonlar sizi ilgili üçüncü taraf uygulama/servise yönlendirir. Bu servisler üzerinden bizimle paylaştığınız bilgiler (isim, telefon numarası, mesaj içeriği vb.), yalnızca sizinle iletişime geçip talebinizi karşılamak amacıyla kullanılır ve söz konusu platformların (WhatsApp/Meta, Google) kendi gizlilik politikalarına tabidir.</p>
       <p><strong>İletişim:</strong> Bu konudaki sorularınız için bize WhatsApp veya telefon üzerinden ulaşabilirsiniz.</p>
     </div>
