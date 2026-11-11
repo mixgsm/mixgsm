@@ -2,7 +2,7 @@
 //
 //   node scripts/generate-sitemap.js
 //
-// Iki sayfanin (ana sayfa + fiyat listesi) icerigi catalog.json'dan gelir;
+// Ana sayfa, fiyat listesi ve urun sayfalari (urun/, laptop/) catalog verisinden gelir;
 // lastmod = katalogun uretildigi gun (Turkiye saati). Dosya yalnizca icerik
 // degisince yazilir, boylece gunde en fazla bir kez degisir.
 "use strict";
@@ -25,8 +25,10 @@ function istanbulDate(iso) {
   return d.toLocaleDateString("en-CA", { timeZone: "Europe/Istanbul" });
 }
 
-function buildSitemap(lastmod) {
-  const urls = PAGES.map((p) =>
+// extraUrls: urun sayfalari (scripts/generate-product-pages.js). Ayni lastmod.
+function buildSitemap(lastmod, extraUrls = []) {
+  const pages = PAGES.concat(extraUrls.map((loc) => ({ loc, changefreq: "weekly", priority: "0.6" })));
+  const urls = pages.map((p) =>
     `  <url>\n    <loc>${p.loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
   ).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
@@ -34,7 +36,10 @@ function buildSitemap(lastmod) {
 
 function main() {
   const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
-  const xml = buildSitemap(istanbulDate(catalog.generatedAt));
+  // Urun sayfasi adresleri uretilemezse site haritasi yalniz iki sayfayla yazilir.
+  let extra = [];
+  try { extra = require("./generate-product-pages").listPageUrls(ROOT); } catch (e) { console.log("::warning::urun sayfasi adresleri alinamadi: " + e.message); }
+  const xml = buildSitemap(istanbulDate(catalog.generatedAt), extra);
   const current = fs.existsSync(SITEMAP_PATH) ? fs.readFileSync(SITEMAP_PATH, "utf8").replace(/\r\n/g, "\n") : "";
   if (current === xml) {
     console.log("sitemap.xml guncel.");
