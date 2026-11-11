@@ -51,7 +51,7 @@
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.7242ddb47c.js" defer></script>
+<script src="js/app.c53233b11e.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <title>MİX GSM | Güvenilir Teknoloji, Doğru Cihaz</title>
@@ -1726,6 +1726,25 @@ silmek yeterli (JS tarafı eksik öğeleri sessizce atlar). -->
 .taksit-note { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
 #laptop-section .taksit-box { margin-bottom: 14px; }
 
+/* --- Telefon fotoğraf sahnesi (2026-11) ---
+   Beyaz zeminli ürün fotoğrafları koyu temada "beyaz kutu" gibi duruyordu.
+   Laptop bölümündeki sahneyle aynı yöntem: görsel alanı açık bir sahne
+   zemini alır, fotoğraf "multiply" ile sahneye karışır (beyaz zemin
+   görünmez olur). Dosyalara dokunulmaz; geri almak için bu kuralları silmek
+   yeterli. Küçük görsellerde (benzer ürün, favori, karşılaştırma, galeri
+   küçük resmi) fotoğraf beyaz bir plakaya oturur. */
+:root { --pstage-hi: #F5F6F8; --pstage-lo: #E3E6EB; --pstage-bg: radial-gradient(120% 95% at 50% 30%, var(--pstage-hi) 0%, var(--pstage-lo) 100%); }
+:root[data-theme="dark"] { --pstage-hi: #E9EBEF; --pstage-lo: #CDD2D9; }
+.visual, .vitrin .visual { background: var(--pstage-bg); }
+.visual img { mix-blend-mode: multiply; }
+.modalvisual { background: var(--pstage-bg); }
+.modalvisual .pgal-main > img { mix-blend-mode: multiply; }
+.pgal-thumb { background: #fff; }
+/* Sahne açık renkli olduğu için görsel üstündeki rozetler dolu zemin alır (her iki temada okunur). */
+.visual .tagbadge, .visual .stock, .visual .stock.ask, .visual .stock.no { background: var(--surface-2); box-shadow: 0 0 0 1px var(--line); }
+.visual .fav { background: color-mix(in srgb, var(--surface-2) 90%, transparent); }
+.similar-item img, .fav-item img, .compare-thumb { background: #fff; border-radius: 8px; padding: 4px; }
+
 /* --- Son baktıklarınız --- */
 .recent { padding: 28px 0 32px; }
 .recent[hidden] { display: none; }
@@ -2608,6 +2627,7 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
       <a href="#catalog" data-footer-store="phone">Telefonlar</a>
       <a href="#laptopCatalogTitle" data-footer-store="laptop">Laptoplar</a>
       <a href="fiyat-listesi/">Güncel Fiyat Listesi</a>
+      <a href="urun/">Tüm Ürünler</a>
     </nav>
     <nav class="footer-col" aria-label="Mağaza">
       <h2 class="footer-h">Mağaza</h2>
