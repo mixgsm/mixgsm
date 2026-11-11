@@ -27,7 +27,8 @@
       "full": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D, Şahinbey / Gaziantep",
       "street_line": "Karagöz Mahallesi, Eski Postane Sokak, No: 26/D"
     },
-    "map_url": "https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6"
+    "map_url": "https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6",
+    "google_place_id": "ChIJzcqjryHhMRURuUBdpr4y78Q"
   },
   "contact": {
     "status": "confirmed",
@@ -50,7 +51,7 @@
   "hours": {
     "status": "confirmed",
     "confirmed_by": "owner",
-    "confirmed_on": "2026-09-28",
+    "confirmed_on": "2026-11-11",
     "weekly": [
       {
         "days": [
@@ -62,13 +63,13 @@
           "SAT"
         ],
         "open": "09:00",
-        "close": "20:00"
+        "close": "18:00"
       }
     ],
     "closed_days": [
       "SUN"
     ],
-    "display_tr": "Pazartesi - Cumartesi: 09:00 - 20:00, Pazar: Kapalı"
+    "display_tr": "Pazartesi - Cumartesi: 09:00 - 18:00, Pazar: Kapalı"
   },
   "policies": {
     "returns": {

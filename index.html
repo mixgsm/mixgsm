@@ -54,7 +54,7 @@
 <script src="js/app.c53233b11e.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
-<title>MİX GSM | Güvenilir Teknoloji, Doğru Cihaz</title>
+<title>MİX GSM | Telefon, Laptop ve Dyson · Türkiye Geneline Kargo</title>
 <meta name="description" content="MİX GSM: sıfır telefon, sıfır ve ikinci el laptop, Dyson ve kişisel bakım ürünleri. Türkiye geneline kargo, güncel fiyatlar ve WhatsApp'tan hızlı destek.">
 <link rel="canonical" href="https://mixgsm.tr/">
 <meta name="robots" content="index, follow">
@@ -74,8 +74,10 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
+  "@type": "MobilePhoneStore",
+  "@id": "https://mixgsm.tr/#magaza",
   "name": "MİX GSM",
+  "alternateName": "Mix GSM İsa ASLAN",
   "image": "https://mixgsm.tr/og-cover.jpg",
   "url": "https://mixgsm.tr/",
   "telephone": "+905424818255",
@@ -88,7 +90,7 @@
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       "opens": "09:00",
-      "closes": "20:00"
+      "closes": "18:00"
     }
   ],
   "address": {
@@ -98,7 +100,14 @@
     "addressRegion": "Gaziantep",
     "addressCountry": "TR"
   },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 37.0644674,
+    "longitude": 37.3796421
+  },
+  "hasMap": "https://www.google.com/maps/place/?q=place_id:ChIJzcqjryHhMRURuUBdpr4y78Q",
   "sameAs": [
+    "https://www.google.com/maps/place/?q=place_id:ChIJzcqjryHhMRURuUBdpr4y78Q",
     "https://www.instagram.com/mixgsm/",
     "https://www.facebook.com/groups/xiaomiredmidestek/",
     "https://t.me/xiaomiredmidestek"
@@ -1745,6 +1754,9 @@ silmek yeterli (JS tarafı eksik öğeleri sessizce atlar). -->
 .visual .fav { background: color-mix(in srgb, var(--surface-2) 90%, transparent); }
 .similar-item img, .fav-item img, .compare-thumb { background: #fff; border-radius: 8px; padding: 4px; }
 
+/* Yorum bölümü başlığındaki iki bağlantı yan yana / dar ekranda alt alta. */
+.home-links { display: flex; flex-wrap: wrap; align-items: center; column-gap: 24px; row-gap: 4px; }
+
 /* --- Son baktıklarınız --- */
 .recent { padding: 28px 0 32px; }
 .recent[hidden] { display: none; }
@@ -2545,7 +2557,7 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
         <div class="store-fact"><dt>Mağaza</dt><dd>Mix GSM İsa ASLAN</dd></div>
         <div class="store-fact"><dt>Telefon</dt><dd><a href="tel:+905424818255">+90 542 481 82 55</a></dd></div>
         <div class="store-fact store-fact--wide"><dt>Adres</dt><dd><address>Karagöz Mahallesi, Eski Postane Sokak, No: 26/D<br>Şahinbey / Gaziantep</address></dd></div>
-        <div class="store-fact store-fact--wide"><dt>Çalışma Saatleri</dt><dd>Pazartesi - Cumartesi: 09:00 - 20:00<br>Pazar: Kapalı</dd></div>
+        <div class="store-fact store-fact--wide"><dt>Çalışma Saatleri</dt><dd>Pazartesi - Cumartesi: 09:00 - 18:00<br>Pazar: Kapalı</dd></div>
       </dl>
       <div class="store-cta">
         <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn--primary"><svg class="icon" aria-hidden="true"><use href="#ic-pin"></use></svg> Yol Tarifi Al <span aria-hidden="true">→</span></a>
@@ -2570,7 +2582,10 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
       <h2 class="home-h2" id="reviewsTitle">Müşteri Deneyimleri</h2>
       <p class="home-lead">Google'da bırakılan müşteri yorumlarından seçmeler.</p>
     </div>
-    <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="home-link"><svg class="icon" aria-hidden="true"><use href="#ic-star"></use></svg> Google'da Değerlendir <span aria-hidden="true">→</span></a>
+    <div class="home-links">
+      <a href="https://maps.app.goo.gl/PB4ZGzPyK2Jk5rwJ6?g_st=ac" target="_blank" rel="noopener noreferrer" class="home-link"><svg class="icon" aria-hidden="true"><use href="#ic-star"></use></svg> Google'da Değerlendir <span aria-hidden="true">→</span></a>
+      <a href="https://search.google.com/local/reviews?placeid=ChIJzcqjryHhMRURuUBdpr4y78Q" target="_blank" rel="noopener noreferrer" class="home-link">Tüm Google Yorumları <span aria-hidden="true">→</span></a>
+    </div>
   </div>
   <div class="reviews-track" id="googleReviews" tabindex="0" role="region" aria-label="Google yorumları">
     <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>

@@ -27,7 +27,7 @@ const HTML_PAGES = [
 const KNOWN_HOSTS = new Set([
   "mixgsm.tr", "wa.me", "web.whatsapp.com", "maps.app.goo.gl", "www.instagram.com", "www.facebook.com",
   "t.me", "www.gsmarena.com", "raw.githubusercontent.com", "docs.google.com", "api.github.com",
-  "schema.org", "www.sitemaps.org", "www.w3.org",
+  "schema.org", "www.sitemaps.org", "www.w3.org", "www.google.com", "search.google.com",
 ]);
 const DEFAULT_WA_NUMBER = "905424818255";
 
