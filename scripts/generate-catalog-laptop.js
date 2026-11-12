@@ -201,6 +201,9 @@ function parseTsvToLaptopProducts(tsv) {
       // AK sütunu "Vitrin" (isteğe bağlı; fotoğraflardan SONRA, eski
       // indeksler kaymaz): laptop vitrininde gösterilecek model.
       showcase: schema.isYes(cols[36]),
+      // AL sütunu "Taksitli Fiyat (TL)" (isteğe bağlı): kredi kartına 3
+      // taksitli toplam. Boşsa site %12 kuralıyla hesaplar.
+      taksitPrice: parsePrice(cols[37]),
     });
   }
 

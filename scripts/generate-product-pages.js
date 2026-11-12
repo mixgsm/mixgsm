@@ -191,6 +191,7 @@ function laptopPages(laptopCatalog, rules, repoLaptopImages, stage) {
       kind: "laptop", dir: LAPTOP_DIR, slug, name, base,
       brand: clean(p.brand), group: "LAPTOP",
       price, stock: sold ? "OUT" : STOCK_LABEL_TR[p.stock] ? p.stock : "ASK", sold,
+      taksitPrice: typeof p.taksitPrice === "number" && isFinite(p.taksitPrice) ? p.taksitPrice : null,
       image: !file || !exists.has(file) ? ""
         : stage && stage.has(file) ? `/laptop-photos/stage/${encodeURIComponent(stage.get(file).lg)}`
         : `/laptop-photos/images/${encodeURIComponent(file)}`,
@@ -323,7 +324,7 @@ function priceText(pg) {
 
 function renderProductPage(pg, all, biz, rules, token) {
   const url = pageUrl(pg);
-  const taksit = !pg.sold && pg.stock !== "OUT" && pg.price !== null ? rules.taksitInfo(pg.price) : null;
+  const taksit = !pg.sold && pg.stock !== "OUT" && pg.price !== null ? rules.taksitInfo(pg.price, pg.taksitPrice) : null;
   const groupTitle = pg.kind === "laptop" ? "Laptoplar" : GROUP_TITLE_TR[pg.group];
   const groupHref = pg.kind === "laptop" ? `/${PHONE_DIR}/#laptoplar` : `/${PHONE_DIR}/#${pg.group === "PERSONAL_CARE" ? "kisisel-bakim" : "telefonlar"}`;
 
@@ -386,7 +387,7 @@ ${pg.image ? `<div class="stage"><img src="${esc(pg.image)}" alt="${esc(pg.name)
 <h1>${esc(pg.name)}</h1>
 <p class="price${pg.sold || pg.price === null ? " ask" : ""}">${esc(priceText(pg))}</p>
 <p class="stockline ${stockClass}">${esc(stockLabel)}</p>
-${taksit ? `<div class="taksit"><b><span>Kredi kartına ${rules.TAKSIT_COUNT} taksit</span><span>${rules.TAKSIT_COUNT} × ${fmtNum(taksit.monthly)} TL</span></b><p>Toplam yaklaşık ${fmtNum(taksit.total)} TL. Geçerli kartlar: ${esc(rules.TAKSIT_CARDS)}. Kesin tutarı WhatsApp’tan teyit ederiz.</p></div>` : ""}
+${taksit ? `<div class="taksit"><b><span>Kredi kartına ${rules.TAKSIT_COUNT} taksit</span><span>${rules.TAKSIT_COUNT} × ${fmtNum(taksit.monthly)} TL</span></b><p>Toplam ${taksit.fixed ? "" : "yaklaşık "}${fmtNum(taksit.total)} TL. Geçerli kartlar: ${esc(rules.TAKSIT_CARDS)}. Kesin tutarı WhatsApp’tan teyit ederiz.</p></div>` : ""}
 <div class="actions">
 <a class="btn wa" href="${esc(wa)}" rel="noopener noreferrer" target="_blank">${pg.sold ? "Benzerini WhatsApp’tan Sor" : "WhatsApp’tan Sor"}</a>
 <a class="btn" href="${esc(pg.catalogHref)}">Katalogda Aç</a>
