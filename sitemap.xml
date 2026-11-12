@@ -750,4 +750,28 @@
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://mixgsm.tr/laptop/acer-aspire-go-16-pc-092/</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mixgsm.tr/laptop/casper-excalibur-g870-pc-093/</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mixgsm.tr/laptop/lenovo-15amn8-pc-094/</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://mixgsm.tr/laptop/monster-monster3050-pc-095/</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
