@@ -16,6 +16,7 @@ const CATALOG_PATH = path.join(ROOT, "catalog.json");
 const PAGES = [
   { loc: "https://mixgsm.tr/", changefreq: "daily", priority: "1.0" },
   { loc: "https://mixgsm.tr/fiyat-listesi/", changefreq: "daily", priority: "0.8" },
+  { loc: "https://mixgsm.tr/iade-politikasi/", changefreq: "monthly", priority: "0.3" },
 ];
 
 function istanbulDate(iso) {

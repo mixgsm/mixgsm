@@ -21,6 +21,7 @@ const { checkLaptopStage } = require("./lib/laptop-stage");
 const HTML_PAGES = [
   { file: "index.html", requireCanonical: true },
   { file: "fiyat-listesi/index.html", requireCanonical: true },
+  { file: "iade-politikasi/index.html", requireCanonical: true },
   { file: "price-assets/index.html", requireCanonical: false },
 ];
 // Bilinen dis alan adlari; digerleri UYARI olarak raporlanir.
