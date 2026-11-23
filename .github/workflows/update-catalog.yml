@@ -17,6 +17,7 @@ on:
       - "scripts/generate-sitemap.js"
       - "scripts/generate-photo-list.js"
       - "scripts/generate-product-pages.js"
+      - "scripts/generate-hero-preload.js"
       # Taksit kurali / ozellik yazimi site kodundan okunur; sayac anahtari
       # index.html'den. Bunlar degisince urun sayfalari hemen yenilensin.
       - "js/**"
@@ -88,6 +89,12 @@ jobs:
         continue-on-error: true
         run: node scripts/generate-product-pages.js
 
+      # Acilis (hero) urun fotografi index.html'e onceden yazilir (hiz/LCP).
+      # Uretilemezse site eski davranisla (JS ile) calismaya devam eder.
+      - name: Acilis gorselini index.html'e yaz
+        continue-on-error: true
+        run: node scripts/generate-hero-preload.js
+
       # sitemap.xml lastmod = katalog gunu; uretilemezse yayin engellenmez.
       - name: sitemap.xml guncelle
         continue-on-error: true
@@ -127,6 +134,7 @@ jobs:
       - name: Degisiklik varsa commit + push et
         run: |
           git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html sitemap.xml
+          git add index.html
           if [ -f feed/photos.json ]; then
             git add feed/photos.json
           fi
