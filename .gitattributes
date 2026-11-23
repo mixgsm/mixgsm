@@ -1,0 +1,16 @@
+# Satir sonlari: depoda ve her bilgisayarda LF (Windows'ta da).
+# Windows'ta git CRLF'e cevirince JS hash'leri, CSP hash'i ve TSV/JSON
+# karsilastirmalari tutmuyor, testler dusuyordu.
+* text=auto eol=lf
+
+# Ikili dosyalar: hic dokunulmaz.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
