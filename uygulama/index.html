@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<title>MİX GSM Uygulamasını Yükle | Android ve iPhone</title>
+<meta name="description" content="MİX GSM'i telefonunuza uygulama olarak ekleyin: güncel telefon ve laptop fiyatları ana ekranınızda. Ücretsiz, mağazadan indirme gerekmez.">
+<link rel="canonical" href="https://mixgsm.tr/uygulama/">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="MİX GSM">
+<meta property="og:title" content="MİX GSM uygulamasını telefonunuza ekleyin">
+<meta property="og:description" content="Güncel telefon ve laptop fiyatları ana ekranınızda. Ücretsiz, yer kaplamaz.">
+<meta property="og:url" content="https://mixgsm.tr/uygulama/">
+<meta property="og:image" content="https://mixgsm.tr/icons/icon-512.png">
+<meta name="theme-color" content="#080808">
+<link rel="icon" href="/mix-gsm-logo.jpg">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<style>
+:root{--bg:#080808;--surface:#141416;--line:rgba(255,255,255,.12);--text:#F5F5F7;--muted:#A3ACBD;--accent:#25D366}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(120% 70% at 50% 0%,#17223F 0%,#080808 60%);color:var(--text);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;min-height:100vh}
+a{color:inherit}
+.wrap{max-width:480px;margin:0 auto;padding:32px 20px 40px;text-align:center}
+.logo{width:96px;height:96px;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+h1{font-size:26px;line-height:1.2;margin:18px 0 8px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 24px}
+.perks{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:8px;text-align:left}
+.perks li{padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:15px}
+.panel{display:none;text-align:left}
+.panel.on{display:block}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:0;border-radius:16px;background:var(--accent);color:#06210f;font-family:inherit;font-size:18px;font-weight:700;line-height:1.2;padding:0 16px;cursor:pointer;text-decoration:none;-webkit-appearance:none;appearance:none}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line);font-weight:600;font-size:15px;min-height:48px;margin-top:10px}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:12px;counter-reset:s}
+.steps li{position:relative;padding:14px 14px 14px 56px;border:1px solid var(--line);border-radius:14px;background:var(--surface);counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:var(--accent);color:#06210f;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ic{display:inline-block;vertical-align:-4px;width:20px;height:20px}
+.note{margin:16px 0 0;padding:12px 14px;border-radius:12px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.35);font-size:14px}
+.done{padding:18px;border-radius:14px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.4);text-align:center;font-weight:600}
+h2{font-size:18px;margin:0 0 12px}
+footer{margin-top:32px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <img class="logo" src="/icons/icon-192.png" alt="MİX GSM logosu" width="96" height="96">
+  <h1>MİX GSM'i telefonunuza ekleyin</h1>
+  <p class="lead">Güncel telefon ve laptop fiyatları tek dokunuşla ana ekranınızda.</p>
+  <ul class="perks">
+    <li>✓ Ücretsiz, mağazadan indirme gerekmez</li>
+    <li>✓ Telefonunuzda yer kaplamaz</li>
+    <li>✓ Fiyat ve stok her açılışta güncel</li>
+  </ul>
+
+  <!-- Zaten yüklü (uygulamadan açıldı) -->
+  <section class="panel" id="p-installed">
+    <div class="done">✓ MİX GSM uygulaması bu telefonda zaten yüklü.</div>
+    <a class="btn ghost" href="/">Kataloğa git</a>
+  </section>
+
+  <!-- Android: tek dokunuşla kurulum -->
+  <section class="panel" id="p-android-btn">
+    <button type="button" class="btn" id="installBtn">📲 Uygulamayı Yükle</button>
+    <p class="lead" style="margin:10px 0 0;font-size:14px">Açılan pencerede <strong>Yükle</strong>'ye dokunun.</p>
+  </section>
+
+  <!-- Android: düğme çıkmazsa elle -->
+  <section class="panel" id="p-android-manual">
+    <h2>Android'de 2 adımda yükleyin</h2>
+    <ol class="steps">
+      <li>Sağ üstteki <strong>⋮</strong> menüsüne dokunun.</li>
+      <li><strong>"Uygulamayı yükle"</strong> ya da <strong>"Ana ekrana ekle"</strong>'yi seçin.</li>
+    </ol>
+  </section>
+
+  <!-- iPhone Safari -->
+  <section class="panel" id="p-ios">
+    <h2>iPhone'da 3 adımda ekleyin</h2>
+    <ol class="steps">
+      <li><strong>Paylaş</strong> düğmesine dokunun (görmüyorsanız önce alttaki <strong>⋯</strong> düğmesine dokunun)
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg>
+      </li>
+      <li>Listeyi kaydırıp <strong>"Ana Ekrana Ekle"</strong>'yi seçin
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+      </li>
+      <li>Sağ üstte <strong>Ekle</strong>'ye dokunun.</li>
+    </ol>
+  </section>
+
+  <!-- iPhone ama Safari değil -->
+  <section class="panel" id="p-ios-other">
+    <h2>Önce Safari'de açın</h2>
+    <p>iPhone'da uygulama olarak eklemek yalnızca <strong>Safari</strong>'de mümkün.</p>
+    <ol class="steps">
+      <li>Aşağıdaki düğmeyle adresi kopyalayın.</li>
+      <li><strong>Safari</strong>'yi açıp adres çubuğuna yapıştırın.</li>
+      <li>Açılan sayfadaki 3 adımı izleyin.</li>
+    </ol>
+    <button type="button" class="btn ghost" id="copyBtn">Adresi kopyala: mixgsm.tr/uygulama</button>
+  </section>
+
+  <!-- Instagram/Facebook vb. uygulama içi tarayıcı -->
+  <section class="panel" id="p-inapp">
+    <div class="note">Bu sayfa bir uygulamanın içinde açıldı. Kurulum için sağ üstteki <strong>⋯</strong> menüsünden <strong>"Tarayıcıda aç"</strong>'ı seçin (iPhone'da Safari, Android'de Chrome).</div>
+  </section>
+
+  <!-- Bilgisayar -->
+  <section class="panel" id="p-desktop">
+    <p>Bilgisayarda Chrome veya Edge adres çubuğunun sağındaki <strong>yükle</strong> simgesine tıklayın. Telefonunuza eklemek için bu sayfayı telefonda açın: <strong>mixgsm.tr/uygulama</strong></p>
+    <button type="button" class="btn" id="installBtnDesk" hidden>Uygulamayı Yükle</button>
+  </section>
+
+  <footer>
+    <a href="/">Siteye dön</a> · <a href="https://wa.me/905424818255" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+  </footer>
+</main>
+<script src="uygulama.js" defer></script>
+</body>
+</html>
