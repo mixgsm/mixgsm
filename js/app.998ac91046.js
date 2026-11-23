@@ -695,7 +695,7 @@ const GITHUB_PHOTO_FILES = [
   'REDMI-15.jpg','REDMI-15C.jpg','REDMI-A7-PRO.jpg','REDMI-NOTE-14-PRO-PLUS-5G.jpg','REDMI-NOTE-14-PRO.webp','REDMI-NOTE-14.webp','REDMI-NOTE-15-PRO-5G.jpg','REDMI-NOTE-15-PRO-PLUS-5G.jpg','REDMI-NOTE-15-PRO.jpg','REDMI-NOTE-15.jpg','REDMI-NOTE-17-PRO-MAX.jpg',
   'SAMSUNG-S24-ULTRA.jpg','SAMSUNG-S25-ULTRA.jpg','SAMSUNG-S26-ULTRA.jpg','SAMSUNG-Z-FOLD-6.webp','SAMSUNG-Z-FOLD-7.jpg',
   'TECNO-CAMON-40-PREMIER.webp','TECNO-CAMON-40-PRO-5G.webp','TECNO-CAMON-50-PRO-5G.webp','TECNO-CAMON-NOTE-50-ULTRA.jpg','TECNO-POVA-CURVE-2-5G.jpg','TECNO-POVA-SLIM-5G.jpg','TECNO-SPARK-40-C.jpg','TECNO-SPARK-GO-3.jpg',
-  'dyson-airwarp-long.jpg','dyson-coanda-x2.png','dyson-gen5-detect-absolute.jpg','dyson-v15-detect-absolute.jpg','gorsel-yok.jpg',
+  'dyson-coanda-x2.png','dyson-gen5-detect-absolute.jpg','dyson-v15-detect-absolute.jpg','gorsel-yok.jpg',
   'm_infinix-smart-20-5.jpg',
   'm_samsung-galaxy-s26-ultra-15.jpg','m_samsung-galaxy-z-fold7-20.jpg',
   'poco-x7-pro.webp'
@@ -789,7 +789,7 @@ const IMAGE_IGNORED_TOKENS = new Set([
 ]);
 const IMAGE_EXACT_ALIASES = {
   'PHILIPS|PHILIPS-LUMEA-LAZER-EPILASYON': ['PHILIPS-LUMEA-LAZER.jpg'],
-  'DYSON|DYSON-AIRWRAP-LONG-COMPLETE': ['DYSON-AIRWRAP-LONG.jpg', 'dyson-airwarp-long.jpg'],
+  'DYSON|DYSON-AIRWRAP-LONG-COMPLETE': ['DYSON-AIRWRAP-LONG.jpg'],
   'XIAOMI|REDMI-A7-PRO': ['REDMI-A7-PRO.jpg'],
   'XIAOMI|REDMI-15C': ['REDMI-15C.jpg'],
   // POCO C85 ile Redmi 15C aynı cihaz: aynı görseller kullanılır.
