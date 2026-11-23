@@ -129,6 +129,7 @@ function phonePages(catalog, rules, matcher, repoPhotos) {
       image: file ? `/photos/${encodeURIComponent(file)}` : "",
       imageKind: "white",
       specs, note: "", condition: "https://schema.org/NewCondition",
+      registration: clean(p.registration).toLocaleUpperCase("tr-TR"),   // yalniz Google beslemesi filtresi; sayfaya yazilmaz
       catalogHref: `/#urun/${slug}`,
       waLabel: clean(`${p.b} ${p.m}` + (clean(p.s) ? ` - ${p.s}` : "")),
     });
@@ -466,6 +467,40 @@ function buildAll(siteRoot) {
   return { pages, files };
 }
 
+// Google Merchant Center yerel urun listelemesi (Gaziantep magazasi) icin iki TSV:
+// urun verisi + magaza stok verisi. Merchant bu adresleri gunluk ceker.
+// Yalniz fiyatli, gorselli, stokta (IN) urun gider. Telefonlarda yalniz "KAYITLI"
+// olanlar: kayit durumu urun sayfalarinda hassas bilgi olarak gizli; kayitsiz ya
+// da durumu belirsiz telefon herkese acik Google listesine girmez (isletme karari).
+// shortcut: magaza kodu sabit; Isletme Profilinde farkli kod tanimlanirsa burada guncelle.
+const GOOGLE_STORE_CODE = "MIXGSM-GAZIANTEP";
+const GOOGLE_PRODUCTS_FEED = "feed/google-urunler.tsv";
+const GOOGLE_STOCK_FEED = "feed/google-magaza-stok.tsv";
+
+function googleFeedFiles(pages) {
+  const cell = (v) => clean(v).replace(/\t/g, " ");
+  const tsv = (rows) => rows.map((r) => r.map(cell).join("\t")).join("\n") + "\n";
+  const items = pages.filter((pg) => pg.price && pg.image && pg.stock === "IN" && !pg.sold
+    && (pg.kind !== "phone" || pg.group !== "PHONE" || pg.registration === "KAYITLI"));
+  const price = (pg) => `${pg.price.toFixed(2)} TRY`;
+  const products = [["id", "title", "description", "link", "image_link", "availability", "price", "condition", "brand", "identifier_exists"]]
+    .concat(items.map((pg) => [
+      pg.slug,
+      pg.name.slice(0, 150),
+      [pg.name + ".", pg.specs.map(([k, v]) => `${k}: ${v}`).join(", "), pg.note].filter(Boolean).join(" ").slice(0, 5000),
+      pageUrl(pg),
+      SITE_ORIGIN + pg.image,
+      "in_stock",
+      price(pg),
+      pg.condition.endsWith("UsedCondition") ? "used" : "new",
+      pg.brand,
+      "no",
+    ]));
+  const stock = [["store_code", "id", "price", "availability"]]
+    .concat(items.map((pg) => [GOOGLE_STORE_CODE, pg.slug, price(pg), "in_stock"]));
+  return new Map([[GOOGLE_PRODUCTS_FEED, tsv(products)], [GOOGLE_STOCK_FEED, tsv(stock)]]);
+}
+
 // Diskte bu scriptin urettigi (isaret tasiyan) sayfalar.
 function existingGenerated(siteRoot) {
   const out = [];
@@ -513,7 +548,7 @@ function listPageUrls(siteRoot) {
 function main() {
   const check = process.argv.includes("--check");
   const { pages, files } = buildAll(ROOT);                    // hata olursa hicbir dosya yazilmaz
-  const { written, removed } = sync(ROOT, files, !check);
+  const { written, removed } = sync(ROOT, new Map([...files, ...googleFeedFiles(pages)]), !check);
   if (check) {
     if (written || removed) { console.log(`::error::urun sayfalari guncel degil: ${written} degisecek, ${removed} silinecek (node scripts/generate-product-pages.js)`); process.exitCode = 1; }
     else console.log(`Urun sayfalari guncel (${pages.length} urun).`);
@@ -526,4 +561,4 @@ if (require.main === module) {
   try { main(); } catch (err) { console.error("HATA:", err.message); process.exit(1); }
 }
 
-module.exports = { buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };
+module.exports = { buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, googleFeedFiles, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };

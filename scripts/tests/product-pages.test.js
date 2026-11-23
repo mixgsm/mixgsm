@@ -88,3 +88,32 @@ test("sayac anahtari yoksa sayfada hic dis script yok", () => {
   const html = gen.renderProductPage(pg, built.pages, biz, rules, "");
   assert.ok(!html.includes("cloudflareinsights"));
 });
+
+test("Google beslemesi: yalniz kayitli/fiyatli/gorselli/stoktaki urun, kayitsiz telefon yok, TSV saglam", () => {
+  const base = { kind: "phone", dir: "urun", group: "PHONE", brand: "XIAOMI", specs: [["Ekran", "6,9"]], note: "", image: "/photos/a.jpg",
+    price: 9500, stock: "IN", sold: false, condition: "https://schema.org/NewCondition", registration: "KAYITLI" };
+  const pages = [
+    { ...base, slug: "kayitli", name: "Xiaomi\tPOCO C85" },
+    { ...base, slug: "kayitsiz", name: "x", registration: "KAYITSIZ" },
+    { ...base, slug: "belirsiz", name: "x", registration: "" },
+    { ...base, slug: "fiyatsiz", name: "x", price: null },
+    { ...base, slug: "gorselsiz", name: "x", image: "" },
+    { ...base, slug: "sor", name: "x", stock: "ASK" },
+    { ...base, slug: "bakim", name: "Braun", group: "PERSONAL_CARE", registration: "-" },
+    { ...base, kind: "laptop", dir: "laptop", group: "LAPTOP", slug: "lp", name: "Lenovo (2. El)", registration: undefined, condition: "https://schema.org/UsedCondition" },
+  ];
+  const feeds = gen.googleFeedFiles(pages);
+  const rows = (f) => feeds.get(f).trimEnd().split("\n").map((l) => l.split("\t"));
+  const prod = rows("feed/google-urunler.tsv");
+  const stock = rows("feed/google-magaza-stok.tsv");
+  assert.deepEqual(prod.slice(1).map((r) => r[0]), ["kayitli", "bakim", "lp"]);
+  prod.forEach((r) => assert.equal(r.length, prod[0].length));
+  assert.deepEqual(prod[1].slice(0, 2), ["kayitli", "Xiaomi POCO C85"]);
+  assert.equal(prod[1][6], "9500.00 TRY");
+  assert.equal(prod[3][7], "used");
+  assert.deepEqual(stock[1], ["MIXGSM-GAZIANTEP", "kayitli", "9500.00 TRY", "in_stock"]);
+  // gercek katalog: kayitsiz telefon beslemeye hic girmez
+  const real = gen.googleFeedFiles(built.pages).get("feed/google-urunler.tsv");
+  built.pages.filter((p) => p.kind === "phone" && p.group === "PHONE" && p.registration !== "KAYITLI")
+    .forEach((p) => assert.ok(!real.includes(`\n${p.slug}\t`), p.slug));
+});

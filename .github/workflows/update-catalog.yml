@@ -130,6 +130,10 @@ jobs:
           if [ -f feed/photos.json ]; then
             git add feed/photos.json
           fi
+          # Google Merchant yerel listeleme beslemeleri (generate-product-pages.js)
+          for f in feed/google-urunler.tsv feed/google-magaza-stok.tsv; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
           # price-assets AYRI ve GUVENLI eklenir: yukaridaki FAZ 4 adimlari
           # (continue-on-error) herhangi bir nedenle calisip price-assets/
           # klasorunu hic olusturamamis olabilir. "git add price-assets"
