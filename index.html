@@ -44,14 +44,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080808">
 <link rel="icon" href="mix-gsm-logo.jpg" type="image/jpeg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <!-- REDESIGN ADIM 1: Inter (self-host, Latin + Türkçe alt küme, değişken
      ağırlık 400-800, ~26 KB). CSP font-src 'self' olduğu için harici font
      servisi kullanılamaz; dosya sitenin kendi /fonts/ klasöründen gelir. -->
 <link rel="preload" href="fonts/inter-var-tr.woff2" as="font" type="font/woff2" crossorigin>
 <!-- PERFORMANS: telefon kataloğu HTML ayrıştırılırken indirilmeye başlar
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
+<!--hero-preload--><link rel="preload" href="photos/POCO-F9-ULTRA-2.jpg" as="image" fetchpriority="high"><!--/hero-preload-->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.998ac91046.js" defer></script>
+<script src="js/app.1464eac982.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <title>MİX GSM | Telefon, Laptop ve Dyson · Türkiye Geneline Kargo</title>
@@ -367,7 +370,7 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 .home-hero-cta:focus-visible, .home-hero-wa:focus-visible { outline: 2px solid #F5F5F7; outline-offset: 3px; }
 .home-hero-stage { position: relative; width: 100%; max-width: 340px; margin: 0 auto; aspect-ratio: 4 / 5; border-radius: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 42%, #F5F5F7 0%, #F5F5F7 52%, #E7E9EE 100%); box-shadow: 0 40px 70px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.06); }
 .home-hero-stage::after { content: ""; position: absolute; left: 50%; bottom: 7%; width: 56%; height: 5%; transform: translateX(-50%); border-radius: 50%; background: rgba(15,20,35,0.16); filter: blur(10px); }
-.home-hero-stage img { position: relative; z-index: 1; width: auto; height: auto; max-width: 72%; max-height: 80%; object-fit: contain; transition: opacity .35s var(--ease-out); }
+.home-hero-stage img { position: relative; z-index: 1; width: auto; height: auto; max-width: 72%; max-height: 80%; object-fit: contain; mix-blend-mode: multiply; transition: opacity .35s var(--ease-out); }
 /* Dönen açılış: görsel değişirken yumuşak geçiş; ürün etiketi (sahne her
    iki temada da açık renkli olduğu için koyu etiket her zaman okunur). */
 .home-hero-stage img.is-fading { opacity: 0; }
@@ -1135,13 +1138,12 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 @media (min-width: 900px) {
   .bento-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
   .bento-card { min-height: 190px; padding: 24px 22px 10px; }
-  .bento-card--lg { grid-column: 1 / span 2; grid-row: 1 / span 2; padding: 32px 30px 14px; background: radial-gradient(90% 80% at 85% 10%, rgba(128,150,210,0.18), transparent 60%), var(--surface); }
+  /* 2026-11-23: büyük kart iki satır kaplayınca içi boş kalıyordu; dört kart eşit 2x2. */
+  .bento-card--lg { grid-column: 1 / span 2; background: radial-gradient(90% 80% at 85% 10%, rgba(128,150,210,0.18), transparent 60%), var(--surface); }
   .bento-card--is { grid-column: 3 / span 2; }
-  .bento-card--okul { grid-column: 3; }
-  .bento-card--tasarim { grid-column: 4; }
-  .bento-card--lg .bento-ic { font-size: 34px; margin-bottom: 20px; }
-  .bento-card--lg .bento-title { font-size: clamp(30px, 3.2vw, 40px); letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 10px; }
-  .bento-card--lg .bento-desc { font-size: 16px; }
+  .bento-card--okul { grid-column: 1 / span 2; }
+  .bento-card--tasarim { grid-column: 3 / span 2; }
+  .bento-title { font-size: 22px; }
 }
 
 /* REDESIGN ADIM 7 — ÖNE ÇIKAN FIRSATLAR + YENİ GELENLER + LAPTOP FIRSATLARI
@@ -1168,7 +1170,6 @@ svg.icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-wid
 /* Vitrinde rozetler görselin üstünde okunaklı kalsın (katalog kartı değişmez). */
 .vitrin .tagbadge, .vitrin .stock { background: var(--surface-2); box-shadow: 0 0 0 1px var(--line); }
 .vitrin--deal .tagbadge.tag-firsat { background: color-mix(in srgb, var(--accent) 86%, #000); color: #fff; box-shadow: none; font-weight: 600; }
-.vitrin--deal { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 .vitrin--deal .vitrin-title { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
 .vitrin--deal .vitrin-title::before { content: ""; flex: 0 0 auto; width: 4px; height: .9em; border-radius: 2px; background: var(--accent); }
 .vitrin--new .vitrin-title { color: color-mix(in srgb, var(--text) 88%, transparent); }
@@ -1883,9 +1884,9 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
       </div>
     </div>
     <div class="home-hero-stage" id="heroStage">
-      <img id="heroProductImg" alt="" style="display:none;" fetchpriority="high" decoding="async">
+      <img id="heroProductImg" src="photos/POCO-F9-ULTRA-2.jpg" alt="XIAOMI POCO F9 ULTRA" fetchpriority="high" decoding="async">
       <button type="button" class="home-hero-rotate" id="heroRotateBtn" aria-pressed="false" aria-label="Ürün geçişini durdur" hidden><svg class="icon ic-pause" aria-hidden="true"><use href="#ic-pause"></use></svg><svg class="icon ic-play" aria-hidden="true"><use href="#ic-play"></use></svg></button>
-      <div class="home-hero-empty" id="heroVisualEmpty">Katalog yükleniyor…</div>
+      <div class="home-hero-empty" id="heroVisualEmpty" style="display:none;">Katalog yükleniyor…</div>
       <!-- Açılış ürünü etiketi: Sheet "Ana Sayfa" seçimleri sırayla döner;
            basınca ürün penceresi açılır (merkezi data-action="open-product"). -->
       <button type="button" class="home-hero-pick" id="heroPick" data-action="open-product" data-i="-1" hidden><span class="home-hero-pick-name" id="heroPickName"></span> <span class="home-hero-pick-price" id="heroPickPrice"></span><span class="sr-only">, ürünü incele</span></button>

@@ -5,6 +5,20 @@
 // olay kalmadığı için hiçbir fonksiyonun global olması gerekmiyor. Dışarıya
 // hiçbir şey açılmaz (eski window.MIXGSM tanılama arayüzü kaldırıldı).
 (function () {
+// GÜVENLİK (tıklama tuzağı / clickjacking): GitHub Pages "frame-ancestors" başlığı
+// gönderemiyor. Site başka bir sitenin çerçevesi (iframe) içinde açılırsa içerik
+// gizlenir ve ziyaretçiye siteyi kendi sekmesinde açan tek bir bağlantı gösterilir.
+if (window.top !== window.self) {
+  const guard = () => {
+    const a = document.createElement('a');
+    a.href = location.href; a.target = '_top'; a.rel = 'noopener';
+    a.textContent = 'MİX GSM sitesini açmak için dokunun';
+    a.style.cssText = 'display:block;padding:24px;font:600 16px system-ui,sans-serif;text-align:center;color:#111;background:#fff';
+    document.body.replaceChildren(a);
+  };
+  if (document.body) guard(); else document.addEventListener('DOMContentLoaded', guard, { once: true });
+  return;
+}
 // TELEFON FOTOĞRAFLARI KENDİ ALAN ADIMIZDAN: ürün fotoğrafları artık
 // raw.githubusercontent.com yerine aynı siteden (/photos/...) yüklenir. Telefon
 // ikinci bir sunucuya bağlanmaz, tarayıcı önbelleği 5 yerine 10 dakikadır.
