@@ -472,8 +472,9 @@ function buildAll(siteRoot) {
 // Yalniz fiyatli, gorselli, stokta (IN) urun gider. Telefonlarda yalniz "KAYITLI"
 // olanlar: kayit durumu urun sayfalarinda hassas bilgi olarak gizli; kayitsiz ya
 // da durumu belirsiz telefon herkese acik Google listesine girmez (isletme karari).
-// shortcut: magaza kodu sabit; Isletme Profilinde farkli kod tanimlanirsa burada guncelle.
-const GOOGLE_STORE_CODE = "MIXGSM-GAZIANTEP";
+// Google'in Isletme Profiline verdigi magaza kodu (yeni profil ekraninda degistirilemiyor).
+// Profil degisirse Merchant Center -> Isletme Profili baglantisindaki kodla guncelle.
+const GOOGLE_STORE_CODE = "17557344197910298668";
 const GOOGLE_PRODUCTS_FEED = "feed/google-urunler.tsv";
 const GOOGLE_STOCK_FEED = "feed/google-magaza-stok.tsv";
 

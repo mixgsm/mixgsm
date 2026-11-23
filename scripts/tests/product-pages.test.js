@@ -111,7 +111,7 @@ test("Google beslemesi: yalniz kayitli/fiyatli/gorselli/stoktaki urun, kayitsiz 
   assert.deepEqual(prod[1].slice(0, 2), ["kayitli", "Xiaomi POCO C85"]);
   assert.equal(prod[1][6], "9500.00 TRY");
   assert.equal(prod[3][7], "used");
-  assert.deepEqual(stock[1], ["MIXGSM-GAZIANTEP", "kayitli", "9500.00 TRY", "in_stock"]);
+  assert.deepEqual(stock[1], ["17557344197910298668", "kayitli", "9500.00 TRY", "in_stock"]);
   // gercek katalog: kayitsiz telefon beslemeye hic girmez
   const real = gen.googleFeedFiles(built.pages).get("feed/google-urunler.tsv");
   built.pages.filter((p) => p.kind === "phone" && p.group === "PHONE" && p.registration !== "KAYITLI")
