@@ -43,14 +43,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Depoyu al
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           # Her zaman main'in EN SON halini al. Eski bir calismayi "Re-run"
           # etmek bile eski commit yerine guncel main uzerinde calisir.
           ref: main
 
       - name: Node.js kur
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "22"
 
@@ -113,7 +113,7 @@ jobs:
       # commit'i ASLA etkilenmez (laptop adimiyla ayni izolasyon deseni).
       - name: Fiyat listesi gorselleri icin bagimliliklari kur (Playwright)
         continue-on-error: true
-        run: npm install
+        run: npm ci
 
       - name: Playwright Chromium kur
         continue-on-error: true
