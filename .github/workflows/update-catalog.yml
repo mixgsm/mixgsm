@@ -31,6 +31,7 @@ on:
 
 permissions:
   contents: write
+  actions: write # son adimda deploy-pages.yml'yi baslatmak icin
 
 concurrency:
   group: catalog-update
@@ -166,3 +167,10 @@ jobs:
             echo "::error::Katalog commit'i main'e gonderilemedi (3 deneme)."
             exit 1
           fi
+
+      # Bot commit'i (GITHUB_TOKEN) "push" ile baska is tetiklemez, workflow_run da
+      # bu depoda tetiklenmedi; yayin isi burada acikca baslatilir (QA orada calisir).
+      - name: Yayin isini baslat (deploy-pages.yml)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --repo "${{ github.repository }}" --ref main

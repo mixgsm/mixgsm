@@ -3,7 +3,7 @@ name: Yayinla (QA gecerse GitHub Pages)
 # NEDEN: Pages "branch'ten yayin" modunda QA kirmiziyken bile site guncelleniyordu.
 # Bu is once testleri + QA'yi (qa.yml) calistirir, yalniz gecerse siteyi yayinlar.
 # Bot commit'leri (GITHUB_TOKEN) "push" ile baska is tetiklemez; bu yuzden katalog
-# isi her bittiginde de calisir (workflow_run).
+# isi (update-catalog.yml) son adiminda bu isi "gh workflow run" ile baslatir.
 #
 # ACIL DURUM (kontrol takildi, fiyat hemen yayinlanmali):
 #   GitHub -> Actions -> "Yayinla (QA gecerse GitHub Pages)" -> Run workflow ->
@@ -17,9 +17,6 @@ name: Yayinla (QA gecerse GitHub Pages)
 on:
   push:
     branches: [main]
-  workflow_run:
-    workflows: ["Katalog Guncelle (Google Sheets -> catalog.json + catalog-laptop.json)"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       kontrolleri_atla:
