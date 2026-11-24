@@ -40,6 +40,7 @@ const ROOT = path.join(__dirname, "..");
 const SITE_ORIGIN = "https://mixgsm.tr";
 const PHONE_DIR = "urun";
 const LAPTOP_DIR = "laptop";
+const GUIDE_DIR = "rehber";
 const PAGE_MARKER = "<!-- mixgsm:urun-sayfasi -->";
 const PHONE_PHOTO_BASE = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/photos/";
 const LAPTOP_PHOTO_BASE = "https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/images/";
@@ -166,7 +167,7 @@ function phonePages(catalog, rules, matcher, repoPhotos) {
       parts.length ? `MİX GSM’de sıfır olarak satılıyor.` : `${base}, MİX GSM’de sıfır olarak satılıyor.`,
     ].filter(Boolean).join(" ");
     pages.push({
-      kind: "phone", dir: PHONE_DIR, slug, name, base, summary, keySpecs: "", titleSpecs: "",
+      kind: "phone", dir: PHONE_DIR, slug, name, base, summary, keySpecs: "", titleSpecs: "", model: clean(p.m).toLocaleUpperCase("tr-TR"),
       brand: clean(p.b), group: p.group === "PERSONAL_CARE" ? "PERSONAL_CARE" : "PHONE",
       price, stock: STOCK_LABEL_TR[p.stock] ? p.stock : "ASK", sold: false,
       image: file ? `/photos/${encodeURIComponent(file)}` : "",
@@ -246,7 +247,7 @@ function laptopPages(laptopCatalog, rules, repoLaptopImages, stage) {
       specOf("Kullanım amacı") ? `Önerilen kullanım: ${specOf("Kullanım amacı")}.` : "",
     ].filter(Boolean).join(" ");
     pages.push({
-      kind: "laptop", dir: LAPTOP_DIR, slug, name, base, cond,
+      kind: "laptop", dir: LAPTOP_DIR, slug, name, base, cond, usage: clean(p.usage),
       keySpecs: keySpecs.join(" · "),
       titleSpecs: [specOf("İşlemci"), [ramShort, storage].filter(Boolean).join("/").replace(/(\d) GB/g, "$1GB").replace(/(\d) TB/g, "$1TB")].filter(Boolean).join(" "),
       summary,
@@ -300,6 +301,11 @@ h1{margin:4px 0 0;font-size:clamp(26px,5.4vw,38px);line-height:1.12;letter-spaci
 .about{margin:0;font-size:15px;line-height:1.6}
 .info.shop{margin-top:0}
 .info.shop b{color:var(--text);font-weight:600}
+.lead{margin-top:10px;color:var(--muted)}
+.info li b{color:var(--text);font-weight:600}
+table.cmp th,table.cmp td{padding-right:10px}
+table.cmp thead th{color:var(--text);font-weight:700;width:auto}
+table.cmp tbody th{width:28%}
 .stockline.out{color:var(--accent)}
 .taksit{margin:16px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .taksit b{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:15px;font-weight:600}
@@ -364,7 +370,7 @@ function topBar(biz) {
 function footer(biz, token) {
   return `<footer>
 <p>${esc(biz.address)}<br><a href="tel:${esc(biz.phone.e164)}">${esc(biz.phone.display)}</a></p>
-<p><a href="/">Ana sayfa (ürün kataloğu)</a> · <a href="/fiyat-listesi/">Güncel fiyat listesi</a> · <a href="/${PHONE_DIR}/">Tüm ürünler</a></p>
+<p><a href="/">Ana sayfa (ürün kataloğu)</a> · <a href="/fiyat-listesi/">Güncel fiyat listesi</a> · <a href="/${PHONE_DIR}/">Tüm ürünler</a> · <a href="/${GUIDE_DIR}/">Rehberler</a></p>
 <p>Bu sayfa katalog verisinden otomatik oluşturulur. Sipariş öncesi stok ve fiyatı WhatsApp’tan teyit edin.</p>
 </footer>
 </div>
@@ -557,6 +563,212 @@ ${body}</main>
 ${footer(biz, token)}`;
 }
 
+
+// ---------------------------------------------------------------- rehber sayfalari
+// Yapay zeka aramalari ve Google icin "hangi telefonu/laptopu almaliyim"
+// turu sayfalar. ICERIK KURALI: urun listeleri, fiyatlar ve ozellikler YALNIZ
+// katalogdan gelir (her guncellemede otomatik yenilenir); elle yazilan metin
+// genel secim tavsiyesidir, hicbir urun hakkinda katalogda olmayan iddia yoktur.
+// Listesi 2 urunden az kalan rehber uretilmez (sayfa silinir).
+const GUIDE_MIN_ITEMS = 2;
+const fmtTL = (n) => `${fmtNum(n)} TL`;
+const SHOP_INFO = (biz) => `<h2>Alışveriş bilgileri</h2>
+<ul class="info shop">
+<li><b>Kargo:</b> Türkiye’nin 81 iline anlaşmalı kargo. Kargo ücreti bize aittir; siparişten sonra ortalama 2 günde teslim edilir.</li>
+<li><b>İade:</b> Teslimden itibaren 7 gün içinde iade; iade kargo ücreti alıcıya aittir. <a href="/iade-politikasi/">İade koşulları</a></li>
+<li><b>Taksit:</b> Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartlarına 3 taksit.</li>
+<li><b>Mağaza:</b> ${esc(biz.address)}</li>
+</ul>`;
+
+const PHONE_TIPS = [
+  "<b>Depolama:</b> Fotoğraf ve video çekiyorsanız 256 GB, uzun yıllar kullanacaksanız 512 GB rahat ettirir.",
+  "<b>Batarya:</b> mAh değeri büyüdükçe pil genellikle daha uzun dayanır; yoğun kullanımda 5000 mAh ve üstüne bakın.",
+  "<b>İşlemci:</b> Oyun ve ağır uygulamalar için üst seri işlemciler (örneğin Snapdragon 8 serisi, Dimensity 9000 serisi, Apple A serisi) daha akıcıdır.",
+  "<b>Bağlantı:</b> Türkiye’de 5G yaygınlaştıkça 5G destekli model, telefonu daha uzun süre güncel tutar.",
+];
+const LAPTOP_TIPS = [
+  "<b>RAM:</b> Günlük ve ofis kullanımında 8 GB yeterli, çok sekmeli çalışma ve oyunda 16 GB önerilir.",
+  "<b>Depolama:</b> SSD/NVMe disk, eski tip diske göre açılışı ve programları çok hızlandırır.",
+  "<b>Ekran kartı:</b> Oyun ve grafik işleri için ayrı (harici) ekran kartı ve yüksek Hz’li ekran önemlidir.",
+  "<b>İkinci el:</b> Kozmetik puanı, pil sağlığı ve adaptörün orijinal olup olmadığı ürün sayfasında yazar; satın almadan önce bakın.",
+];
+
+function guideDefs(pages) {
+  const phones = pages.filter((p) => p.kind === "phone" && p.group === "PHONE" && p.stock === "IN" && p.price !== null);
+  const laptops = pages.filter((p) => p.kind === "laptop" && !p.sold && p.stock === "IN" && p.price !== null);
+  const byPrice = (a, b) => a.price - b.price;
+  const list = [
+    {
+      slug: "20000-tl-alti-telefon", kind: "list",
+      title: "20.000 TL Altı Telefonlar: Güncel Fiyatlar",
+      h1: "20.000 TL altı telefonlar",
+      intro: "MİX GSM’de şu an stokta olan, nakit fiyatı 20.000 TL ve altındaki sıfır telefonlar, fiyatına göre sıralı. Liste katalogla birlikte otomatik güncellenir.",
+      items: phones.filter((p) => p.price <= 20000).sort(byPrice), tips: PHONE_TIPS,
+    },
+    {
+      slug: "20000-40000-tl-arasi-telefon", kind: "list",
+      title: "20.000–40.000 TL Arası Telefonlar: Güncel Fiyatlar",
+      h1: "20.000–40.000 TL arası telefonlar",
+      intro: "Orta-üst segment: MİX GSM’de stokta olan, nakit fiyatı 20.000 ile 40.000 TL arasındaki sıfır telefonlar, fiyatına göre sıralı.",
+      items: phones.filter((p) => p.price > 20000 && p.price <= 40000).sort(byPrice), tips: PHONE_TIPS,
+    },
+    {
+      slug: "ust-segment-telefon", kind: "list",
+      title: "Üst Segment Telefonlar (40.000 TL Üstü): Güncel Fiyatlar",
+      h1: "Üst segment telefonlar (40.000 TL üstü)",
+      intro: "Amiral gemisi modeller: MİX GSM’de stokta olan, nakit fiyatı 40.000 TL’nin üstündeki sıfır telefonlar, fiyatına göre sıralı.",
+      items: phones.filter((p) => p.price > 40000).sort(byPrice), tips: PHONE_TIPS,
+    },
+    {
+      slug: "oyun-laptopu", kind: "list",
+      title: "Oyun Laptopları: Stoktaki Modeller ve Fiyatları",
+      h1: "Oyun laptopları",
+      intro: "MİX GSM’de şu an stokta olan, oyun için ayrılmış sıfır ve ikinci el laptoplar, fiyatına göre sıralı. İşlemci, RAM ve ekran kartı bilgisi her ürünün yanında.",
+      items: laptops.filter((p) => /gaming|oyun/i.test(p.usage)).sort(byPrice), tips: LAPTOP_TIPS,
+    },
+    {
+      slug: "ofis-ve-ogrenci-laptopu", kind: "list",
+      title: "Ofis ve Öğrenci Laptopları: Stoktaki Modeller",
+      h1: "Ofis ve öğrenci laptopları",
+      intro: "İş, ders ve günlük kullanım için MİX GSM’de şu an stokta olan sıfır ve ikinci el laptoplar, fiyatına göre sıralı.",
+      items: laptops.filter((p) => /ofis|öğrenci|ogrenci|günlük|gunluk/i.test(p.usage)).sort(byPrice), tips: LAPTOP_TIPS,
+    },
+  ];
+  // Karsilastirmalar: katalogdaki model adlariyla (her modelin tum varyantlari).
+  const PAIRS = [
+    ["MI 17T", "MI 17T PRO"],
+    ["REDMI NOTE 14 PRO PLUS 5G", "REDMI NOTE 15 PRO PLUS 5G"],
+    ["S25 ULTRA", "S26 ULTRA"],
+    ["IPHONE 17 PRO", "IPHONE 18 PRO"],
+  ];
+  const all = pages.filter((p) => p.kind === "phone" && p.group === "PHONE");
+  PAIRS.forEach(([a, b]) => {
+    const A = all.filter((p) => p.model === a), B = all.filter((p) => p.model === b);
+    if (!A.length || !B.length) return;
+    const nameA = A[0].base, nameB = B[0].base;
+    list.push({
+      slug: `${normSlug(nameA)}-vs-${normSlug(nameB)}`, kind: "compare",
+      title: `${nameA} vs ${nameB}: Farklar ve Fiyatlar`,
+      h1: `${nameA} vs ${nameB}`,
+      intro: `${nameA} ile ${nameB} arasındaki farklar: ekran, işlemci, kamera, batarya ve MİX GSM’deki güncel fiyatlar. Tablo katalogdaki bilgilerden otomatik oluşturulur.`,
+      a: A, b: B, items: A.concat(B), tips: PHONE_TIPS,
+    });
+  });
+  return list.filter((g) => g.kind === "compare" || g.items.length >= GUIDE_MIN_ITEMS);
+}
+const normSlug = (t) => clean(t).toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ö/g, "o").replace(/ç/g, "c").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function itemSpecLine(p) {
+  if (p.kind === "laptop") return p.keySpecs || "";
+  const get = (k) => (p.specs.find((r) => r[0] === k) || [])[1] || "";
+  return [get("İşlemci"), get("Batarya")].filter(Boolean).join(" · ");
+}
+
+function compareTable(g) {
+  const pick = (list, k) => { const v = [...new Set(list.map((p) => (p.specs.find((r) => r[0] === k) || [])[1]).filter(Boolean))]; return v.join(" · "); };
+  const minPrice = (list) => { const ps = list.filter((p) => p.price !== null && p.stock !== "OUT").map((p) => p.price); return ps.length ? `${fmtTL(Math.min(...ps))}’den başlayan` : "Fiyat için sorun"; };
+  const rows = [["Güncel fiyat", minPrice(g.a), minPrice(g.b)]].concat(
+    ["RAM / Depolama", "Ekran", "İşlemci", "Kamera", "Batarya", "Bağlantı"].map((k) => [k, pick(g.a, k), pick(g.b, k)]).filter((r) => r[1] || r[2]));
+  const diffs = rows.slice(1).filter((r) => r[1] && r[2] && r[1] !== r[2]).map((r) => `<li><b>${esc(r[0])}:</b> ${esc(g.a[0].base)} ${esc(r[1])}, ${esc(g.b[0].base)} ${esc(r[2])}.</li>`);
+  const same = rows.slice(1).filter((r) => r[1] && r[1] === r[2]).map((r) => r[0]);
+  return `<table class="cmp">
+<thead><tr><th scope="col"></th><th scope="col">${esc(g.a[0].base)}</th><th scope="col">${esc(g.b[0].base)}</th></tr></thead>
+<tbody>
+${rows.map((r) => `<tr><th scope="row">${esc(r[0])}</th><td>${esc(r[1] || "—")}</td><td>${esc(r[2] || "—")}</td></tr>`).join("\n")}
+</tbody>
+</table>
+${diffs.length ? `<h2>Öne çıkan farklar</h2>\n<ul class="info">\n${diffs.join("\n")}\n</ul>` : ""}
+${same.length ? `<p class="note">Aynı olanlar: ${esc(same.join(", "))}.</p>` : ""}`;
+}
+
+function renderGuidePage(g, guides, biz, token) {
+  const url = `${SITE_ORIGIN}/${GUIDE_DIR}/${g.slug}/`;
+  const count = g.items.length;
+  const description = fitText([g.intro.split(". ")[0] + ".", `${count} model, güncel fiyatlarla.`, "Ücretsiz kargo, 3 taksit."], DESCRIPTION_MAX);
+  const title = firstFitting([`${g.title} | MİX GSM`, g.title, `${g.h1} Fiyatları | MİX GSM`, `${g.h1} | MİX GSM`, g.h1], TITLE_MAX);
+  const ld = [
+    { "@context": "https://schema.org", "@type": "ItemList", name: g.h1, numberOfItems: count,
+      itemListElement: g.items.map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.name, url: pageUrl(p) })) },
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "MİX GSM", item: SITE_ORIGIN + "/" },
+      { "@type": "ListItem", position: 2, name: "Rehberler", item: `${SITE_ORIGIN}/${GUIDE_DIR}/` },
+      { "@type": "ListItem", position: 3, name: g.h1, item: url }] },
+  ];
+  const listHtml = `<ul class="more">\n${g.items.map((p) => `<li><a href="${esc(pagePath(p))}">${esc(p.name)}<span>${esc([priceText(p), itemSpecLine(p)].filter(Boolean).join(" · "))}</span></a></li>`).join("\n")}\n</ul>`;
+  const others = guides.filter((x) => x !== g);
+  return `${headCommon({ title, description, url, image: "", token, ld })}
+<body>
+<div class="wrap">
+${topBar(biz)}
+<main>
+<ol class="crumbs">
+<li><a href="/">Ana sayfa</a></li>
+<li><a href="/${GUIDE_DIR}/">Rehberler</a></li>
+</ol>
+<h1>${esc(g.h1)}</h1>
+<p class="about lead">${esc(g.intro)}</p>
+${g.kind === "compare" ? compareTable(g) + `\n<h2>Tüm sürümler ve fiyatlar</h2>\n${listHtml}` : `<h2>Stoktaki modeller (${count})</h2>\n${listHtml}`}
+<h2>Seçerken nelere bakmalı?</h2>
+<ul class="info">
+${g.tips.map((t) => `<li>${t}</li>`).join("\n")}
+</ul>
+${SHOP_INFO(biz)}
+${others.length ? `<h2>Diğer rehberler</h2>\n<ul class="more">\n${others.map((o) => `<li><a href="/${GUIDE_DIR}/${o.slug}/">${esc(o.h1)}</a></li>`).join("\n")}\n</ul>` : ""}
+</main>
+${footer(biz, token)}`;
+}
+
+function renderGuideIndex(guides, biz, token) {
+  const url = `${SITE_ORIGIN}/${GUIDE_DIR}/`;
+  const ld = [{ "@context": "https://schema.org", "@type": "ItemList", name: "MİX GSM Rehberler", numberOfItems: guides.length,
+    itemListElement: guides.map((g, i) => ({ "@type": "ListItem", position: i + 1, name: g.h1, url: `${url}${g.slug}/` })) }];
+  const section = (kind, title) => {
+    const l = guides.filter((g) => g.kind === kind);
+    return l.length ? `<h2>${title}</h2>\n<ul class="more">\n${l.map((g) => `<li><a href="/${GUIDE_DIR}/${g.slug}/">${esc(g.h1)}<span>${g.items.length} model</span></a></li>`).join("\n")}\n</ul>\n` : "";
+  };
+  return `${headCommon({ title: "Telefon ve Laptop Rehberleri | MİX GSM", description: "Bütçeye göre telefon listeleri, oyun ve ofis laptopları, model karşılaştırmaları. Fiyatlar MİX GSM kataloğuyla otomatik güncellenir.", url, image: "", token, ld })}
+<body>
+<div class="wrap">
+${topBar(biz)}
+<main>
+<h1>Rehberler</h1>
+<p class="note">Hangi telefonu ya da laptopu alacağınıza karar vermenize yardımcı listeler. Ürünler ve fiyatlar MİX GSM kataloğundan otomatik gelir.</p>
+${section("list", "Bütçeye ve kullanıma göre")}${section("compare", "Karşılaştırmalar")}</main>
+${footer(biz, token)}`;
+}
+
+// llms.txt: yapay zeka asistanlari icin sitenin kisa ozeti (llmstxt.org onerisi).
+// Yalniz dogrulanmis isletme bilgisi ve sayfa adresleri; fiyat yazilmaz.
+function renderLlmsTxt(pages, guides, biz) {
+  const n = (k) => pages.filter((p) => !p.sold && (k === "laptop" ? p.kind === "laptop" : p.kind === "phone" && p.group === k)).length;
+  return `# MİX GSM
+
+> Gaziantep merkezli telefon ve teknoloji mağazası. Sıfır cep telefonu, sıfır ve ikinci el laptop, Dyson/Braun/Philips kişisel bakım ürünleri satar; Türkiye’nin 81 iline kargo ile gönderir.
+
+- Adres: ${biz.address}
+- Telefon / WhatsApp sipariş: ${biz.phone.display}
+- Kargo: Türkiye geneli, kargo ücreti mağazaya ait, siparişten sonra ortalama 2 günde teslim
+- İade: Teslimden itibaren 7 gün; iade kargo ücreti alıcıya ait
+- Taksit: Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartlarına 3 taksit
+- Takas ve ikinci el telefon alım-satımı yapılmaz
+- Fiyatlar dolar kuruna göre değişebilir; sipariş öncesi WhatsApp’tan teyit edilir
+
+## Ürünler
+
+- [Tüm ürünler](${SITE_ORIGIN}/${PHONE_DIR}/): ${n("PHONE")} telefon, ${n("laptop")} laptop, ${n("PERSONAL_CARE")} kişisel bakım ürünü; her ürünün kendi sayfası, güncel fiyatı ve stok durumu
+- [Güncel fiyat listesi](${SITE_ORIGIN}/fiyat-listesi/): tüm telefonların fiyat ve stok tablosu
+- [Ana sayfa ve katalog](${SITE_ORIGIN}/): arama, filtre ve karşılaştırma
+
+## Rehberler
+
+${guides.map((g) => `- [${g.h1}](${SITE_ORIGIN}/${GUIDE_DIR}/${g.slug}/)`).join("\n")}
+
+## Politikalar
+
+- [İade ve değişim politikası](${SITE_ORIGIN}/iade-politikasi/)
+`;
+}
+
 // ---------------------------------------------------------------- uretim
 function buildAll(siteRoot) {
   const read = (rel) => JSON.parse(fs.readFileSync(path.join(siteRoot, rel), "utf8"));
@@ -577,7 +789,11 @@ function buildAll(siteRoot) {
   const files = new Map();                                    // goreli yol -> icerik
   pages.forEach((pg) => files.set(`${pg.dir}/${pg.slug}/index.html`, renderProductPage(pg, pages, biz, rules, token)));
   files.set(`${PHONE_DIR}/index.html`, renderIndexPage(pages, biz, token));
-  return { pages, files };
+  const guides = guideDefs(pages);
+  guides.forEach((g) => files.set(`${GUIDE_DIR}/${g.slug}/index.html`, renderGuidePage(g, guides, biz, token)));
+  if (guides.length) files.set(`${GUIDE_DIR}/index.html`, renderGuideIndex(guides, biz, token));
+  const llms = renderLlmsTxt(pages, guides, biz);
+  return { pages, files, guides, llms };
 }
 
 // Google Merchant Center yerel urun listelemesi (Gaziantep magazasi) icin iki TSV:
@@ -618,7 +834,7 @@ function googleFeedFiles(pages) {
 // Diskte bu scriptin urettigi (isaret tasiyan) sayfalar.
 function existingGenerated(siteRoot) {
   const out = [];
-  [PHONE_DIR, LAPTOP_DIR].forEach((dir) => {
+  [PHONE_DIR, LAPTOP_DIR, GUIDE_DIR].forEach((dir) => {
     const abs = path.join(siteRoot, dir);
     if (!fs.existsSync(abs)) return;
     const top = path.join(abs, "index.html");
@@ -648,21 +864,22 @@ function sync(siteRoot, files, write) {
     const abs = path.join(siteRoot, rel);
     fs.unlinkSync(abs);
     const dir = path.dirname(abs);
-    if (path.basename(dir) !== PHONE_DIR && path.basename(dir) !== LAPTOP_DIR && !fs.readdirSync(dir).length) fs.rmdirSync(dir);
+    if (![PHONE_DIR, LAPTOP_DIR, GUIDE_DIR].includes(path.basename(dir)) && !fs.readdirSync(dir).length) fs.rmdirSync(dir);
   });
   return { written, removed };
 }
 
 // Site haritasi icin adresler (generate-sitemap.js kullanir).
 function listPageUrls(siteRoot) {
-  const { pages } = buildAll(siteRoot);
-  return [`${SITE_ORIGIN}/${PHONE_DIR}/`].concat(pages.filter((p) => !p.sold).map(pageUrl));
+  const { pages, guides } = buildAll(siteRoot);
+  const guideUrls = guides.length ? [`${SITE_ORIGIN}/${GUIDE_DIR}/`].concat(guides.map((g) => `${SITE_ORIGIN}/${GUIDE_DIR}/${g.slug}/`)) : [];
+  return [`${SITE_ORIGIN}/${PHONE_DIR}/`].concat(guideUrls, pages.filter((p) => !p.sold).map(pageUrl));
 }
 
 function main() {
   const check = process.argv.includes("--check");
-  const { pages, files } = buildAll(ROOT);                    // hata olursa hicbir dosya yazilmaz
-  const { written, removed } = sync(ROOT, new Map([...files, ...googleFeedFiles(pages)]), !check);
+  const { pages, files, llms } = buildAll(ROOT);              // hata olursa hicbir dosya yazilmaz
+  const { written, removed } = sync(ROOT, new Map([...files, ...googleFeedFiles(pages), ["llms.txt", llms]]), !check);
   if (check) {
     if (written || removed) { console.log(`::error::urun sayfalari guncel degil: ${written} degisecek, ${removed} silinecek (node scripts/generate-product-pages.js)`); process.exitCode = 1; }
     else console.log(`Urun sayfalari guncel (${pages.length} urun).`);
@@ -675,4 +892,4 @@ if (require.main === module) {
   try { main(); } catch (err) { console.error("HATA:", err.message); process.exit(1); }
 }
 
-module.exports = { buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, googleFeedFiles, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };
+module.exports = { GUIDE_DIR, guideDefs, buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, googleFeedFiles, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };

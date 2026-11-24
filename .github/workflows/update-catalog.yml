@@ -18,6 +18,7 @@ on:
       - "scripts/generate-photo-list.js"
       - "scripts/generate-product-pages.js"
       - "scripts/generate-hero-preload.js"
+      - "scripts/indexnow-submit.js"
       # Taksit kurali / ozellik yazimi site kodundan okunur; sayac anahtari
       # index.html'den. Bunlar degisince urun sayfalari hemen yenilensin.
       - "js/**"
@@ -132,9 +133,11 @@ jobs:
         run: node scripts/generate-price-assets.js
 
       - name: Degisiklik varsa commit + push et
+        id: commit
         run: |
           git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html sitemap.xml
           git add index.html
+          if [ -f llms.txt ]; then git add llms.txt; fi
           if [ -f feed/photos.json ]; then
             git add feed/photos.json
           fi
@@ -155,7 +158,7 @@ jobs:
             git add price-assets
           fi
           # Urun sayfalari: -A ile katalogdan kalkan urunun sayfasinin silinmesi de commit'lenir.
-          for d in urun laptop; do
+          for d in urun laptop rehber; do
             if [ -d "$d" ] || git ls-files --error-unmatch "$d" >/dev/null 2>&1; then
               git add -A "$d"
             fi
@@ -163,6 +166,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "Degisiklik yok, commit atilmiyor."
           else
+            # IndexNow (Bing) icin degisen dosyalarin listesi
+            git diff --cached --name-only > "$RUNNER_TEMP/degisen-dosyalar.txt"
             git config user.name "mixgsm-catalog-bot"
             git config user.email "actions@github.com"
             git commit -m "chore: catalog.json / catalog-laptop.json / fiyat listesi gorselleri otomatik guncellendi"
@@ -170,6 +175,7 @@ jobs:
             # Gondermeden once en son main'in ustune al; zorla gonderme (force) YOK.
             for deneme in 1 2 3; do
               if git pull --rebase origin main && git push origin HEAD:main; then
+                echo "pushed=1" >> "$GITHUB_OUTPUT"
                 exit 0
               fi
               git rebase --abort 2>/dev/null || true
@@ -179,6 +185,13 @@ jobs:
             echo "::error::Katalog commit'i main'e gonderilemedi (3 deneme)."
             exit 1
           fi
+
+      # Degisen sayfalari Bing/IndexNow'a bildir (ChatGPT aramasi Bing'e dayanir).
+      # Yayini asla engellemez.
+      - name: Degisen sayfalari IndexNow'a bildir (Bing)
+        if: steps.commit.outputs.pushed == '1'
+        continue-on-error: true
+        run: node scripts/indexnow-submit.js "$RUNNER_TEMP/degisen-dosyalar.txt"
 
       # Bot commit'i (GITHUB_TOKEN) "push" ile baska is tetiklemez, workflow_run da
       # bu depoda tetiklenmedi; yayin isi burada acikca baslatilir (QA orada calisir).
