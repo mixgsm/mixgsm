@@ -117,3 +117,29 @@ test("Google beslemesi: yalniz kayitli/fiyatli/gorselli/stoktaki urun, kayitsiz 
   built.pages.filter((p) => p.kind === "phone" && p.group === "PHONE" && p.registration !== "KAYITLI")
     .forEach((p) => assert.ok(!real.includes(`\n${p.slug}\t`), p.slug));
 });
+
+// SEO denetimi (Kasim 2026): Google icin iade bilgisi, kisa aciklama/baslik,
+// ana sayfadaki kartlarin gercek urun sayfasina baglanmasi.
+test("teklifte gercek iade kosulu var (7 gun, iade kargosu alicida); baslik ve aciklama kisa", () => {
+  built.pages.filter((pg) => !pg.sold).forEach((pg) => {
+    const html = built.files.get(`${pg.dir}/${pg.slug}/index.html`);
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)[1]);
+    if (ld.offers) {
+      const rp = ld.offers.hasMerchantReturnPolicy;
+      assert.equal(rp.merchantReturnDays, 7);
+      assert.equal(rp.returnFees, "https://schema.org/ReturnFeesCustomerResponsibility");
+      assert.equal(ld.offers.shippingDetails, undefined, "kargo ucreti teyit edilmeden yazilmaz");
+    }
+    const unesc = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+    assert.ok(unesc(html.match(/<title>(.*?)<\/title>/)[1]).length <= 60, `uzun baslik: ${pg.slug}`);
+    assert.ok(unesc(html.match(/name="description" content="(.*?)"/)[1]).length <= 155, `uzun aciklama: ${pg.slug}`);
+    assert.ok(html.includes("<h2>Alışveriş bilgileri</h2>"));
+  });
+});
+
+test("ana sayfa kartlari gercek urun sayfasina baglanir (telefon ve laptop)", () => {
+  const src = readAppSource(root);
+  assert.ok(src.includes('<a class="card-open" href="/urun/${productSlug(p)}/"'));
+  assert.ok(src.includes("'<a class=\"card-open\" href=\"/laptop/' + laptopSlugOf(p) + '/\""));
+  assert.ok(src.includes("e.ctrlKey || e.metaKey"), "yeni sekmede acma davranisi korunur");
+});
