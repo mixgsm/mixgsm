@@ -128,7 +128,9 @@ test("teklifte gercek iade kosulu var (7 gun, iade kargosu alicida); baslik ve a
       const rp = ld.offers.hasMerchantReturnPolicy;
       assert.equal(rp.merchantReturnDays, 7);
       assert.equal(rp.returnFees, "https://schema.org/ReturnFeesCustomerResponsibility");
-      assert.equal(ld.offers.shippingDetails, undefined, "kargo ucreti teyit edilmeden yazilmaz");
+      const sd = ld.offers.shippingDetails;
+      assert.equal(sd.shippingRate.value, 0, "kargo isletmeye ait");
+      assert.equal(sd.shippingDestination.addressCountry, "TR");
     }
     const unesc = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
     assert.ok(unesc(html.match(/<title>(.*?)<\/title>/)[1]).length <= 60, `uzun baslik: ${pg.slug}`);
