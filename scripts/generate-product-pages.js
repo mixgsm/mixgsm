@@ -61,10 +61,10 @@ const RETURN_POLICY = {
   returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
   merchantReturnLink: "https://mixgsm.tr/iade-politikasi/",
 };
-// Kargo bilgisi (Google "shippingDetails"). Ucret ve teslim suresi isletme
-// sahibinden teyit edilmeden YAZILMAZ; null iken sayfalara eklenmez.
-// Ornek: { rate: 0, handlingDays: [0, 1], transitDays: [1, 3] }
-const SHIPPING = null;
+// Kargo bilgisi (Google "shippingDetails"). Isletme sahibi teyidi (25 Kasim 2026):
+// kargo ucreti isletmeye ait (alici odemez); siparisten sonra ortalama 2 gunde
+// teslim (hazirlik 0-1 gun + kargo 1-2 gun). Degisirse yalniz burayi guncelleyin.
+const SHIPPING = { rate: 0, handlingDays: [0, 1], transitDays: [1, 2] };
 
 // Bir metni kelime ortasindan bolmeden en fazla max karaktere kisaltir.
 function fitText(parts, max) {
@@ -397,7 +397,7 @@ function renderProductPage(pg, all, biz, rules, token) {
   const specText = pg.specs.slice(0, 5).map((r) => `${r[0]}: ${r[1]}`).join(", ");
   // Google'da gorunen aciklama: once fiyat, sonra sigdigi kadar ozellik, en sonda
   // kargo/taksit. ~155 karakteri gecmez (kelime ortasindan kesilmez).
-  const closing = `Türkiye geneline kargo${taksit ? `, ${rules.TAKSIT_COUNT} taksit` : ""}.`;
+  const closing = `Ücretsiz kargo${taksit ? `, ${rules.TAKSIT_COUNT} taksit` : ""}.`;
   const lead = `${pg.name}${pg.price !== null ? ` fiyatı ${fmtNum(pg.price)} TL.` : ": güncel fiyatı WhatsApp’tan sorun."}`;
   const specBits = pg.specs.filter((r) => r[0] !== "Durum").slice(0, 4).map((r) => `${r[0]}: ${r[1]}.`);
   const description = pg.sold
@@ -515,7 +515,7 @@ ${pg.summary ? `<h2>Ürün hakkında</h2>
 <p class="about">${esc(pg.summary)}</p>` : ""}
 <h2>Alışveriş bilgileri</h2>
 <ul class="info shop">
-<li><b>Kargo:</b> Gaziantep’teki mağazamızdan Türkiye’nin 81 iline anlaşmalı kargo ile gönderilir.</li>
+<li><b>Kargo:</b> Gaziantep’teki mağazamızdan Türkiye’nin 81 iline anlaşmalı kargo ile gönderilir. Kargo ücreti bize aittir; siparişten sonra ortalama 2 günde teslim edilir.</li>
 <li><b>İade:</b> Teslimden itibaren 7 gün içinde iade; iade kargo ücreti alıcıya aittir. <a href="/iade-politikasi/">İade koşulları</a></li>
 ${taksit ? `<li><b>Taksit:</b> Kredi kartına ${rules.TAKSIT_COUNT} taksit (${esc(rules.TAKSIT_CARDS)}).</li>\n` : ""}<li><b>Mağazadan teslim:</b> ${esc(biz.address)}</li>
 </ul>
