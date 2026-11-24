@@ -1793,7 +1793,7 @@ function phoneCardHtml(p, extraAttrs) {
       </div>
       <div class="info">
         <div class="brand">${escapeHtml(p.b)}</div>
-        <div class="name"><button type="button" class="card-open" data-action="open-product" data-i="${pIndex}" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">${escapeHtml(p.m)}</button></div>
+        <div class="name"><a class="card-open" href="/urun/${productSlug(p)}/" data-action="open-product" data-i="${pIndex}" aria-label="${escapeHtml(p.b)} ${escapeHtml(p.m)} ürününü görüntüle">${escapeHtml(p.m)}</a></div>
         <span class="spec">${escapeHtml(displaySpec('spec', p.s))}</span>
         <div class="bottom">
           <div class="price">
@@ -2889,6 +2889,18 @@ document.addEventListener("keydown", e => {
   }
 });
 
+// SEO: kart adı gerçek ürün sayfasına (/urun/..., /laptop/...) bağlantıdır;
+// arama motorları ürün sayfalarını ana sayfadan bulur. Normal tıklamada sayfa
+// değişmez, mevcut ürün penceresi açılır (preventDefault; diğer dinleyiciler
+// aynen çalışır). Ctrl/Cmd/Shift/Alt ile tıklanırsa tarayıcı sayfayı açar ve
+// pencere açılmaz (yakalama aşamasında yayılım durdurulur).
+document.addEventListener('click', e => {
+  const a = e.target && e.target.closest ? e.target.closest('a.card-open') : null;
+  if (!a) return;
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) { e.stopPropagation(); return; }
+  e.preventDefault();
+}, true);
+
 // REDESIGN SAĞLAMLAŞTIRMA — MERKEZİ TIKLAMA YÖNETİMİ (event delegation)
 // JS ile üretilen kart/düğmelerde satır içi onclick/onerror YOK. Her öğe
 // data-action (+ data-i / data-key) taşır; tek bir belge dinleyicisi mevcut
@@ -3657,7 +3669,10 @@ function laptopCardMarkup(p) {
     + '</div>'
     + '<div class="laptop-card-body">'
     + '<div class="laptop-card-brand">' + escapeHtml(p.brand || '') + '</div>'
-    + '<div class="laptop-card-model"><button type="button" class="card-open" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">' + escapeHtml(p.model || title) + '</button></div>'
+    + '<div class="laptop-card-model">' + (p.brand && p.model
+      // Ürün sayfası yalnız marka + modeli olan laptop için üretilir (generate-product-pages.js).
+      ? '<a class="card-open" href="/laptop/' + laptopSlugOf(p) + '/" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">' + escapeHtml(p.model) + '</a>'
+      : '<button type="button" class="card-open" aria-label="' + escapeHtml(title) + ' ürününü görüntüle">' + escapeHtml(p.model || title) + '</button>') + '</div>'
     + (specsText ? '<div class="laptop-card-specs">' + escapeHtml(specsText) + '</div>' : '')
     + '<div class="laptop-card-bottom">' + priceMarkup + taksitCardLine(p.price, !sold, p.taksitPrice) + '</div>'
     + '</div></article>';

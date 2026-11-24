@@ -47,6 +47,36 @@ const SLUG_OK = /^[a-z0-9-]{1,200}$/;
 const STOCK_LABEL_TR = { IN: "Stokta", ASK: "Stok durumunu sorun", OUT: "Tükendi" };
 const STOCK_SCHEMA = { IN: "https://schema.org/InStock", ASK: "https://schema.org/LimitedAvailability", OUT: "https://schema.org/OutOfStock" };
 const GROUP_TITLE_TR = { PHONE: "Cep Telefonları", PERSONAL_CARE: "Kişisel Bakım" };
+const TITLE_MAX = 60;          // Google arama sonucunda kesilmeden gorunen yaklasik baslik uzunlugu
+const DESCRIPTION_MAX = 155;   // Google'in kesmeden gosterdigi yaklasik aciklama uzunlugu
+
+// Isletmenin GERCEK iade kosulu (iade-politikasi/ sayfasiyla ayni): teslimden
+// itibaren 7 gun, iade kargosunu alici oder. Google urun sonuclarinda gosterilir.
+const RETURN_POLICY = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "TR",
+  returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+  merchantReturnDays: 7,
+  returnMethod: "https://schema.org/ReturnByMail",
+  returnFees: "https://schema.org/ReturnFeesCustomerResponsibility",
+  merchantReturnLink: "https://mixgsm.tr/iade-politikasi/",
+};
+// Kargo bilgisi (Google "shippingDetails"). Ucret ve teslim suresi isletme
+// sahibinden teyit edilmeden YAZILMAZ; null iken sayfalara eklenmez.
+// Ornek: { rate: 0, handlingDays: [0, 1], transitDays: [1, 3] }
+const SHIPPING = null;
+
+// Bir metni kelime ortasindan bolmeden en fazla max karaktere kisaltir.
+function fitText(parts, max) {
+  let out = "";
+  for (const part of parts) {
+    const next = clean(out ? `${out} ${part}` : part);
+    if (next.length > max) break;
+    out = next;
+  }
+  return out || clean(parts[0]).slice(0, max);
+}
+const firstFitting = (list, max) => list.find((t) => t.length <= max) || list[list.length - 1];
 
 const esc = (s) => String(s == null ? "" : s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -122,8 +152,21 @@ function phonePages(catalog, rules, matcher, repoPhotos) {
       ["Batarya", rules.displaySpec("battery", p.battery)],
       ["Bağlantı", rules.displaySpec("connectivity", p.connectivity)],
     ].filter((r) => r[1]);
+    const specOf = (k) => (specs.find((r) => r[0] === k) || [])[1] || "";
+    const parts = [
+      variant && `${variant} hafıza`,
+      specOf("Ekran") && `${specOf("Ekran")} ekran`,
+      specOf("İşlemci") && `${specOf("İşlemci")} işlemci`,
+      specOf("Kamera") && `${specOf("Kamera")} kamera`,
+      specOf("Batarya") && `${specOf("Batarya")} batarya`,
+    ].filter(Boolean);
+    const summary = [
+      parts.length ? `${base}; ${parts.join(", ")} ile geliyor.` : "",
+      specOf("Bağlantı") ? `Bağlantı: ${specOf("Bağlantı")}.` : "",
+      parts.length ? `MİX GSM’de sıfır olarak satılıyor.` : `${base}, MİX GSM’de sıfır olarak satılıyor.`,
+    ].filter(Boolean).join(" ");
     pages.push({
-      kind: "phone", dir: PHONE_DIR, slug, name, base,
+      kind: "phone", dir: PHONE_DIR, slug, name, base, summary, keySpecs: "", titleSpecs: "",
       brand: clean(p.b), group: p.group === "PERSONAL_CARE" ? "PERSONAL_CARE" : "PHONE",
       price, stock: STOCK_LABEL_TR[p.stock] ? p.stock : "ASK", sold: false,
       image: file ? `/photos/${encodeURIComponent(file)}` : "",
@@ -158,7 +201,8 @@ function laptopPages(laptopCatalog, rules, repoLaptopImages, stage) {
   const exists = new Set(repoLaptopImages);
   const pages = [];
   const seen = new Set();
-  const unit = (v, u) => { const t = clean(v); return !t ? "" : new RegExp(u + "\\b", "i").test(t) ? t : `${t} ${u}`; };
+  // "-" gibi bos yer tutucular yazilmaz; "1 TB" degerine "GB" eklenmez.
+  const unit = (v, u) => { const t = clean(v); return !t || t === "-" ? "" : new RegExp(u + "\\b", "i").test(t) || (u === "GB" && /\bTB\b/i.test(t)) ? t : `${t} ${u}`; };
   (laptopCatalog && Array.isArray(laptopCatalog.products) ? laptopCatalog.products : []).forEach((p) => {
     if (!p || !clean(p.brand) || !clean(p.model)) return;
     const slug = rules.laptopSlugOf(p);
@@ -174,7 +218,7 @@ function laptopPages(laptopCatalog, rules, repoLaptopImages, stage) {
     const ssd = clean(p.ssdGB);
     const specs = [
       ["Durum", cond],
-      ["İşlemci", clean([p.cpu, p.cpuGen].map(clean).filter(Boolean).join(" "))],
+      ["İşlemci", clean([p.cpu, p.cpuGen].map(clean).filter((x) => x && x !== "-").join(" "))],
       ["RAM", clean([unit(p.ramGB, "GB"), clean(p.ramType)].filter(Boolean).join(" "))],
       ["Depolama", !ssd ? "" : /ssd|nvme|hdd|emmc/i.test(ssd) ? unit(ssd.replace(/\s*(ssd|nvme|hdd|emmc).*$/i, ""), "GB") + " " + ssd.replace(/^.*?(ssd|nvme|hdd|emmc)/i, "$1") : unit(ssd, "GB") + " SSD"],
       ["Ekran kartı", clean([clean(p.gpu), unit(p.gpuVramGB, "GB"), unit(p.gpuTgpW, "W")].filter(Boolean).join(" · "))],
@@ -188,8 +232,24 @@ function laptopPages(laptopCatalog, rules, repoLaptopImages, stage) {
       ["M.2 yuvası", clean(p.m2Slot)],
       ["Kullanım amacı", clean(p.usage)],
     ].filter((r) => r[1]);
+    const specOf = (k) => (specs.find((r) => r[0] === k) || [])[1] || "";
+    const ramShort = unit(p.ramGB, "GB");
+    const storage = specOf("Depolama");
+    const keySpecs = [specOf("İşlemci"), ramShort && `${ramShort} RAM`, storage].filter(Boolean);
+    const summary = [
+      `${base}${cond ? `, ${cond.toLocaleLowerCase("tr-TR") === "sıfır" ? "sıfır" : "ikinci el"}` : ""} bir laptop`
+        + (keySpecs.length || specOf("Ekran kartı") || specOf("Ekran")
+          ? `: ${[specOf("İşlemci") && `${specOf("İşlemci")} işlemci`, ramShort && `${specOf("RAM")} RAM`, storage && `${storage} depolama`, specOf("Ekran kartı") && `${specOf("Ekran kartı")} ekran kartı`, specOf("Ekran") && `${specOf("Ekran")} ekran`].filter(Boolean).join(", ")}.`
+          : "."),
+      specOf("Kozmetik durum") ? `Kozmetik durumu ${specOf("Kozmetik durum")}.` : "",
+      specOf("Pil sağlığı") ? `Pil sağlığı: ${specOf("Pil sağlığı")}.` : "",
+      specOf("Kullanım amacı") ? `Önerilen kullanım: ${specOf("Kullanım amacı")}.` : "",
+    ].filter(Boolean).join(" ");
     pages.push({
-      kind: "laptop", dir: LAPTOP_DIR, slug, name, base,
+      kind: "laptop", dir: LAPTOP_DIR, slug, name, base, cond,
+      keySpecs: keySpecs.join(" · "),
+      titleSpecs: [specOf("İşlemci"), [ramShort, storage].filter(Boolean).join("/").replace(/(\d) GB/g, "$1GB").replace(/(\d) TB/g, "$1TB")].filter(Boolean).join(" "),
+      summary,
       brand: clean(p.brand), group: "LAPTOP",
       price, stock: sold ? "OUT" : STOCK_LABEL_TR[p.stock] ? p.stock : "ASK", sold,
       taksitPrice: typeof p.taksitPrice === "number" && isFinite(p.taksitPrice) ? p.taksitPrice : null,
@@ -235,6 +295,11 @@ h1{margin:4px 0 0;font-size:clamp(26px,5.4vw,38px);line-height:1.12;letter-spaci
 .price.ask{font-size:20px;color:var(--muted);font-weight:600}
 .stockline{margin:8px 0 0;font-size:14px;font-weight:600;color:var(--muted)}
 .stockline.in{color:#1a9c4a}
+@media (prefers-color-scheme:light){.stockline.in{color:#137a38}}
+.keyspecs{margin:8px 0 0;font-size:15px;color:var(--muted);font-weight:500}
+.about{margin:0;font-size:15px;line-height:1.6}
+.info.shop{margin-top:0}
+.info.shop b{color:var(--text);font-weight:600}
 .stockline.out{color:var(--accent)}
 .taksit{margin:16px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .taksit b{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:15px;font-weight:600}
@@ -280,7 +345,7 @@ ${PAGE_MARKER}
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(url)}">
-${image ? `<meta property="og:image" content="${esc(SITE_ORIGIN + image)}">\n` : ""}<meta name="theme-color" content="#080808">
+<meta property="og:image" content="${esc(SITE_ORIGIN + (image || "/og-cover.jpg"))}">\n<meta name="theme-color" content="#080808">
 <link rel="icon" href="/mix-gsm-logo.jpg" type="image/jpeg">
 ${ld.map((o) => `<script type="application/ld+json">${jsonLd(o)}</script>`).join("\n")}
 <style>
@@ -330,12 +395,34 @@ function renderProductPage(pg, all, biz, rules, token) {
   const groupHref = pg.kind === "laptop" ? `/${PHONE_DIR}/#laptoplar` : `/${PHONE_DIR}/#${pg.group === "PERSONAL_CARE" ? "kisisel-bakim" : "telefonlar"}`;
 
   const specText = pg.specs.slice(0, 5).map((r) => `${r[0]}: ${r[1]}`).join(", ");
-  const description = clean(
-    pg.sold ? `${pg.name} MİX GSM’de satıldı. Benzer modeller için katalogdaki güncel laptoplara bakın.`
-      : `${pg.name}${pg.price !== null ? ` güncel fiyatı ${fmtNum(pg.price)} TL` : " için güncel fiyatı WhatsApp’tan sorun"}. ${specText ? specText + ". " : ""}MİX GSM’den Türkiye geneline kargo${taksit ? `, kredi kartına ${rules.TAKSIT_COUNT} taksit` : ""}.`
-  ).slice(0, 300);
+  // Google'da gorunen aciklama: once fiyat, sonra sigdigi kadar ozellik, en sonda
+  // kargo/taksit. ~155 karakteri gecmez (kelime ortasindan kesilmez).
+  const closing = `Türkiye geneline kargo${taksit ? `, ${rules.TAKSIT_COUNT} taksit` : ""}.`;
+  const lead = `${pg.name}${pg.price !== null ? ` fiyatı ${fmtNum(pg.price)} TL.` : ": güncel fiyatı WhatsApp’tan sorun."}`;
+  const specBits = pg.specs.filter((r) => r[0] !== "Durum").slice(0, 4).map((r) => `${r[0]}: ${r[1]}.`);
+  const description = pg.sold
+    ? fitText([`${pg.name} MİX GSM’de satıldı.`, "Benzer modeller için katalogdaki güncel laptoplara bakın."], DESCRIPTION_MAX)
+    : (() => {
+      let body = lead;
+      for (const bit of specBits) {
+        if (clean(`${body} ${bit} ${closing}`).length > DESCRIPTION_MAX) break;
+        body = clean(`${body} ${bit}`);
+      }
+      const full = clean(`${body} ${closing}`);
+      return full.length <= DESCRIPTION_MAX ? full : fitText(full.split(" "), DESCRIPTION_MAX);
+    })();
+  // Baslik: laptopta islemci/RAM/depolama da baslikta (insanlar boyle arar).
+  // Uzunsa once "Fiyatı", sonra marka eki dusurulur.
+  const label = pg.titleSpecs ? clean(`${pg.base} ${pg.titleSpecs}${pg.cond ? ` (${pg.cond})` : ""}`) : pg.name;
   const title = pg.sold ? `${pg.name} (Satıldı) | MİX GSM`
-    : `${pg.name} ${pg.price !== null ? "Fiyatı" : "Fiyat ve Stok"} | MİX GSM`;
+    : firstFitting([
+      `${label} ${pg.price !== null ? "Fiyatı" : "Fiyat ve Stok"} | MİX GSM`,
+      `${label} | MİX GSM`,
+      ...(pg.titleSpecs ? [label] : []),
+      `${pg.name} ${pg.price !== null ? "Fiyatı" : "Fiyat ve Stok"} | MİX GSM`,
+      `${pg.name} | MİX GSM`,
+      label,
+    ], TITLE_MAX);
 
   const product = {
     "@context": "https://schema.org",
@@ -346,13 +433,26 @@ function renderProductPage(pg, all, biz, rules, token) {
     url,
   };
   if (pg.image) product.image = SITE_ORIGIN + pg.image;
-  if (specText || pg.note) product.description = clean([pg.note, specText].filter(Boolean).join(" ")).slice(0, 500);
+  if (pg.summary || specText || pg.note) product.description = clean([pg.summary, pg.note].filter(Boolean).join(" ") || specText).slice(0, 500);
   if (!pg.sold && pg.price !== null) {
     product.offers = {
       "@type": "Offer", url, price: pg.price, priceCurrency: "TRY",
       availability: STOCK_SCHEMA[pg.stock], itemCondition: pg.condition,
       seller: { "@type": "Organization", name: "MİX GSM", url: SITE_ORIGIN + "/" },
+      hasMerchantReturnPolicy: RETURN_POLICY,
     };
+    if (SHIPPING) {
+      product.offers.shippingDetails = {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: SHIPPING.rate, currency: "TRY" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "TR" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: SHIPPING.handlingDays[0], maxValue: SHIPPING.handlingDays[1], unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: SHIPPING.transitDays[0], maxValue: SHIPPING.transitDays[1], unitCode: "DAY" },
+        },
+      };
+    }
   }
   const crumbs = {
     "@context": "https://schema.org",
@@ -366,7 +466,12 @@ function renderProductPage(pg, all, biz, rules, token) {
 
   const wa = `https://wa.me/${biz.phone.e164.replace("+", "")}?text=${encodeURIComponent(rules.productWhatsappText(pg.waLabel))}`;
   // Ayni markanin diger sayfalari (once ayni tur, katalog sirasi), en fazla 8.
-  const others = all.filter((x) => x !== pg && x.kind === pg.kind && !x.sold && x.brand.toLocaleUpperCase("tr") === pg.brand.toLocaleUpperCase("tr")).slice(0, 8);
+  const sameBrand = (x) => x.brand.toLocaleUpperCase("tr") === pg.brand.toLocaleUpperCase("tr");
+  const pool = all.filter((x) => x !== pg && x.kind === pg.kind && !x.sold);
+  const others = pg.kind === "laptop"
+    ? pool.filter(sameBrand).concat(pool.filter((x) => !sameBrand(x))).slice(0, 8)
+    : pool.filter(sameBrand).slice(0, 8);
+  const othersTitle = pg.kind === "laptop" ? "Diğer laptoplar" : `${pg.brand} — diğer modeller`;
 
   const stockClass = pg.stock === "IN" ? "in" : pg.stock === "OUT" ? "out" : "";
   const stockLabel = pg.sold ? "Bu model satıldı" : STOCK_LABEL_TR[pg.stock];
@@ -386,7 +491,7 @@ ${pg.image ? `<div class="stage"><img src="${esc(pg.image)}" alt="${esc(pg.name)
 <div>
 <p class="eyebrow">${esc(pg.brand)}</p>
 <h1>${esc(pg.name)}</h1>
-<p class="price${pg.sold || pg.price === null ? " ask" : ""}">${esc(priceText(pg))}</p>
+${pg.keySpecs ? `<p class="keyspecs">${esc(pg.keySpecs)}</p>\n` : ""}<p class="price${pg.sold || pg.price === null ? " ask" : ""}">${esc(priceText(pg))}</p>
 <p class="stockline ${stockClass}">${esc(stockLabel)}</p>
 ${taksit ? `<div class="taksit"><b><span>Kredi kartına ${rules.TAKSIT_COUNT} taksit</span><span>${rules.TAKSIT_COUNT} × ${fmtNum(taksit.monthly)} TL</span></b><p>Toplam ${taksit.fixed ? "" : "yaklaşık "}${fmtNum(taksit.total)} TL. Geçerli kartlar: ${esc(rules.TAKSIT_CARDS)}. Kesin tutarı WhatsApp’tan teyit ederiz.</p></div>` : ""}
 <div class="actions">
@@ -406,7 +511,15 @@ ${pg.specs.map((r) => `<tr><th scope="row">${esc(r[0])}</th><td>${esc(r[1])}</td
 </tbody>
 </table>` : ""}
 ${pg.note ? `<p class="note">${esc(pg.note)}</p>` : ""}
-${others.length ? `<h2>${esc(pg.brand)} — diğer modeller</h2>
+${pg.summary ? `<h2>Ürün hakkında</h2>
+<p class="about">${esc(pg.summary)}</p>` : ""}
+<h2>Alışveriş bilgileri</h2>
+<ul class="info shop">
+<li><b>Kargo:</b> Gaziantep’teki mağazamızdan Türkiye’nin 81 iline anlaşmalı kargo ile gönderilir.</li>
+<li><b>İade:</b> Teslimden itibaren 7 gün içinde iade; iade kargo ücreti alıcıya aittir. <a href="/iade-politikasi/">İade koşulları</a></li>
+${taksit ? `<li><b>Taksit:</b> Kredi kartına ${rules.TAKSIT_COUNT} taksit (${esc(rules.TAKSIT_CARDS)}).</li>\n` : ""}<li><b>Mağazadan teslim:</b> ${esc(biz.address)}</li>
+</ul>
+${others.length ? `<h2>${esc(othersTitle)}</h2>
 <ul class="more">
 ${others.map((o) => `<li><a href="${esc(pagePath(o))}">${esc(o.name)}<span>${esc(priceText(o))}</span></a></li>`).join("\n")}
 </ul>` : ""}

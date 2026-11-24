@@ -246,7 +246,7 @@ function renderPage(feed, business) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'">
-<title>Güncel Telefon Fiyat Listesi | MİX GSM Gaziantep</title>
+<title>Güncel Telefon Fiyat Listesi | MİX GSM · Türkiye Geneline Kargo</title>
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${url}">
 <meta name="robots" content="index, follow">
@@ -256,6 +256,7 @@ function renderPage(feed, business) {
 <meta property="og:title" content="Güncel Telefon Fiyat Listesi | MİX GSM">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${url}">
+<meta property="og:image" content="https://mixgsm.tr/og-cover.jpg">
 <meta name="theme-color" content="#080808">
 <link rel="icon" href="/mix-gsm-logo.jpg">
 <script type="application/ld+json">${jsonLd(itemList)}</script>
