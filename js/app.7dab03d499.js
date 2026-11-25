@@ -117,9 +117,9 @@ let ramFilter = "ALL", only5G = false, minBattery = 0, priceMin = null, priceMax
 // eklenmedi - GPU/ekran yenileme hizi gibi veriler katalogda yok, bu yuzden
 // uydurma bir kritere gore etiketlemek istemedik.
 let minCamera = 0, minPerf = 0;
-// Kayıt durumu filtresi: yalnız Sheet'teki "KAYITLI" / "KAYITSIZ" değerleriyle
-// birebir eşleşir; boş, "-", "SORUNUZ" gibi belirsiz satırlar tahmin edilmez.
-let registrationFilter = '';
+// IMEI/kayit durumu sitede GOSTERILMEZ ve filtrelenmez (sahip karari 2026-11-25;
+// urun sayfasi/fiyat listesiyle ayni kural). Veri yalniz Google beslemesi
+// filtresi icin katalogda kalir.
 const favKey = "mixgsm-favorites-v15";
 let favs = [];
 // Karsilastirma listesi (favorilerden bagimsiz, gecici, sayfa yenilenince sifirlanir).
@@ -1872,8 +1872,7 @@ function render() {
     (priceMin === null || (p.p !== null && p.p >= priceMin)) &&
     (priceMax === null || (p.p !== null && p.p <= priceMax)) &&
     (!minCamera || extractLeadingNumber(p.camera) >= minCamera) &&
-    (!minPerf || perfTierOf(p) >= minPerf) &&
-    (!registrationFilter || normalizeTR(p.registration) === registrationFilter)
+    (!minPerf || perfTierOf(p) >= minPerf)
   );
   
   if(q) {
@@ -1963,19 +1962,13 @@ document.getElementById("only5GCheck").addEventListener("change", e => {
   only5G = e.target.checked;
   render();
 });
-document.getElementById("registrationSelect").addEventListener("change", e => {
-  const v = e.target.value;
-  registrationFilter = v === 'kayitli' || v === 'kayitsiz' ? v : '';
-  render();
-});
 document.getElementById("minBatterySelect").addEventListener("change", e => {
   minBattery = parseInt(e.target.value, 10) || 0;
   render();
 });
 document.getElementById("advClearBtn").addEventListener("click", () => {
   ramFilter = "ALL"; only5G = false; minBattery = 0; priceMin = null; priceMax = null;
-  minCamera = 0; minPerf = 0; registrationFilter = '';
-  document.getElementById("registrationSelect").value = '';
+  minCamera = 0; minPerf = 0;
   document.getElementById("priceMinInput").value = '';
   document.getElementById("priceMaxInput").value = '';
   document.getElementById("only5GCheck").checked = false;
@@ -2254,7 +2247,7 @@ function renderProductModal(p) {
 
   setRow("spec", displaySpec('spec', p.s)); setRow("screen", displaySpec('screen', p.screen)); setRow("processor", p.processor);
   setRow("camera", displaySpec('camera', p.camera)); setRow("battery", displaySpec('battery', p.battery));
-  setRow("connectivity", displaySpec('connectivity', p.connectivity)); setRow("registration", displaySpec('text', p.registration));
+  setRow("connectivity", displaySpec('connectivity', p.connectivity));
   setRow("warranty", p.warranty);
 
   const waText = productWhatsappText(`${p.b} ${p.m}` + (String(p.s || '').trim() ? ` - ${p.s}` : ''));
@@ -2549,7 +2542,6 @@ function renderCompareTable() {
     ['İşlemci', p => p.processor || '-'],
     ['Kamera', p => displaySpec('camera', p.camera) || '-'],
     ['Bağlantı', p => displaySpec('connectivity', p.connectivity) || '-'],
-    ['Kayıt Durumu', p => displaySpec('text', p.registration) || '-'],
     ['Garanti / İade', p => p.warranty || '-'],
   ];
 

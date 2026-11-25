@@ -54,7 +54,7 @@
      (loadCatalogFromSameOrigin aynı URL'yi kullanır). -->
 <!--hero-preload--><link rel="preload" href="photos/POCO-F9-ULTRA-2.jpg" as="image" fetchpriority="high"><!--/hero-preload-->
 <link rel="preload" href="catalog.json" as="fetch" crossorigin="anonymous">
-<script src="js/app.7f2cee086f.js" defer></script>
+<script src="js/app.7dab03d499.js" defer></script>
 <link rel="preconnect" href="https://docs.google.com">
 <link rel="dns-prefetch" href="https://raw.githubusercontent.com">
 <title>MİX GSM | Telefon, Laptop ve Dyson · Türkiye Geneline Kargo</title>
@@ -2134,14 +2134,6 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
             <label class="adv-checkbox"><input type="checkbox" id="only5GCheck"> Sadece 5G destekli modeller</label>
           </div>
           <div>
-            <div class="adv-row-label">Kayıt Durumu</div>
-            <select class="adv-select" id="registrationSelect" aria-label="Kayıt durumu">
-              <option value="">Farketmez</option>
-              <option value="kayitli">Kayıtlı</option>
-              <option value="kayitsiz">Kayıtsız</option>
-            </select>
-          </div>
-          <div>
             <div class="adv-row-label">Batarya</div>
             <select class="adv-select" id="minBatterySelect" aria-label="Minimum batarya kapasitesi">
               <option value="0">Farketmez</option>
@@ -2589,7 +2581,9 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
     </div>
   </div>
   <div class="reviews-track" id="googleReviews" tabindex="0" role="region" aria-label="Google yorumları">
-    <figure class="ref-card"><blockquote class="ref-quote">"İkinci el telefon alırken çok yardımcı oldular, güvenilir esnaf. Kesinlikle tavsiye ederim."</blockquote><figcaption class="ref-source">— Ahmet Y.</figcaption></figure>
+    <!-- 2026-11-25: "Ikinci el telefon..." yorumu kaldirildi (MIX GSM ikinci el telefon satmiyor; sahip karari).
+         Yerine Google Isletme Profili'ndeki gercek yorum, metin AYNEN (Orhan Serin, ~Eylul 2026). -->
+    <figure class="ref-card"><blockquote class="ref-quote">"Xiaomi 17 Pro aldım. 2 günde Mersin'e ulaştı. Üründen aşırı memnunum. Bir şey olursa destek de sağlıyorlar sağ olsun. Kesinlikle güvenebilirsiniz."</blockquote><figcaption class="ref-source">— Orhan S.</figcaption></figure>
     <figure class="ref-card"><blockquote class="ref-quote">"Cihazlar temiz, fiyatlar makul. İsa Bey'e ilgisinden dolayı teşekkürler."</blockquote><figcaption class="ref-source">— Mehmet K.</figcaption></figure>
   </div>
 </section>
@@ -2706,7 +2700,6 @@ html.vt-urun::view-transition-old(root), html.vt-urun::view-transition-new(root)
         <tr id="tr-camera"><td>Kamera</td><td id="mfcamera"></td></tr>
         <tr id="tr-battery"><td>Batarya</td><td id="mfbattery"></td></tr>
         <tr id="tr-connectivity"><td>Bağlantı</td><td id="mfconnectivity"></td></tr>
-        <tr id="tr-registration"><td>Kayıt Durumu</td><td id="mfregistration"></td></tr>
         <tr id="tr-warranty"><td>Garanti / İade</td><td id="mfwarranty"></td></tr>
       </table>
 

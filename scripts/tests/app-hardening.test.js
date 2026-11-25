@@ -77,3 +77,10 @@ test("WhatsApp urun mesaji onerilen bicimde ve yalniz katalog verisinden", () =>
   // Telefon penceresi de ayni yardimciyi kullanir.
   assert.ok(/productWhatsappText\(`\$\{p\.b\} \$\{p\.m\}`/.test(source));
 });
+
+test("IMEI/kayit durumu sitede gosterilmez ve filtrelenmez (sahip karari 2026-11-25)", () => {
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  assert.ok(!/registrationSelect|tr-registration|mfregistration/.test(html), "index.html'de kayit filtresi/satiri var");
+  assert.ok(!/<option[^>]*>\s*Kay[ıi]tl[ıi]\s*</i.test(html) && !/>\s*Kay[ıi]t Durumu\s*</i.test(html), "index.html'de kayit durumu metni var");
+  assert.ok(!/registrationFilter|setRow\("registration"|'Kayıt Durumu'/.test(source), "site kodu kayit durumunu gosteriyor/filtreliyor");
+});
