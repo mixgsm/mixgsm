@@ -870,12 +870,45 @@ function imageFileScore(p, file) {
   return score;
 }
 
+// Urune bagli sabit parcalar (marka/model temizligi, model kelimeleri, takma ad
+// dosyalari). Yalniz marka + model metnine baglidir.
+const imageProductPartsCache = new Map();
+function imageProductPartsOf(p) {
+  const key = `${p.b ?? ''}\u0000${p.m ?? ''}`;
+  let parts = imageProductPartsCache.get(key);
+  if (!parts) {
+    if (imageProductPartsCache.size >= 2000) imageProductPartsCache.clear();
+    const brand = cleanImageName(p.b);
+    const model = cleanImageName(p.m);
+    let modelTokens = imageTokens(model).filter(t => !IMAGE_IGNORED_TOKENS.has(t));
+    if (brand === 'XIAOMI') modelTokens = modelTokens.filter(t => t !== 'XIAOMI');
+    const aliasFiles = IMAGE_EXACT_ALIASES[`${brand}|${model}`];
+    parts = { brand, modelTokens, aliasLower: aliasFiles ? new Set(aliasFiles.map(f => f.toLowerCase())) : null };
+    imageProductPartsCache.set(key, parts);
+  }
+  return parts;
+}
+// Dosyaya bagli sabit parcalar. Yalniz dosya adina baglidir.
+const imageFilePartsOf = memoizeString(function imageFilePartsRaw(file) {
+  const name = String(file ?? '');
+  const fileKey = cleanImageName(name.replace(/\.[^.]+$/, ''));
+  return {
+    fileKey,
+    lower: name.toLowerCase(),
+    matchKey: imageMatchKey(fileKey),
+    fileTokens: imageTokens(fileKey).filter(t => !IMAGE_IGNORED_TOKENS.has(t)),
+  };
+});
+
 function imageFileScoreRaw(p, file) {
   if (!file || file === '.gitkeep' || file === 'gorsel-yok.jpg') return -999;
 
-  const brand = cleanImageName(p.b);
-  const model = cleanImageName(p.m);
-  const fileKey = cleanImageName(file.replace(/\.[^.]+$/, ''));
+  // PERFORMANS: urune ve dosyaya bagli sabit parcalar bir kez hesaplanir
+  // (imageProductPartsOf / imageFilePartsOf); puanlama mantigi AYNEN asagida.
+  const pp = imageProductPartsOf(p);
+  const fp = imageFilePartsOf(file);
+  const brand = pp.brand;
+  const fileKey = fp.fileKey;
 
   // NOT: Anahtarlar cleanImageName(marka)+'|'+cleanImageName(model) formatiyla
   // BIREBIR eslesecek sekilde (tire ile, bosluksuz) yazilmalidir - aksi halde
@@ -883,8 +916,7 @@ function imageFileScoreRaw(p, file) {
   // duser (bu, daha once Pro/Pro Max/Plus modellerinin birbirine karismasina
   // sebep olan gercek bir hataydi).
 
-  const aliasFiles = IMAGE_EXACT_ALIASES[`${brand}|${model}`];
-  if (aliasFiles && aliasFiles.some(f => f.toLowerCase() === file.toLowerCase())) return 1000;
+  if (pp.aliasLower && pp.aliasLower.has(fp.lower)) return 1000;
 
   if (brand === 'APPLE' && !fileKey.includes('IPHONE')) return -999;
   if (brand === 'SAMSUNG' && !fileKey.includes('SAMSUNG')) return -999;
@@ -898,12 +930,9 @@ function imageFileScoreRaw(p, file) {
   if (brand === 'REDMI' && !fileKey.includes('REDMI')) return -999;
   if (brand === 'POCO' && !fileKey.includes('POCO')) return -999;
   // "xiaomi-17-2.jpg" gibi yüklemeler de Xiaomi sayılır (anahtar MI-17-2 olur).
-  if (brand === 'XIAOMI' && !/^(MI|REDMI|POCO)-/.test(imageMatchKey(fileKey))) return -999;
+  if (brand === 'XIAOMI' && !/^(MI|REDMI|POCO)-/.test(fp.matchKey)) return -999;
 
-  const ignored = IMAGE_IGNORED_TOKENS;
-
-  let modelTokens = imageTokens(model).filter(t => !ignored.has(t));
-  if (brand === 'XIAOMI') modelTokens = modelTokens.filter(t => t !== 'XIAOMI');
+  const modelTokens = pp.modelTokens;
 
   const matched = modelTokens.filter(t => fileKey.includes(t));
   if (!matched.length) return -999;
@@ -919,7 +948,7 @@ function imageFileScoreRaw(p, file) {
   // Dosya adinda modelde olmayan fazladan kelime varsa (PRO/PLUS/MAX/ULTRA gibi
   // ayirici ekler dahil), bu dosya farkli/daha ust bir varyant olabilir demektir.
   // Boyle dosyalari cezalandirarak, tam eslesen dosyanin her zaman kazanmasini saglar.
-  const fileTokens = imageTokens(fileKey).filter(t => !ignored.has(t));
+  const fileTokens = fp.fileTokens;
   const extraTokens = fileTokens.filter(t => !modelTokens.includes(t));
 
   let score = matched.length * 20;
@@ -929,8 +958,8 @@ function imageFileScoreRaw(p, file) {
   score -= extraTokens.length * 25;
 
   if (/^(m_|b_|k_)/i.test(file)) score -= 4;
-  if (file.toLowerCase().endsWith('.jpg')) score += 1;
-  if (file.toLowerCase() === `${fileKey}.jpg`.toLowerCase()) score += 3;
+  if (fp.lower.endsWith('.jpg')) score += 1;
+  if (fp.lower === `${fileKey}.jpg`.toLowerCase()) score += 3;
 
   return score;
 }
@@ -1341,15 +1370,25 @@ function toCatalogTime(value) {
   if (!Number.isFinite(t) || t > Date.now() + 36e5 || t < Date.UTC(2024, 0, 1)) return null;
   return new Date(t).toISOString();
 }
+// PERFORMANS: toLocaleString(..., { timeZone }) ilk cagrida tarih/saat dilimi
+// verisini yukledigi icin yavas telefonda acilista ~100 ms ana is parcacigini
+// kilitliyordu. Turkiye 2016'dan beri yaz/kis saati uygulamadan sabit UTC+3;
+// cikti tr-TR + Europe/Istanbul bicimiyle birebir ayni ("25 Kasım 14:47";
+// 2024-2030 arasi binlerce zamanla karsilastirildi, test: app-hardening).
+const TR_MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+function istanbulTimeLabel(iso) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return String(iso || '').slice(0, 16).replace('T', ' ');
+  const d = new Date(t + 3 * 36e5);
+  const p2 = n => String(n).padStart(2, '0');
+  return `${d.getUTCDate()} ${TR_MONTHS[d.getUTCMonth()]} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}`;
+}
 function showCatalogTime(elId, iso, prefix) {
   const el = document.getElementById(elId);
   if (!el) return;
   el.textContent = '';
   if (!iso) { el.hidden = true; return; }
-  let label;
-  try {
-    label = new Date(iso).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-  } catch (e) { label = iso.slice(0, 16).replace('T', ' '); }
+  const label = istanbulTimeLabel(iso);
   el.appendChild(document.createTextNode(prefix + ': '));
   const time = document.createElement('time');
   time.dateTime = iso;
@@ -1467,6 +1506,25 @@ function openProductFromHash() {
   if (idx > -1) renderProductModal(products[idx]);
 }
 
+// Fotoğraf eşleştirme önbelleğini parça parça doldurur (her parça en fazla
+// ~30 ms; arada setTimeout(0) ile ana iş parçacığı serbest kalır). Hata
+// olursa sessizce biter: önbellek dolmasa da çizim adımları aynı hesabı
+// kendileri yapar.
+async function warmImageCandidates(list) {
+  try {
+    const now = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+    let sliceStart = now();
+    for (const p of list || []) {
+      if (!p || isNonProductRow(p)) continue;
+      imageCandidatesForProduct(p);
+      if (now() - sliceStart > 30) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        sliceStart = now();
+      }
+    }
+  } catch (e) { /* çizim adımları aynı hesabı yeniden yapar */ }
+}
+
 // Katalog verisi geldiğinde (catalog.json / Sheets / önbellek) ORTAK gösterim
 // adımları - eskiden üç yerde birebir kopyaydı. fromCache: bağlantı sorunu
 // nedeniyle son bilinen katalog gösteriliyor ("güncel olmayabilir" uyarısı).
@@ -1483,6 +1541,13 @@ async function showPhoneCatalog(list, fromCache, generatedAt) {
     const names = await Promise.race([startEarlyPhotoNames(), new Promise(r => setTimeout(() => r(null), EARLY_PHOTO_WAIT_MS))]);
     if (names) applyPhotoNames(names);
   }
+  // PERFORMANS (2026-11-25): ürün fotoğrafı eşleştirmesi (ilk seferde tüm
+  // ürünler x tüm dosyalar) tek parça ~0,3 sn'lik iş olarak yavaş telefonda
+  // dokunuşları geciktiriyordu. Aynı hesap burada küçük parçalara bölünüp
+  // araya tarayıcıya nefes aldırılarak önbelleğe alınır; aşağıdaki hero,
+  // kartlar ve arama motoru verisi hazır sonucu kullanır. Sonuçlar değişmez
+  // (aynı fonksiyon, aynı ürün nesneleri, aynı fotoğraf listesi).
+  await warmImageCandidates(products);
   // PERFORMANS: hero (LCP) görseli yalnızca ürün listesine bağlı. src'si
   // kataloğun tamamı çizilmeden ÖNCE atanır ve tarayıcıya kısa bir ara
   // verilir: görsel isteği ancak çalışan görev bitince gönderildiği için ara
@@ -5643,11 +5708,22 @@ function renderRecentStrip() {
     const token = meta ? String(meta.getAttribute('content') || '').trim() : '';
     if (!/^[a-f0-9]{32}$/i.test(token)) return;
     if (location.hostname !== 'mixgsm.tr' && location.hostname !== 'www.mixgsm.tr') return;
-    const s = document.createElement('script');
-    s.defer = true;
-    s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-    s.setAttribute('data-cf-beacon', JSON.stringify({ token: token }));
-    document.head.appendChild(s);
+    // PERFORMANS: sayac betigi acilista ~0,3 sn'lik tek uzun is yapiyordu ve sayfanin
+    // ilk etkilesimiyle yarisiyordu. Sayfa tamamen yuklenip tarayici bosa ciktiginda
+    // (en gec 4 sn) yuklenir; ziyaret yine sayilir, yukleme zamanlari tarayicinin
+    // kendi kayitlarindan okunur.
+    const load = () => {
+      const s = document.createElement('script');
+      s.defer = true;
+      s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      s.setAttribute('data-cf-beacon', JSON.stringify({ token: token }));
+      document.head.appendChild(s);
+    };
+    const whenIdle = () => (typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(load, { timeout: 4000 })
+      : setTimeout(load, 2000));
+    if (document.readyState === 'complete') whenIdle();
+    else window.addEventListener('load', whenIdle, { once: true });
   } catch (e) {}
 })();
 

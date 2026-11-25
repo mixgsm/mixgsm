@@ -97,3 +97,25 @@ test("taksit: aciklama yorumlarindaki oran koddaki TAKSIT_RATE ile ayni (eski or
   const laptopGen = fs.readFileSync(path.join(root, "scripts", "generate-catalog-laptop.js"), "utf8");
   for (const x of laptopGen.matchAll(/site[^\n]*%(\d+)/g)) assert.equal(Number(x[1]), pct, "generate-catalog-laptop.js yorumunda eski oran");
 });
+
+test("katalog saati: elle bicimleme tr-TR + Europe/Istanbul ile birebir ayni (2024-2030)", () => {
+  const code = section("const TR_MONTHS", "function showCatalogTime(") + ";istanbulTimeLabel";
+  const label = vm.runInNewContext(code, {});
+  let n = 0;
+  for (let t = Date.UTC(2024, 0, 1); t < Date.UTC(2031, 0, 1); t += 3600e3 * 7 + 60e3 * 13) {
+    const iso = new Date(t).toISOString();
+    const intl = new Date(iso).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+    assert.equal(label(iso), intl, iso);
+    n++;
+  }
+  assert.ok(n > 8000);
+  assert.equal(label("bozuk"), "bozuk");
+});
+
+test("ziyaret sayaci yalniz gercek alan adinda ve sayfa yuklendikten sonra (bos zamanda) yuklenir", () => {
+  const block = section("(function initVisitCounter()", "\n})();\n");
+  assert.match(block, /location\.hostname !== 'mixgsm\.tr'/);
+  assert.match(block, /addEventListener\('load', whenIdle, \{ once: true \}\)/);
+  assert.match(block, /requestIdleCallback\(load, \{ timeout: 4000 \}\)/);
+  assert.ok(block.indexOf("document.head.appendChild(s)") > block.indexOf("const load = () =>"), "betik dogrudan degil, load icinde eklenmeli");
+});
