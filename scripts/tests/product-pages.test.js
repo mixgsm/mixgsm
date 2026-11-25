@@ -45,6 +45,11 @@ test("her sayfada uretici isareti, tek h1, gecerli JSON-LD ve CSP var", () => {
     assert.ok(html.includes(gen.PAGE_MARKER), rel);
     assert.equal((html.match(/<h1>/g) || []).length, 1, rel);
     assert.match(html, /<meta http-equiv="Content-Security-Policy" content="default-src 'none';/, rel);
+    const csp = html.match(/Content-Security-Policy" content="([^"]*)"/)[1];
+    // ayni siteye istek izni var (robots.txt denetimi); satir ici betik izni / genis izin YOK
+    assert.match(csp, /connect-src 'self'(;| https:\/\/cloudflareinsights\.com)/, rel);
+    assert.ok(!/unsafe-inline'[^;]*;?\s*$/.test(csp.split("script-src")[1] || "") && !/script-src[^;]*'unsafe-inline'/.test(csp), rel);
+    assert.ok(!/connect-src[^;]*\*/.test(csp), rel);
     [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].forEach((m) => JSON.parse(m[1]));
   });
 });

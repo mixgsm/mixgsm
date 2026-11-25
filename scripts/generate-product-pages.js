@@ -332,8 +332,11 @@ footer p{margin:0 0 8px}
 `.trim();
 
 function headCommon({ title, description, url, image, token, ld, noindex }) {
+  // connect-src 'self': sayfanin kendi sitesine istek izni (sayfada kendi betigi yok; bu izin
+  // tarayici/denetim araclarinin ayni siteden robots.txt okumasini engellememek icindir).
+  // script-src degismez: yalniz sayac (varsa), satir ici betik YOK.
   const csp = "default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'"
-    + (token ? "; script-src https://static.cloudflareinsights.com; connect-src https://cloudflareinsights.com" : "");
+    + (token ? "; script-src https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com" : "; connect-src 'self'");
   return `<!doctype html>
 <html lang="tr">
 <head>
