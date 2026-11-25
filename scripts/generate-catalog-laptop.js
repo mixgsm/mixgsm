@@ -202,7 +202,7 @@ function parseTsvToLaptopProducts(tsv) {
       // indeksler kaymaz): laptop vitrininde gösterilecek model.
       showcase: schema.isYes(cols[36]),
       // AL sütunu "Taksitli Fiyat (TL)" (isteğe bağlı): kredi kartına 3
-      // taksitli toplam. Boşsa site %12 kuralıyla hesaplar.
+      // taksitli toplam. Boşsa site TAKSIT_RATE (%13) kuralıyla hesaplar.
       taksitPrice: parsePrice(cols[37]),
     });
   }

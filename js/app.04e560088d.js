@@ -244,17 +244,17 @@ function displaySpec(kind, value) {
 
 // ================================================================
 // TAKSİT (2026-11) — kredi kartına 3 taksit bilgisi.
-// İşletme kuralı: taksitli toplam = nakit/havale fiyatının %12 fazlası.
+// İşletme kuralı: taksitli toplam = nakit/havale fiyatının %13 fazlası (TAKSIT_RATE).
 // Aylık tutar 50 TL'ye yuvarlanır ve "yaklaşık" olarak gösterilir; kesin
 // tutar WhatsApp'ta teyit edilir (metinde yazıyor). Oran, taksit sayısı ve
 // geçerli kartlar YALNIZ buradan değişir. Fiyatı olmayan / satılmış /
 // tükenmiş üründe hiçbir şey gösterilmez (uydurma tutar yok).
 // 2026-11-12: Laptop Sheet'inde "Taksitli Fiyat (TL)" (AL sütunu) doluysa
 // taksitli toplam OLDUĞU GİBİ o rakamdır (afişlerle aynı); aylık tutar
-// toplam/3'ün TL'ye yuvarlanmışıdır. Boşsa yukarıdaki %12 kuralı geçerlidir.
+// toplam/3'ün TL'ye yuvarlanmışıdır. Boşsa yukarıdaki %13 kuralı (TAKSIT_RATE) geçerlidir.
 // ================================================================
 const TAKSIT_COUNT = 3;
-const TAKSIT_RATE = 0.13; // 2026-11: isletme orani %12 -> %13 (laptopta afis fiyati taksitPrice esas)
+const TAKSIT_RATE = 0.13; // %13 (Kasim 2026'da artirildi); laptopta afis fiyati taksitPrice esas
 const TAKSIT_CARDS = 'Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartları';
 function taksitInfo(price, fixedTotal) {
   if (typeof price !== 'number' || !isFinite(price) || price <= 0) return null;

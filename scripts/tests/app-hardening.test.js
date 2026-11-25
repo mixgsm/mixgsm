@@ -84,3 +84,16 @@ test("IMEI/kayit durumu sitede gosterilmez ve filtrelenmez (sahip karari 2026-11
   assert.ok(!/<option[^>]*>\s*Kay[ıi]tl[ıi]\s*</i.test(html) && !/>\s*Kay[ıi]t Durumu\s*</i.test(html), "index.html'de kayit durumu metni var");
   assert.ok(!/registrationFilter|setRow\("registration"|'Kayıt Durumu'/.test(source), "site kodu kayit durumunu gosteriyor/filtreliyor");
 });
+
+test("taksit: aciklama yorumlarindaki oran koddaki TAKSIT_RATE ile ayni (eski oran yorumda kalmasin)", () => {
+  const m = source.match(/const TAKSIT_RATE = (0\.\d+);/);
+  assert.ok(m, "TAKSIT_RATE bulunamadi");
+  const pct = Math.round(Number(m[1]) * 100);
+  const i = source.indexOf("// TAKSİT (");
+  const block = source.slice(i, source.indexOf("const TAKSIT_CARDS", i));
+  const mentioned = [...block.matchAll(/%(\d+)/g)].map((x) => Number(x[1]));
+  assert.ok(mentioned.length > 0, "taksit aciklamasinda oran yok");
+  mentioned.forEach((n) => assert.equal(n, pct, `taksit yorumunda %${n} yaziyor, kod %${pct}`));
+  const laptopGen = fs.readFileSync(path.join(root, "scripts", "generate-catalog-laptop.js"), "utf8");
+  for (const x of laptopGen.matchAll(/site[^\n]*%(\d+)/g)) assert.equal(Number(x[1]), pct, "generate-catalog-laptop.js yorumunda eski oran");
+});
