@@ -83,3 +83,35 @@ test("gercek depo QA'dan hatasiz gecer", () => {
   const r = runQa(path.join(__dirname, "..", ".."), { quiet: true });
   assert.deepEqual(r.errors, []);
 });
+
+test("kayit durumu: beklenmeyen deger QA uyarisi olur, cikis kodu 0 kalir, registration katalogda durur", () => {
+  const root = path.join(__dirname, "..", "..");
+  const catalog = JSON.parse(fs.readFileSync(path.join(root, "catalog.json"), "utf8"));
+  catalog.products.push(
+    { b: "XIAOMI", m: "TEST MODEL QA", s: "8 GB / 256 GB", p: 15000, stock: "IN", cat: "XIAOMI", group: "PHONE",
+      img: "", battery: "", screen: "", processor: "", camera: "", connectivity: "", registration: "BELIRSIZ-QA",
+      warranty: "", tagLabel: "", tagClass: "", home: false },
+    { b: "XIAOMI", m: "TEST MODEL QA2", s: "8 GB / 256 GB", p: 15000, stock: "IN", cat: "XIAOMI", group: "PHONE",
+      img: "", battery: "", screen: "", processor: "", camera: "", connectivity: "", registration: "KAYITLI",
+      warranty: "", tagLabel: "", tagClass: "", home: false });
+  // Gercek depoyu kopyalamadan: yalniz katalog dosyasi gecici klasorde, geri kalan dosyalar sembolik baglanti.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mixgsm-qa-reg-"));
+  for (const name of fs.readdirSync(root)) {
+    if (name === "catalog.json" || name === ".git" || name === "node_modules") continue;
+    fs.symlinkSync(path.join(root, name), path.join(dir, name));
+  }
+  fs.writeFileSync(path.join(dir, "catalog.json"), JSON.stringify(catalog));
+  const r = runQa(dir, { quiet: true });
+  assert.deepEqual(r.errors, [], "kayit uyarisi yayini durdurmamali");
+  const reg = r.warnings.filter((w) => w.startsWith("Kayit durumu"));
+  assert.ok(reg.some((w) => /"BELIRSIZ-QA" \(1 telefon/.test(w) && w.includes("TEST MODEL QA 8 GB")));
+  assert.ok(!reg.join(" ").includes("TEST MODEL QA2"), "KAYITLI icin uyari cikmamali");
+  // komut satiri: uyari olsa da cikis kodu 0
+  const out = require("child_process").spawnSync(process.execPath,
+    ["--preserve-symlinks", "--preserve-symlinks-main", path.join(dir, "scripts", "qa-check.js")], { cwd: dir, encoding: "utf8" });
+  assert.equal(out.status, 0, out.stdout + out.stderr);
+  assert.match(out.stdout, /::warning::Kayit durumu beklenmeyen deger "BELIRSIZ-QA"/);
+  // registration alani public katalogda (Merchant "yalniz KAYITLI" filtresi icin) duruyor
+  const real = catalog.products.filter((p) => p.group === "PHONE" && p.b && p.m);
+  assert.ok(real.length > 0 && real.every((p) => "registration" in p));
+});

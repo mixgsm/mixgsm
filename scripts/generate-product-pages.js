@@ -771,21 +771,28 @@ ${guides.map((g) => `- [${g.h1}](${SITE_ORIGIN}/${GUIDE_DIR}/${g.slug}/)`).join(
 }
 
 // ---------------------------------------------------------------- uretim
-function buildAll(siteRoot) {
+// Sayfa modelleri (HTML cizilmeden): urun sayfalarinin ve fiyat listesinin
+// (generate-price-page.js) ortak kaynagi; adres/slug mantigi tek yerde kalir.
+function pageModels(siteRoot) {
   const read = (rel) => JSON.parse(fs.readFileSync(path.join(siteRoot, rel), "utf8"));
   const catalog = read("catalog.json");
   if (!catalog || !Array.isArray(catalog.products) || !catalog.products.length) throw new Error("catalog.json bos/gecersiz - urun sayfalari GUNCELLENMEDI.");
   let laptopCatalog = null;
   try { laptopCatalog = read("catalog-laptop.json"); } catch (e) { laptopCatalog = null; }   // laptop verisi yoksa yalniz telefon
-  const biz = requireBusiness(read(path.join("feed", "business.public.json")));
   const rules = loadSiteRules(siteRoot);
   const matcher = loadSiteImageMatcher(siteRoot);
   const listDir = (rel) => (fs.existsSync(path.join(siteRoot, rel)) ? fs.readdirSync(path.join(siteRoot, rel)) : []);
-  const token = readCounterToken(siteRoot);
-
   const pages = phonePages(catalog, rules, matcher, listDir("photos"))
     .concat(laptopPages(laptopCatalog, rules, listDir(path.join("laptop-photos", "images")), readLaptopStage(siteRoot)));
   if (!pages.some((p) => p.kind === "phone")) throw new Error("Telefon urunu bulunamadi - urun sayfalari GUNCELLENMEDI.");
+  return { pages, rules };
+}
+
+function buildAll(siteRoot) {
+  const read = (rel) => JSON.parse(fs.readFileSync(path.join(siteRoot, rel), "utf8"));
+  const biz = requireBusiness(read(path.join("feed", "business.public.json")));
+  const { pages, rules } = pageModels(siteRoot);
+  const token = readCounterToken(siteRoot);
 
   const files = new Map();                                    // goreli yol -> icerik
   pages.forEach((pg) => files.set(`${pg.dir}/${pg.slug}/index.html`, renderProductPage(pg, pages, biz, rules, token)));
@@ -893,4 +900,4 @@ if (require.main === module) {
   try { main(); } catch (err) { console.error("HATA:", err.message); process.exit(1); }
 }
 
-module.exports = { GUIDE_DIR, guideDefs, buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, googleFeedFiles, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };
+module.exports = { GUIDE_DIR, guideDefs, pageModels, pageUrl, buildAll, sync, existingGenerated, listPageUrls, loadSiteRules, phonePages, laptopPages, renderProductPage, googleFeedFiles, PAGE_MARKER, PHONE_DIR, LAPTOP_DIR };

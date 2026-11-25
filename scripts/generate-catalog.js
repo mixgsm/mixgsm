@@ -54,7 +54,9 @@ function normalizeGithubImageUrl(value) {
   return "";
 }
 
-function parseTsvToProducts(tsv) {
+// sheetRows (istege bagli): her urunun Google Sheet'teki satir numarasi (1'den baslar)
+// bu diziye ayni sirayla yazilir. YALNIZ uyari/QA icindir; catalog.json'a girmez.
+function parseTsvToProducts(tsv, sheetRows) {
   // Tirnakli hucre / hucre ici satir sonu destekli ayristirma (lib/tsv.js).
   const rows = parseTsvRows(tsv);
   const products = [];
@@ -144,9 +146,27 @@ function parseTsvToProducts(tsv) {
       // P sütunu "Ana Sayfa" (isteğe bağlı; yoksa false): açılış görseli seçimi.
       home: schema.isYes(cols[15]),
     });
+    if (Array.isArray(sheetRows)) sheetRows.push(i + 1);
   }
 
   return products;
+}
+
+// Yayina girecek urun listesi: Sheet'teki kategori basliklari ve garanti/kargo/
+// taksit notlari (fiyatsiz "urun" satirlari) AYIKLANIR. Kural lib/catalog-schema
+// isNonProductRow; sitedeki kopyayla birebir ayni oldugu catalog-schema.test.js'te
+// dogrulanir. "Sorunuz" fiyatli gercek urunler korunur (marka + model dolu).
+function buildCatalogProducts(tsv) {
+  const allRows = [];
+  const all = parseTsvToProducts(tsv, allRows);
+  const products = [];
+  const sheetRows = [];
+  all.forEach((p, i) => {
+    if (schema.isNonProductRow(p)) return;
+    products.push(p);
+    sheetRows.push(allRows[i]);
+  });
+  return { products, sheetRows, skipped: all.length - products.length };
 }
 
 async function main() {
@@ -155,7 +175,7 @@ async function main() {
     throw new Error("Google Sheets export basarisiz: HTTP " + res.status);
   }
   const tsv = await res.text();
-  const products = parseTsvToProducts(tsv);
+  const { products, sheetRows, skipped } = buildCatalogProducts(tsv);
 
   // GUVENLIK: Sheets bos/bozuk donerse (bakim sayfasi, izin hatasi, kolon
   // kaymasi, duplicate urun vb.) catalog.json'u EZMEYIZ. Onceki iyi surum
@@ -165,7 +185,7 @@ async function main() {
     OUTPUT_PATH,
     (list) => list.filter((p) => !schema.isNonProductRow(p)).length
   );
-  const result = schema.validatePhoneCatalog(products, { previousRealCount });
+  const result = schema.validatePhoneCatalog(products, { previousRealCount, sheetRows });
   result.errors.unshift(...headerErrors);
   schema.report(result, "catalog.json");
   if (result.errors.length) {
@@ -181,7 +201,7 @@ async function main() {
   };
 
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(payload));
-  console.log(`catalog.json yazildi: ${products.length} satir, ${result.stats.realCount} gercek urun.`);
+  console.log(`catalog.json yazildi: ${products.length} urun (${skipped} baslik/not satiri ayiklandi).`);
 }
 
 if (require.main === module) {
@@ -191,4 +211,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseTsvToProducts, normalizeGithubImageUrl, normalizeTR };
+module.exports = { parseTsvToProducts, buildCatalogProducts, normalizeGithubImageUrl, normalizeTR };

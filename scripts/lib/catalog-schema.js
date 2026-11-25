@@ -122,14 +122,42 @@ function checkCommon(items, { priceOf, label, previousCount }) {
   return errors;
 }
 
-function validatePhoneCatalog(products, { previousRealCount } = {}) {
+// Kayit durumu (IMEI) sutunu: telefonlarda beklenen degerler yalniz KAYITLI / KAYITSIZ.
+// Digerleri (bos, "-", "ŞUAN YOK", "SORUNUZ"...) YAYINI DURDURMAZ, yalniz uyari olur:
+// bu telefonlar Google Merchant beslemesine girmez (yalniz KAYITLI gider). Deger
+// TAHMIN EDILMEZ / DUZELTILMEZ. Kisisel bakim urunlerinde kayit sutunu anlamsizdir, bakilmaz.
+// sheetRows (istege bagli, products ile ayni sira): Google Sheet satir numaralari;
+// yoksa (ornegin QA catalog.json'dan okurken) satir numarasi yazilmaz.
+const REGISTRATION_EXPECTED = new Set(["KAYITLI", "KAYITSIZ"]);
+const REGISTRATION_NAMES_SHOWN = 8;
+
+function registrationWarnings(products, sheetRows) {
+  const groups = new Map();
+  (products || []).forEach((p, i) => {
+    if (!p || isNonProductRow(p) || p.group === "PERSONAL_CARE") return;
+    const raw = String(p.registration == null ? "" : p.registration).trim();
+    if (REGISTRATION_EXPECTED.has(raw.toLocaleUpperCase("tr-TR"))) return;
+    const key = raw || "(boş)";
+    const row = Array.isArray(sheetRows) && Number.isInteger(sheetRows[i]) ? ` [Sheet satırı ${sheetRows[i]}]` : "";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(`${p.b} ${p.m}${p.s ? " " + p.s : ""}`.replace(/\s+/g, " ").trim() + row);
+  });
+  return [...groups].map(([value, items]) => {
+    const shown = items.slice(0, REGISTRATION_NAMES_SHOWN).join(", ");
+    const more = items.length > REGISTRATION_NAMES_SHOWN ? ` ve ${items.length - REGISTRATION_NAMES_SHOWN} tane daha` : "";
+    return `Kayit durumu beklenmeyen deger "${value}" (${items.length} telefon; Google listesine girmez — bilerek degilse Sheet'te KAYITLI veya KAYITSIZ yazin): ${shown}${more}`;
+  });
+}
+
+function validatePhoneCatalog(products, { previousRealCount, sheetRows } = {}) {
   const real = (products || []).filter((p) => !isNonProductRow(p));
   const errors = checkCommon(real, { priceOf: (p) => p.p, label: "telefon", previousCount: previousRealCount });
   const dupSlugs = findDuplicates(real.map(productSlug));
   if (dupSlugs.length) errors.push(`Duplicate urun slug'i: ${dupSlugs.join(", ")}`);
   const warnings = real
     .filter((p) => p.p !== null && p.p > PHONE_PRICE_WARN)
-    .map((p) => `Cok yuksek fiyat, kontrol edin: ${p.b} ${p.m} ${p.s} = ${p.p} TL`);
+    .map((p) => `Cok yuksek fiyat, kontrol edin: ${p.b} ${p.m} ${p.s} = ${p.p} TL`)
+    .concat(registrationWarnings(products, sheetRows));
   return { errors, warnings, stats: { rowCount: (products || []).length, realCount: real.length } };
 }
 
@@ -169,6 +197,7 @@ module.exports = {
   productSlug,
   isNonProductRow,
   validatePhoneCatalog,
+  registrationWarnings,
   validateLaptopCatalog,
   readPreviousCount,
   report,

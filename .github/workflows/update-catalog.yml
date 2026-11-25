@@ -73,6 +73,7 @@ jobs:
       # continue-on-error: true de eklendi - bu adim ne olursa olsun
       # asagidaki adimlari ve TELEFON'un catalog.json'i ASLA etkilenmez.
       - name: catalog-laptop.json olustur (Public Laptop Sheet'ten - LAPTOP)
+        id: laptop_catalog
         continue-on-error: true
         run: node scripts/generate-catalog-laptop.js
 
@@ -87,29 +88,36 @@ jobs:
       # gorunurluk. Once tumu bellekte uretilir; hata olursa hicbir dosya
       # degismez ve katalog commit'i ENGELLENMEZ.
       - name: Urun sayfalari olustur (urun/, laptop/)
+        id: product_pages
         continue-on-error: true
         run: node scripts/generate-product-pages.js
 
       # Acilis (hero) urun fotografi index.html'e onceden yazilir (hiz/LCP).
       # Uretilemezse site eski davranisla (JS ile) calismaya devam eder.
       - name: Acilis gorselini index.html'e yaz
+        id: hero_preload
         continue-on-error: true
         run: node scripts/generate-hero-preload.js
 
-      # sitemap.xml lastmod = katalog gunu; uretilemezse yayin engellenmez.
+      # sitemap.xml lastmod = her sayfanin ICERIGININ son degistigi gun
+      # (.sitemap-state.json'daki icerik ozetiyle; git gecmisi kullanilmaz).
+      # Uretilemezse yayin engellenmez.
       - name: sitemap.xml guncelle
+        id: sitemap
         continue-on-error: true
         run: node scripts/generate-sitemap.js
 
       # Telefon fotograf listesi (site galeri/eslestirme icin okur). Uretilemezse
       # site sabit liste + GitHub API yedegiyle calismaya devam eder.
       - name: feed/photos.json guncelle
+        id: photo_list
         continue-on-error: true
         run: node scripts/generate-photo-list.js
 
       # Gorsel saglik raporu: eksik/kirik gorselleri Actions ozetinde UYARI
       # olarak gosterir; yayini engellemez (site kirik gorselde yedek gosterir).
       - name: Gorsel saglik kontrolu
+        id: image_check
         continue-on-error: true
         run: node scripts/check-images.js
 
@@ -121,14 +129,17 @@ jobs:
       # tarayici indirme, render) basarisiz olsa bile TELEFON kataloğunun
       # commit'i ASLA etkilenmez (laptop adimiyla ayni izolasyon deseni).
       - name: Fiyat listesi gorselleri icin bagimliliklari kur (Playwright)
+        id: price_deps
         continue-on-error: true
         run: npm ci
 
       - name: Playwright Chromium kur
+        id: price_chromium
         continue-on-error: true
         run: npx playwright install --with-deps chromium
 
       - name: Mobil fiyat listesi JPG + PDF olustur (catalog.json'dan)
+        id: price_assets
         continue-on-error: true
         run: node scripts/generate-price-assets.js
 
@@ -138,6 +149,8 @@ jobs:
           git add catalog.json catalog-laptop.json feed/products.json fiyat-listesi/index.html sitemap.xml
           git add index.html
           if [ -f llms.txt ]; then git add llms.txt; fi
+          # sitemap lastmod durumu (adres/icerik ozeti/tarih; hassas veri yok, nokta ile basladigi icin yayinlanmaz)
+          if [ -f .sitemap-state.json ]; then git add .sitemap-state.json; fi
           if [ -f feed/photos.json ]; then
             git add feed/photos.json
           fi
@@ -189,6 +202,7 @@ jobs:
       # Degisen sayfalari Bing/IndexNow'a bildir (ChatGPT aramasi Bing'e dayanir).
       # Yayini asla engellemez.
       - name: Degisen sayfalari IndexNow'a bildir (Bing)
+        id: indexnow
         if: steps.commit.outputs.pushed == '1'
         continue-on-error: true
         run: node scripts/indexnow-submit.js "$RUNNER_TEMP/degisen-dosyalar.txt"
@@ -199,3 +213,55 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run deploy-pages.yml --repo "${{ github.repository }}" --ref main
+
+      # Hata gorunurlugu: continue-on-error adimlari basarisiz olsa da is akisi
+      # "yesil" gorunur. Bu adim her durumda (zamanlanmis, elle, push) calisir ve
+      # her izlenen adimin GERCEK sonucunu (steps.<id>.outcome) Actions ozetine
+      # yazar. Yalniz rapor: commit/push/deploy sirasini degistirmez, yeniden
+      # calistirma tetiklemez; kendisi hata verse bile is akisini kirmizi yapmaz.
+      - name: Izlenen adimlarin ozeti
+        if: always()
+        continue-on-error: true
+        env:
+          O_LAPTOP: ${{ steps.laptop_catalog.outcome }}
+          O_PAGES: ${{ steps.product_pages.outcome }}
+          O_HERO: ${{ steps.hero_preload.outcome }}
+          O_SITEMAP: ${{ steps.sitemap.outcome }}
+          O_PHOTOS: ${{ steps.photo_list.outcome }}
+          O_IMAGES: ${{ steps.image_check.outcome }}
+          O_DEPS: ${{ steps.price_deps.outcome }}
+          O_CHROMIUM: ${{ steps.price_chromium.outcome }}
+          O_ASSETS: ${{ steps.price_assets.outcome }}
+          O_INDEXNOW: ${{ steps.indexnow.outcome }}
+        run: |
+          set +e
+          satirlar=(
+            "Laptop katalogu (catalog-laptop.json)|$O_LAPTOP"
+            "Urun sayfalari (urun/, laptop/)|$O_PAGES"
+            "Acilis gorseli (index.html)|$O_HERO"
+            "sitemap.xml|$O_SITEMAP"
+            "Fotograf listesi (feed/photos.json)|$O_PHOTOS"
+            "Gorsel saglik kontrolu|$O_IMAGES"
+            "Fiyat gorseli bagimliliklari (npm ci)|$O_DEPS"
+            "Playwright Chromium|$O_CHROMIUM"
+            "Mobil fiyat listesi JPG + PDF|$O_ASSETS"
+            "IndexNow bildirimi (Bing)|$O_INDEXNOW"
+          )
+          hatali=""
+          for s in "${satirlar[@]}"; do
+            ad="${s%%|*}"; sonuc="${s##*|}"
+            if [ "$sonuc" = "failure" ]; then hatali+="| ${ad} | BASARISIZ |"$'\n'; echo "::warning::Izlenen adim basarisiz: ${ad}"; fi
+          done
+          {
+            echo "## Izlenen adimlar"
+            if [ -n "$hatali" ]; then
+              echo "Asagidaki adimlar basarisiz oldu (is akisi devam etti; onceki gecerli dosyalar korunur):"
+              echo
+              echo "| Adim | Sonuc |"
+              echo "|---|---|"
+              printf '%s' "$hatali"
+            else
+              echo "Izlenen adimlar basarili (calismayan/atlanan adim basarisiz sayilmaz)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "Ozet yazilamadi (rapor adimi; is akisini etkilemez)."
+          exit 0

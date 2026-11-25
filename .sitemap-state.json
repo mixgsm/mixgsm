@@ -1,0 +1,553 @@
+{
+ "version": 1,
+ "urls": {
+  "https://mixgsm.tr/": {
+   "hash": "6fadfa0dcd2b7dde",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/fiyat-listesi/": {
+   "hash": "265c4e8da47cb10b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/iade-politikasi/": {
+   "hash": "796c7f9801104dd5",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/uygulama/": {
+   "hash": "14681e896616712d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/": {
+   "hash": "1be00ab0f336c968",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/": {
+   "hash": "d324559cc6d0f873",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/20000-tl-alti-telefon/": {
+   "hash": "4ee75fb4d4839f9b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/20000-40000-tl-arasi-telefon/": {
+   "hash": "de11abe4d929d3f8",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/ust-segment-telefon/": {
+   "hash": "5f6955a488eacf6b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/oyun-laptopu/": {
+   "hash": "49e656066e28be03",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/ofis-ve-ogrenci-laptopu/": {
+   "hash": "bf505be74a0c33c4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/xiaomi-mi-15t-pro-vs-xiaomi-mi-17t-pro/": {
+   "hash": "16c30ada6b42d673",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/xiaomi-mi-17t-vs-xiaomi-mi-17t-pro/": {
+   "hash": "e15fdb06a1ace92f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/xiaomi-redmi-note-14-pro-plus-5g-vs-xiaomi-redmi-note-15-pro-plus-5g/": {
+   "hash": "83a3e8a05b4673d4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/samsung-s25-ultra-vs-samsung-s26-ultra/": {
+   "hash": "b15e2ebb0f07777e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/rehber/iphone-17-pro-vs-iphone-18-pro/": {
+   "hash": "8867d4fe8171b711",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-c85-4-128/": {
+   "hash": "9324588d611bcda8",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-15c-8-256/": {
+   "hash": "15639386c117d4f3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-17c-8-256/": {
+   "hash": "579a14ee71610b02",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-15-8-256/": {
+   "hash": "9f94a3e201de974f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-17-4-128/": {
+   "hash": "baaf2d55223f2fea",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-14-8-256/": {
+   "hash": "dd6355c8a3fe8417",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-14-pro-5g-8-256/": {
+   "hash": "70f92df196e58ee4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-14-pro-plus-5g-12-256/": {
+   "hash": "c64e229dd53cee0a",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-14-pro-plus-5g-12-512/": {
+   "hash": "606f74350852d6c9",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-14-pro-plus-5g-16-512/": {
+   "hash": "3194c268f2c9fe17",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-12-256/": {
+   "hash": "7bba1f2019e28920",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-17-8-256/": {
+   "hash": "a843066b08cae6ca",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-4-5g-8-256/": {
+   "hash": "69e269afb219fd13",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-5g-12-256/": {
+   "hash": "f839d08a6f9670de",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-5g-12-512/": {
+   "hash": "ae5ee7c7532cc4b3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-17-pro-5g-12-256/": {
+   "hash": "f6bfacf73820a399",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-plus-5g-12-256/": {
+   "hash": "2b8841c46b941ab3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-plus-5g-12-512/": {
+   "hash": "5d391bee888f236f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-15-pro-plus-5g-16-512/": {
+   "hash": "bd9ef2ded00e76e4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-17-pro-max-5g-12-256/": {
+   "hash": "674f8c2eeca4c4ce",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-redmi-note-17-pro-max-5g-12-512/": {
+   "hash": "f773f1a07ce08ff6",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-x7-pro-12-512/": {
+   "hash": "913c16abef3b4fdb",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-x8-pro-8-512/": {
+   "hash": "6692d4f41e6243e4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-x8-pro-12-512/": {
+   "hash": "00eecb031bbcad65",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-x8-pro-max-12-512/": {
+   "hash": "4fc7b4c97759c834",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-f8-pro-12-512/": {
+   "hash": "c9be1faf8634befc",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-f8-ultra-16-512/": {
+   "hash": "a27caed9cd86b132",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-f9-pro-12-512/": {
+   "hash": "15d1b377c5ad3e91",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-f9-ultra-12-256/": {
+   "hash": "b7ec6e245ed6bcbb",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-poco-f9-ultra-16-512/": {
+   "hash": "d12f6c6894027e04",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15t-12-256/": {
+   "hash": "0e63a472b8a4781d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15t-12-512/": {
+   "hash": "003017fe8fec4b2b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15t-pro-12-256/": {
+   "hash": "a4d8f356ee69e4c2",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15t-pro-12-512/": {
+   "hash": "f81736469628fbe2",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15t-pro-12-1024/": {
+   "hash": "b8d04143f93e0d5f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17t-12-256/": {
+   "hash": "89aaf2c81b7f8ebf",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17t-12-512/": {
+   "hash": "2df7e6062c6889ec",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17t-pro-12-512/": {
+   "hash": "6c5d203a592aef2c",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17t-pro-12-1024/": {
+   "hash": "4be5315adb2997e2",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-15-12-512/": {
+   "hash": "d5c4306725b993df",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-12-256/": {
+   "hash": "82c874163c6f3912",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-12-512/": {
+   "hash": "aca015e0903779f1",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-pro-12-256/": {
+   "hash": "cf4271106f47cdd3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-pro-12-512/": {
+   "hash": "4814f29d60f5306b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-pro-16-512/": {
+   "hash": "1af72a71b157a3a1",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-pro-max-12-512/": {
+   "hash": "58dd98dff0cffeb2",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-pro-max-16-512/": {
+   "hash": "bf13de393b0d2c68",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-ultra-12-512/": {
+   "hash": "f285e61324f3a65f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-ultra-global-16-512/": {
+   "hash": "f59765de78365c50",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-ultra-leica-edition-16-512/": {
+   "hash": "aa91ccbe1f6f1819",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/xiaomi-mi-17-ultra-16-1024/": {
+   "hash": "a7219f4c99bdf4fe",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-smart-10-4-128/": {
+   "hash": "162516f174d42202",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-smart-10-plus-8-128/": {
+   "hash": "e2b504adf3f82179",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-smart-20-4-128/": {
+   "hash": "6098fe4e1329daf8",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-smart-20-4-256/": {
+   "hash": "8ba6d324f3c66c0e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-hot-60i-4-128/": {
+   "hash": "488156eecdd15faa",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-hot-60-pro-8-256/": {
+   "hash": "bddf566b50c07664",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-hot-60-pro-plus-8-256/": {
+   "hash": "5994278a58aa38d8",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-note-50-pro-8-256/": {
+   "hash": "020eacbe15e7acf4",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-note-50-pro-plus-12-256/": {
+   "hash": "c3bca45c4c1d646a",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-note-60-pro-8-256/": {
+   "hash": "08f540b45d2380ef",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-note-60-pro-12-256/": {
+   "hash": "bda6ea7a57213be0",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/infinix-gt-50-pro-12-256/": {
+   "hash": "491a5a650c0b42ab",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-spark-go-3-4-128/": {
+   "hash": "193d6f4d2f210a15",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-spark-40-c-8-256/": {
+   "hash": "8b18be757ad23b7d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-camon-40-pro-12-256/": {
+   "hash": "303468950e9332a7",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-camon-40-premier-12-256/": {
+   "hash": "85a0ac691593f161",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-camon-50-pro-8-256/": {
+   "hash": "a0a52e6adf3ad65e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-camon-note-50-ultra-8-256/": {
+   "hash": "7f84650b54cfc521",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-pova-curve-2-8-256/": {
+   "hash": "9ff3f3e100a41844",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/tecno-pova-slim-8-256/": {
+   "hash": "6261bce479c5f3a3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-16-128/": {
+   "hash": "0dbe7cd35be86787",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-16-pro-128/": {
+   "hash": "9a0377ab07e7ad38",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-16-pro-max-256/": {
+   "hash": "5a121d258732e275",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-17-256/": {
+   "hash": "7988576d8cb422f1",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-17-pro-256/": {
+   "hash": "634503d7ad94d2db",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-17-pro-max-256/": {
+   "hash": "d1c2a49c033f0dea",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-18-pro-256/": {
+   "hash": "54e262379da733cb",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/iphone-iphone-18-pro-max-256/": {
+   "hash": "3b224768b77382d8",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/samsung-s25-ultra-12-256/": {
+   "hash": "4f54fe0088e778ca",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/samsung-s26-ultra-12-256/": {
+   "hash": "909dfed59d4fc7e7",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/samsung-s26-ultra-12-512/": {
+   "hash": "42f66bae70b5b15e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/samsung-z-fold-7-12-256/": {
+   "hash": "21455a25f4e76129",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/samsung-z-fold-7-12-512/": {
+   "hash": "9ba0bbfc0ee82d1a",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/oneplus-oneplus-11-12-256/": {
+   "hash": "ef30ffa225b763db",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/oneplus-oneplus-12-12-256/": {
+   "hash": "05678e79578029d2",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/oneplus-oneplus-15-12-256/": {
+   "hash": "977ab976aef7496c",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/oneplus-oneplus-15-12-512/": {
+   "hash": "11956b9ae996a9bf",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/oneplus-oneplus-15-16-512/": {
+   "hash": "1153b3272444a798",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/google-pixel-10-pro-xl-16-256/": {
+   "hash": "4ebd00942f397db5",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/red-magic-redmagic-11s-pro-12-256/": {
+   "hash": "2e61f4bf52f6306e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/red-magic-redmagic-11-pro-12-256/": {
+   "hash": "787d8ec658dfc0e5",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/red-magic-redmagic-11-pro-16-512/": {
+   "hash": "3d41c128f0a3f9ec",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/philips-philips-lumea-lazer-epilasyon/": {
+   "hash": "8bb0720dab5ed607",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/braun-skin-i-expert/": {
+   "hash": "3cb331ebede09fa9",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/braun-silk-expert-pro-5/": {
+   "hash": "88b1b7d3f42f6e36",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-airstrait/": {
+   "hash": "816871a1e61fe2aa",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-airwrap-long-complete/": {
+   "hash": "56b732afbb8ae5da",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-airwrap-co-anda2x/": {
+   "hash": "c75c60c3189cb2d9",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-v15-detect-absolute-kuru/": {
+   "hash": "b42bd87cf36d8ebc",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-gen5-detect-submarine/": {
+   "hash": "7a3b65d70710d8fd",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/urun/dyson-dyson-v16-piston-animal/": {
+   "hash": "d9919352183e692d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/dell-latitude-pc-005/": {
+   "hash": "f1c8a0160245279b",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/lenovo-ideapad-3-pc-043/": {
+   "hash": "d18d25e87a71fd21",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/acer-v15-gaming-pc-056/": {
+   "hash": "b84df5711b1c9a3d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/hp-victus-gaming-pc-063/": {
+   "hash": "6be0141eb5a1cc30",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/asus-tuf-gaming-pc-067/": {
+   "hash": "5dd21a91ba701c25",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/acer-nitro-17-3-gaming-pc-071/": {
+   "hash": "354af1bc04b15a6e",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/monster-tulpar-t7-v20-8-pc-077/": {
+   "hash": "cfab89dbeafe66e3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/casper-excalibur-gaming-pc-078/": {
+   "hash": "7d289b552edaf1e3",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/msi-leopard-gp76-gaming-pc-079/": {
+   "hash": "f407ec7ac270189f",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/msi-thin-gf63-12ve-099xtr-pc-081/": {
+   "hash": "11f1ab6a927890d5",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/casper-excalibur-g880-1362-bea0x-c-pc-084/": {
+   "hash": "54a0a150601e7f0d",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/msi-cyborg-15-b13wekg-849tr-pc-085/": {
+   "hash": "f3b3b9c845af7089",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/apple-macbook-air-m2-pc-086/": {
+   "hash": "7f67975986489477",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/apple-macbook-neo-pc-089/": {
+   "hash": "c023a1422b24e272",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/msi-katana-17-b12v-pc-090/": {
+   "hash": "a643ede0d3c679eb",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/acer-aspire-go-16-pc-092/": {
+   "hash": "a05f66d01fff9d00",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/casper-excalibur-g870-pc-093/": {
+   "hash": "43f351da14fadb0a",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/lenovo-15amn8-pc-094/": {
+   "hash": "3cf110de5276ff35",
+   "lastmod": "2026-11-25"
+  },
+  "https://mixgsm.tr/laptop/monster-abra-pc-095/": {
+   "hash": "ab13a429d17d4c2c",
+   "lastmod": "2026-11-25"
+  }
+ }
+}

@@ -188,8 +188,15 @@ function waLink(phone, text) {
   return `https://wa.me/${phone.e164.replace("+", "")}?text=${encodeURIComponent(text)}`;
 }
 
-function renderPage(feed, business) {
+// links (istege bagli, main() doldurur):
+//   phoneUrls: Map product_id -> mutlak urun sayfasi adresi (yalniz sayfasi GERCEKTEN olanlar)
+//   laptops  : [{ name, price, url }] stokta, fiyatli, satilmamis ve sayfasi olan laptoplar
+// Bos birakilirsa sayfa eski haliyle (baglantisiz, laptopsuz) cizilir.
+function renderPage(feed, business, links = {}) {
   const biz = requireBusiness(business);
+  const phoneUrls = links.phoneUrls instanceof Map ? links.phoneUrls : new Map();
+  const laptops = Array.isArray(links.laptops) ? links.laptops : [];
+  const relPath = (abs) => abs.slice(SITE_ORIGIN.length);
   const when = fmtWhen(feed.generated_at);
   const url = `${SITE_ORIGIN}/fiyat-listesi/`;
 
@@ -211,18 +218,33 @@ function renderPage(feed, business) {
       // IMEI/kayit durumu musteriye acik fiyat sayfasinda GOSTERILMEZ (sahip karari 2026-09-20;
       // Faz D'de ayri musteri iletisim kurali olarak ele alinacak).
       toc.push(`<li><a href="#marka-${esc(bkey)}">${esc(title)}</a></li>`);
-      body += `<section id="marka-${esc(bkey)}">\n<h3>${esc(title)}</h3>\n<div class="tablewrap"><table>\n<thead><tr><th scope="col">Model</th><th scope="col">RAM / Depolama</th><th scope="col">Fiyat</th><th scope="col">Stok</th><th scope="col"><span class="sr">WhatsApp</span></th></tr></thead>\n<tbody>\n`;
+      // Kisisel bakim urunlerinde (Dyson/Braun/Philips) RAM / Depolama anlamsiz: sutun hic yok.
+      const hasVariantCol = group !== "PERSONAL_CARE";
+      body += `<section id="marka-${esc(bkey)}">\n<h3>${esc(title)}</h3>\n<div class="tablewrap"><table>\n<thead><tr><th scope="col">Model</th>${hasVariantCol ? '<th scope="col">RAM / Depolama</th>' : ""}<th scope="col">Fiyat</th><th scope="col">Stok</th><th scope="col"><span class="sr">WhatsApp</span></th></tr></thead>\n<tbody>\n`;
       for (const pr of b.items) {
         const price = pr.price.amount === null ? "WhatsApp’tan sorun" : fmtPrice(pr.price.amount);
         const label = displayName(pr);
         const wa = waLink(biz.phone, `Merhaba MİX GSM, ${label} için stok ve fiyat bilgisi almak istiyorum.`);
-        body += `<tr id="${esc(pr.product_id)}"><th scope="row">${esc(pr.model)}</th><td>${esc(pr.variant.label || "—")}</td>` +
+        const pageUrl = phoneUrls.get(pr.product_id);
+        const modelCell = pageUrl ? `<a href="${esc(relPath(pageUrl))}">${esc(pr.model)}</a>` : esc(pr.model);
+        body += `<tr id="${esc(pr.product_id)}"><th scope="row">${modelCell}</th>${hasVariantCol ? `<td>${esc(pr.variant.label || "—")}</td>` : ""}` +
           `<td class="price">${esc(price)}</td><td><span class="stock ${pr.stock.toLowerCase()}">${esc(STOCK_LABEL_TR[pr.stock])}</span></td>` +
           "" +
           `<td><a href="${esc(wa)}" rel="noopener noreferrer" target="_blank">Sor</a></td></tr>\n`;
       }
       body += `</tbody>\n</table></div>\n</section>\n`;
     }
+  }
+
+  if (laptops.length) {
+    toc.push(`<li><a href="#laptoplar">Laptoplar</a></li>`);
+    body += `<h2>Laptoplar</h2>\n<section id="laptoplar">\n<p class="lead">Stoktaki laptoplar. Özellikler ve fotoğraflar ürün sayfasında.</p>\n<div class="tablewrap"><table>\n<thead><tr><th scope="col">Model</th><th scope="col">Fiyat</th><th scope="col"><span class="sr">WhatsApp</span></th></tr></thead>\n<tbody>\n`;
+    for (const lp of laptops) {
+      const wa = waLink(biz.phone, `Merhaba MİX GSM, ${lp.name} için stok ve fiyat bilgisi almak istiyorum.`);
+      body += `<tr><th scope="row"><a href="${esc(relPath(lp.url))}">${esc(lp.name)}</a></th><td class="price">${esc(fmtPrice(lp.price))}</td>` +
+        `<td><a href="${esc(wa)}" rel="noopener noreferrer" target="_blank">Sor</a></td></tr>\n`;
+    }
+    body += `</tbody>\n</table></div>\n</section>\n`;
   }
 
   const itemList = {
@@ -234,7 +256,7 @@ function renderPage(feed, business) {
       "@type": "ListItem",
       position: i + 1,
       name: displayName(pr),
-      url: `${url}#${pr.product_id}`,
+      url: phoneUrls.get(pr.product_id) || `${url}#${pr.product_id}`,
     })),
   };
 
@@ -320,6 +342,41 @@ ${body}</main>
 `;
 }
 
+// ---------------------------------------------------------------- urun sayfasi baglantilari
+// Adresler urun sayfasi ureticisinin (generate-product-pages.js pageModels) KENDI
+// modellerinden alinir; ayrica sayfa dosyasi depoda GERCEKTEN varsa baglanti verilir
+// (yeni urunun sayfasi bir sonraki calismada olusunca baglanti da gelir; 404 yok).
+const pageExists = (root, abs) => {
+  const rel = abs.slice(SITE_ORIGIN.length).replace(/^\/+/, "");
+  return fs.existsSync(path.join(root, rel, "index.html"));
+};
+
+function collectLinks(root, feed) {
+  const phoneUrls = new Map();
+  let laptops = [];
+  let models = null;
+  try {
+    const pp = require("./generate-product-pages");
+    models = pp.pageModels(root).pages.map((pg) => ({ ...pg, url: pp.pageUrl(pg) }));
+  } catch (e) {
+    console.log("::warning::fiyat listesi: urun sayfasi modelleri alinamadi, baglantisiz cizilecek: " + e.message);
+  }
+  if (models) {
+    const ids = new Set(feed.products.map((pr) => pr.product_id));
+    models.filter((pg) => pg.kind === "phone" && ids.has(pg.slug) && pageExists(root, pg.url))
+      .forEach((pg) => phoneUrls.set(pg.slug, pg.url));
+    // Laptop: yalniz stokta, fiyatli, satilmamis ve sayfasi olan (rehber/llms ile ayni kural).
+    try {
+      laptops = models.filter((pg) => pg.kind === "laptop" && !pg.sold && pg.stock === "IN" && typeof pg.price === "number" && pg.price > 0 && pageExists(root, pg.url))
+        .map((pg) => ({ name: pg.name, price: pg.price, url: pg.url }));
+    } catch (e) {
+      console.log("::warning::fiyat listesi: laptop ozeti atlandi: " + e.message);
+      laptops = [];
+    }
+  }
+  return { phoneUrls, laptops };
+}
+
 // ---------------------------------------------------------------- calistirma
 function main() {
   const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"));
@@ -329,13 +386,61 @@ function main() {
   const business = JSON.parse(fs.readFileSync(BUSINESS_PATH, "utf8"));
   const feed = buildFeed(catalog);
   if (!feed.count) throw new Error("Urun sayisi 0 - feed ve fiyat sayfasi GUNCELLENMEDI.");
-  const html = renderPage(feed, business); // hata olursa hicbir dosya yazilmaz
+  const html = renderPage(feed, business, collectLinks(ROOT, feed)); // hata olursa hicbir dosya yazilmaz
 
   fs.mkdirSync(path.dirname(FEED_PATH), { recursive: true });
   fs.mkdirSync(PAGE_DIR, { recursive: true });
   fs.writeFileSync(FEED_PATH, JSON.stringify(feed) + "\n", "utf8");
   fs.writeFileSync(PAGE_PATH, html, "utf8");
   console.log(`feed/products.json ve fiyat-listesi/index.html yazildi: ${feed.count} urun.`);
+}
+
+// Fiyat sayfasi icerik kontrolleri (--verify ve testler). Hata listesi doner.
+//  - her urun satiri var, fiyat/stok besleme ile ayni
+//  - urun adi baglantisi ve JSON-LD adresi: urun sayfasi varsa ONA, yoksa sayfa ici capaya
+//  - baglanti verilen her urun/laptop sayfasi depoda var ve noindex degil
+//  - kisisel bakim tablolarinda RAM / Depolama sutunu yok
+//  - IMEI/kayit durumu bilgisi yok
+function verifyPage(html, feed, root) {
+  const errors = [];
+  const rowOf = (id) => {
+    const i = html.indexOf(`<tr id="${id}">`);
+    return i < 0 ? null : html.slice(i, html.indexOf("</tr>", i));
+  };
+  let ld = null;
+  try { ld = JSON.parse((html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/) || [])[1]); } catch (e) { ld = null; }
+  if (!ld || !Array.isArray(ld.itemListElement)) errors.push("JSON-LD ItemList okunamadi");
+  const ldUrl = new Map((ld && ld.itemListElement || []).map((x) => [x.position, x.url]));
+  feed.products.forEach((pr, i) => {
+    const id = pr.product_id;
+    const row = rowOf(id);
+    if (!row) { errors.push(`sayfada urun yok: ${id}`); return; }
+    const price = pr.price.amount === null ? "WhatsApp’tan sorun" : fmtPrice(pr.price.amount);
+    if (!row.includes(`>${esc(price)}<`)) errors.push(`fiyat uyumsuz: ${id} (${price})`);
+    if (!row.includes(`>${esc(STOCK_LABEL_TR[pr.stock])}<`)) errors.push(`stok uyumsuz: ${id}`);
+    const abs = `${SITE_ORIGIN}/urun/${id}/`;
+    const hasPage = fs.existsSync(path.join(root, "urun", id, "index.html"));
+    const linked = row.includes(`<a href="/urun/${id}/">`);
+    if (hasPage && !linked) errors.push(`urun sayfasi var ama baglanti yok: ${id}`);
+    if (!hasPage && linked) errors.push(`olmayan urun sayfasina baglanti: ${id}`);
+    const expectUrl = hasPage ? abs : `${SITE_ORIGIN}/fiyat-listesi/#${id}`;
+    if (ldUrl.get(i + 1) !== expectUrl) errors.push(`JSON-LD adresi yanlis: ${id} (${ldUrl.get(i + 1)})`);
+    if (pr.group === "PERSONAL_CARE" && /<td>[^<]*(GB|—)<\/td>/.test(row)) errors.push(`kisisel bakim satirinda RAM/Depolama hucresi: ${id}`);
+  });
+  // Kisisel bakim marka bolumlerinde RAM sutunu basligi olmamali.
+  const careKeys = new Set(feed.products.filter((pr) => pr.group === "PERSONAL_CARE").map((pr) => pr.brand.key));
+  careKeys.forEach((k) => {
+    const i = html.indexOf(`<section id="marka-${k}">`);
+    if (i >= 0 && html.slice(i, html.indexOf("</section>", i)).includes("RAM / Depolama")) errors.push(`kisisel bakim tablosunda RAM / Depolama sutunu: ${k}`);
+  });
+  // Laptop baglantilari: sayfa var, satilmis (noindex) degil.
+  for (const m of html.matchAll(/href="\/laptop\/([a-z0-9-]+)\/"/g)) {
+    const file = path.join(root, "laptop", m[1], "index.html");
+    if (!fs.existsSync(file)) errors.push(`olmayan laptop sayfasina baglanti: ${m[1]}`);
+    else if (/<meta name="robots" content="noindex/.test(fs.readFileSync(file, "utf8"))) errors.push(`satilmis (noindex) laptop listede: ${m[1]}`);
+  }
+  if (/Kayıtlı|Kayıtsız|Kayıt Durumu|IMEI/.test(html)) errors.push("sayfada IMEI/kayit durumu bilgisi var (gosterilmemeli)");
+  return errors;
 }
 
 // --verify: catalog.json, feed/products.json ve fiyat-listesi/index.html AYNI veri anlik goruntusunden mi?
@@ -349,15 +454,19 @@ function verify() {
   if (feed.generated_at !== catalog.generatedAt) errors.push(`feed generated_at (${feed.generated_at}) != catalog generatedAt (${catalog.generatedAt})`);
   if (feed.count !== expected.length || feed.products.length !== expected.length) errors.push(`urun sayisi uyumsuz: feed=${feed.count}/${feed.products.length} catalog=${expected.length}`);
   if (!html.includes(`datetime="${catalog.generatedAt}"`)) errors.push("fiyat-listesi/index.html baska bir zaman damgasi gosteriyor");
-  for (const p of expected) {
-    const id = legacyProductSlug(p);
-    if (!html.includes(`id="${id}"`)) errors.push(`sayfada urun yok: ${id}`);
-  }
-  if (/Kayıtlı|Kayıtsız|IMEI/.test(html)) errors.push("sayfada IMEI/kayit durumu bilgisi var (gosterilmemeli)");
+  errors.push(...verifyPage(html, feed, ROOT));
   if (errors.length) throw new Error("Tutarlilik hatasi:\n - " + errors.join("\n - "));
   console.log(`Tutarlilik dogrulandi: catalog.json, feed/products.json ve fiyat-listesi/index.html ayni veri (${expected.length} urun, ${catalog.generatedAt}).`);
 }
 
+module.exports = {
+  normalizeTR, normalizeText, legacyProductSlug, isNonProductRow, canonicalBrand, brandKey, modelKey,
+  parseVariant, registrationCode, buildFeed, renderPage, collectLinks, verifyPage,
+  STOCK_LABEL_TR, STOCK_SCHEMA_ORG, REGISTRATION_SYNONYMS,
+};
+
+// Calistirma blogu module.exports'tan SONRA: main() icinde generate-product-pages
+// yuklenirken (o da bu dosyayi require eder) disa acilan fonksiyonlar hazir olsun.
 if (require.main === module) {
   try {
     if (process.argv.includes("--verify")) verify();
@@ -368,8 +477,3 @@ if (require.main === module) {
   }
 }
 
-module.exports = {
-  normalizeTR, normalizeText, legacyProductSlug, isNonProductRow, canonicalBrand, brandKey, modelKey,
-  parseVariant, registrationCode, buildFeed, renderPage,
-  STOCK_LABEL_TR, STOCK_SCHEMA_ORG, REGISTRATION_SYNONYMS,
-};

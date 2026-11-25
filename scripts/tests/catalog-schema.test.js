@@ -12,6 +12,7 @@ const {
   productSlug,
   isNonProductRow,
   validatePhoneCatalog,
+  registrationWarnings,
   validateLaptopCatalog,
 } = require("../lib/catalog-schema");
 
@@ -127,6 +128,17 @@ test("laptop sayisi yariya duserse hata verir", () => {
   assert.ok(validateLaptopCatalog([laptop()], { previousCount: 10 }).errors.length > 0);
 });
 
+// Gercek Sheet'te gorulen baslik/not satirlari (25.11.2026 catalog.json'dan). catalog.json
+// artik bunlari tasimadigi icin kural testleri bu sabit listeyle de calisir.
+const SHEET_NOTE_ROWS = [
+  "📱  INFINIX MODELLERİ", "🍏  APPLE IPHONE", "🔹  SAMSUNG", "🧹  DYSON MODELLERİ",
+  "💎 MIX GSM MÜŞTERİ HİZMETLERİ & GARANTİ ŞARTLARI",
+  "✅ TÜM CİHAZLARA 1 YIL ÜCRETSİZ YAZILIM DESTEĞİ SAĞLANIR.",
+  "🚚 ANLAŞMALI KARGO İLE GÜVENLİ VE HIZLI ADRESE TESLİMAT (KARGO ÜCRETI BIZE AITTIR, ORTALAMA 2 GÜNDE TESLIM).",
+  "💳 3 AY TAKSİT YAPILAN KARTLAR: YAPI KREDİ WORLD CARD, VAKIFBANK WORLD CARD, QNB KREDİ KARTI, ENPARA KREDİ KARTI.",
+  "📲 WHATSAPP SIPARIŞ & İLETIŞIM: 0542 481 82 55",
+].map((b) => ({ b, m: "", s: "", p: null, stock: "ASK", group: "PHONE", registration: "", warranty: "" }));
+
 // Ayni kuralin iki kopyasi (site kodu js/app.<hash>.js <-> lib) sessizce ayrismasin: sitedeki
 // isNonProductRow/productSlug, gercek katalogdaki her satirda lib ile ayni sonucu vermeli.
 test("isNonProductRow ve productSlug site kodundaki kopyayla birebir ayni", () => {
@@ -149,9 +161,39 @@ test("isNonProductRow ve productSlug site kodundaki kopyayla birebir ayni", () =
     { b: "MARKA", m: "MODEL / ÜRÜN TANIMI", s: "" },
     { b: "SAMSUNG", m: "SAMSUNG", s: "" },
     { b: "İPHONE", m: "İPHONE 17 PRO", s: "256 GB" },
-  ]);
+  ], SHEET_NOTE_ROWS);
   rows.forEach((p) => {
     assert.equal(site.isNonProductRow(p), isNonProductRow(p), `isNonProductRow farkli: ${p.b} ${p.m}`);
     assert.equal(site.productSlug(p), productSlug(p), `productSlug farkli: ${p.b} ${p.m}`);
   });
+});
+
+test("kayit durumu: KAYITLI/KAYITSIZ disi telefon degeri uyari olur (hata degil), deger degistirilmez", () => {
+  const ph = (m, registration, extra = {}) => ({ b: "XIAOMI", m, s: "8 GB / 256 GB", p: 15000, stock: "IN", group: "PHONE", registration, ...extra });
+  const list = [
+    ph("REDMI 15", "KAYITLI"), ph("REDMI 15C", "kayıtsız"), ph("POCO F9 PRO", "ŞUAN YOK"), ph("POCO F9 ULTRA", "ŞUAN YOK"),
+    ph("PIXEL 10", "SORUNUZ"), ph("REDMI 17", ""), ph("REDMI 17C", "-"),
+    { b: "DYSON", m: "AIRSTRAIT", s: "", p: 9500, stock: "IN", group: "PERSONAL_CARE", registration: "-" },
+  ].concat(SHEET_NOTE_ROWS);
+  const before = JSON.stringify(list);
+  const w = registrationWarnings(list, list.map((_, i) => i + 2));
+  assert.equal(w.length, 4);                                     // "ŞUAN YOK", "SORUNUZ", "(boş)", "-"
+  assert.match(w[0], /"ŞUAN YOK" \(2 telefon/);
+  assert.match(w[0], /POCO F9 PRO 8 GB \/ 256 GB \[Sheet satırı 4\]/);
+  assert.ok(w.some((x) => /"\(boş\)" \(1 telefon/.test(x)));
+  assert.ok(!w.join(" ").includes("REDMI 15 "), "beklenen deger uyari vermemeli");
+  assert.ok(!w.join(" ").includes("AIRSTRAIT"), "kisisel bakim urununde kayit sutunu kontrol edilmez");
+  assert.equal(JSON.stringify(list), before, "uyari veriyi degistirmemeli");
+  // satir numarasi verilmezse yazilmaz; validatePhoneCatalog uyariyi tasir ama HATA uretmez
+  assert.ok(!registrationWarnings(list).join(" ").includes("Sheet satırı"));
+  const v = validatePhoneCatalog(list);
+  assert.deepEqual(v.errors, []);
+  assert.equal(v.warnings.filter((x) => x.startsWith("Kayit durumu")).length, 4);
+});
+
+test("cok sayida ayni deger ozetlenir (isim listesi sinirli)", () => {
+  const list = Array.from({ length: 20 }, (_, i) => ({ b: "XIAOMI", m: `MODEL ${i}`, s: "", p: 10000, stock: "IN", group: "PHONE", registration: "?" }));
+  const [w] = registrationWarnings(list);
+  assert.match(w, /\(20 telefon/);
+  assert.match(w, /ve 12 tane daha$/);
 });

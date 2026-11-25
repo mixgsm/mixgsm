@@ -8,7 +8,7 @@ const assert = require("node:assert/strict");
 const vm = require("vm");
 const { parseTsvRows, cleanCell } = require("../lib/tsv");
 const { readAppSource } = require("../asset-version");
-const { parseTsvToProducts } = require("../generate-catalog");
+const { parseTsvToProducts, buildCatalogProducts } = require("../generate-catalog");
 const { parseTsvToLaptopProducts } = require("../generate-catalog-laptop");
 const path = require("path");
 
@@ -85,4 +85,36 @@ test("laptop katalogu: aciklama cok satirli kalir, fotograf sutunlari kaymaz", (
   assert.equal(p.price, 41500);
   assert.equal(p.stock, "IN");
   assert.equal(p.img, "https://raw.githubusercontent.com/mixgsm/mixgsm/main/laptop-photos/images/PC-9-01.jpg");
+});
+
+test("catalog.json uretimi: Sheet baslik/not satirlari ayiklanir, 'Sorunuz' fiyatli gercek urun korunur", () => {
+  const row = (cells) => cells.concat(Array(15 - cells.length).fill("")).join("\t");
+  const tsv = [
+    PHONE_HEADER,
+    row(["📱  INFINIX MODELLERİ"]),
+    row(["INFINIX", "HOT 60 PRO", "8 GB / 256 GB", "11.500", "VAR", "", "", "", "", "", "", "", "KAYITLI"]),
+    row(["GOOGLE", "PIXEL 10 PRO XL", "16 GB / 256 GB", "Sorunuz", "SORUNUZ", "", "", "", "", "", "", "", "SORUNUZ"]),
+    row(["✅ TÜM CİHAZLARA 1 YIL ÜCRETSİZ YAZILIM DESTEĞİ SAĞLANIR."]),
+    row(["📲 WHATSAPP SIPARIŞ & İLETIŞIM: 0542 481 82 55"]),
+  ].join("\n");
+  const { products, sheetRows, skipped } = buildCatalogProducts(tsv);
+  assert.deepEqual(products.map((p) => p.m), ["HOT 60 PRO", "PIXEL 10 PRO XL"]);
+  assert.equal(products[1].p, null);                 // fiyat "Sorunuz" -> null, urun yine de var
+  assert.equal(products[1].stock, "ASK");
+  assert.equal(products[1].registration, "SORUNUZ"); // kayit alani silinmez/degistirilmez
+  assert.deepEqual(sheetRows, [3, 4]);               // Google Sheet satir numaralari (baslik = 1)
+  assert.equal(skipped, 3);
+  assert.ok(products.every((p) => !("sourceRow" in p) && !("row" in p)), "satir numarasi public veriye girmez");
+
+  // Ayni girdi sitenin kendi kuraliyla (js/app.<hash>.js isNonProductRow) suzulunce ayni urun kumesi cikar.
+  const fs = require("fs");
+  const path = require("path");
+  const vm = require("vm");
+  const src = require("../asset-version").readAppSource(path.join(__dirname, "..", ".."));
+  const cut = (a, b) => { const i = src.indexOf(a); const j = src.indexOf(b, i); assert.ok(i >= 0 && j > i, a); return src.slice(i, j); };
+  const site = vm.runInNewContext(cut("function normalizeTR(", "function computeSearchScore(") +
+    cut("function isNonProductRow(", "function normalizeGithubImageUrl(") + ";({ isNonProductRow })", {});
+  const viaSite = parseTsvToProducts(tsv).filter((p) => !site.isNonProductRow(p));
+  assert.deepEqual(viaSite, products);
+  void fs;
 });
