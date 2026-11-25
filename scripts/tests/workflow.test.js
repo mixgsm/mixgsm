@@ -46,3 +46,24 @@ test("sitemap durum dosyasi commit'e eklenir; mevcut yayin adimlari yerinde", ()
   assert.ok(commit > names.indexOf("sitemap.xml guncelle"));
   assert.ok(names.indexOf("Yayin isini baslat (deploy-pages.yml)") > commit);
 });
+
+test("yayin: paket yukleme ve yayin ayri islerde (ayni iste paket listesi yarisi olmasin)", () => {
+  const d = fs.readFileSync(path.join(__dirname, "..", "..", ".github", "workflows", "deploy-pages.yml"), "utf8");
+  const job = (name) => {
+    const i = d.indexOf(`\n  ${name}:\n`);
+    assert.ok(i >= 0, `${name} isi yok`);
+    const rest = d.slice(i + 1);
+    const next = rest.slice(1).search(/\n  [a-z_]+:\n/);
+    return next < 0 ? rest : rest.slice(0, next + 1);
+  };
+  const build = job("build");
+  const deploy = job("deploy");
+  assert.match(build, /needs: qa/);
+  assert.match(build, /upload-pages-artifact@[0-9a-f]{40}/);
+  assert.ok(!build.includes("actions/deploy-pages@"));
+  assert.match(deploy, /needs: build/);
+  assert.match(deploy, /actions\/deploy-pages@[0-9a-f]{40}/);
+  assert.match(deploy, /needs\.build\.result == 'success'/);
+  assert.match(deploy, /needs\.build\.outputs\.mode == 'workflow'/);
+  assert.match(deploy, /pages: write/);
+});

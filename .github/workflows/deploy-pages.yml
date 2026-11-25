@@ -37,17 +37,20 @@ jobs:
     if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.kontrolleri_atla) }}
     uses: ./.github/workflows/qa.yml
 
-  deploy:
+  # Derleme ve yayin AYRI isler (GitHub'in onerdigi duzen). Ayni iste paket yuklenip
+  # 0,2 sn sonra yayin adimi paketi aradiginda GitHub'in paket listesi henuz
+  # guncellenmemis olabiliyor ("No artifacts named github-pages were found",
+  # 25.11.2026'da arka arkaya goruldu). Ayri iste bu yaris olmaz; "Re-run" da
+  # ayni calismada ikinci paket birakip "Multiple artifacts" hatasina dusmez.
+  build:
     needs: qa
     if: ${{ always() && (needs.qa.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.kontrolleri_atla)) }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      pages: read
+    outputs:
+      mode: ${{ steps.mode.outputs.type }}
     steps:
       - name: Depoyu al
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -68,11 +71,21 @@ jobs:
       - name: Yayin paketini yukle
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
 
-      - name: Yayinla
-        id: deployment
-        if: steps.mode.outputs.type == 'workflow'
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
-
       - name: Yayin atlandi bilgisi
         if: steps.mode.outputs.type != 'workflow'
         run: echo "::notice::Pages kaynagi '${{ steps.mode.outputs.type }}' (GitHub Actions degil); kontroller gecti, yayin adimi atlandi."
+
+  deploy:
+    needs: build
+    if: ${{ always() && needs.build.result == 'success' && needs.build.outputs.mode == 'workflow' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Yayinla
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
