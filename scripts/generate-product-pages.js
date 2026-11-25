@@ -636,6 +636,7 @@ function guideDefs(pages) {
   ];
   // Karsilastirmalar: katalogdaki model adlariyla (her modelin tum varyantlari).
   const PAIRS = [
+    ["MI 15T PRO", "MI 17T PRO"],
     ["MI 17T", "MI 17T PRO"],
     ["REDMI NOTE 14 PRO PLUS 5G", "REDMI NOTE 15 PRO PLUS 5G"],
     ["S25 ULTRA", "S26 ULTRA"],
