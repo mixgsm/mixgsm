@@ -254,7 +254,7 @@ function displaySpec(kind, value) {
 // toplam/3'ün TL'ye yuvarlanmışıdır. Boşsa yukarıdaki %12 kuralı geçerlidir.
 // ================================================================
 const TAKSIT_COUNT = 3;
-const TAKSIT_RATE = 0.12;
+const TAKSIT_RATE = 0.13; // 2026-11: isletme orani %12 -> %13 (laptopta afis fiyati taksitPrice esas)
 const TAKSIT_CARDS = 'Yapı Kredi World, VakıfBank World, QNB ve Enpara kredi kartları';
 function taksitInfo(price, fixedTotal) {
   if (typeof price !== 'number' || !isFinite(price) || price <= 0) return null;

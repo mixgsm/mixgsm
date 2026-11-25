@@ -178,9 +178,15 @@ test("gecmis: telefon ac/kapat/ileri/geri; laptop ac/kapat -> telefona gec -> il
 });
 
 test("dogrudan urun baglantilari: #urun/ ve #laptop/ acilir", async (t) => {
-  const { page: p1 } = await open(t, { path: "#urun/xiaomi-redmi-a7-pro" });
+  // Sabit bir model yerine katalogda gercekten stokta olan ilk telefon secilir
+  // (eski sabit "xiaomi-redmi-a7-pro" katalogdan kalkinca test bosuna kirildi).
+  // Slug = ayni ureticinin (generate-product-pages) urettigi urun sayfasi adresi.
+  const phone = require("../../../feed/products.json").products
+    .find((x) => x.group === "PHONE" && x.stock === "IN" && x.price && x.price.amount > 0);
+  assert.ok(phone, "katalogda stokta telefon yok");
+  const { page: p1 } = await open(t, { path: `#urun/${phone.product_id}` });
   await p1.waitForSelector("#modal.open");
-  assert.match(await p1.textContent("#mn"), /REDMI A7 PRO/);
+  assert.ok((await p1.textContent("#mn")).toLocaleUpperCase("tr-TR").includes(phone.model.toLocaleUpperCase("tr-TR")));
   const { page: p2 } = await open(t, { path: "#laptop/acer-nitro-5-pc-001", waitCards: false });
   await p2.waitForSelector("#laptopModal.open");
   assert.equal(await p2.textContent("#lmn"), "NITRO 5");
