@@ -12,7 +12,7 @@
 
 ## Ürünler
 
-- [Tüm ürünler](https://mixgsm.tr/urun/): 93 telefon, 19 laptop, 9 kişisel bakım ürünü; her ürünün kendi sayfası, güncel fiyatı ve stok durumu
+- [Tüm ürünler](https://mixgsm.tr/urun/): 93 telefon, 15 laptop, 9 kişisel bakım ürünü; her ürünün kendi sayfası, güncel fiyatı ve stok durumu
 - [Güncel fiyat listesi](https://mixgsm.tr/fiyat-listesi/): tüm telefonların fiyat ve stok tablosu
 - [Ana sayfa ve katalog](https://mixgsm.tr/): arama, filtre ve karşılaştırma
 
